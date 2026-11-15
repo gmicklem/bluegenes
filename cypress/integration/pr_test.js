@@ -4,8 +4,7 @@ describe("UI Test", function() {
   });
 
   it("Upload page resolved IDs as expected", function() {
-    cy.server();
-    cy.route("POST", "*/service/ids").as("uploadData");
+    cy.intercept("POST", /\/service\/ids(\?|$)/).as("uploadData");
     cy.contains("Upload").click();
     cy.url().should("include", "/upload/input");
     cy.contains("Show example").click();
@@ -13,10 +12,7 @@ describe("UI Test", function() {
       .contains("Continue")
       .click();
     cy.url().should("include", "/upload/save");
-    cy.wait("@uploadData");
-    cy.get("@uploadData").should(xhr => {
-      expect(xhr.status).to.equal(200);
-    });
+    cy.wait("@uploadData").its("response.statusCode").should("eq", 200);
   });
 
   it("Templates execute and show results", function() {
@@ -24,7 +20,7 @@ describe("UI Test", function() {
       cy.contains("Templates").click();
     });
     cy.url().should("include", "/templates");
-    cy.get("div[class=template-list]").within(() => {
+    cy.get("div[class=template-list]").first().within(() => {
       cy.get(":nth-child(n) > .col")
         .its("length")
         .should("be.gt", 0);
@@ -32,27 +28,23 @@ describe("UI Test", function() {
   });
 
   it("Templates allow you to select lists and type in identifiers", function() {
-    cy.server();
-    cy.route("POST", "*/service/query/results/tablerows").as("getData");
+    cy.intercept("POST", /\/service\/query\/results\/tablerows(\?|$)/).as("getData");
     cy.get("#bluegenes-main-nav").within(() => {
       cy.contains("Templates").click();
     });
     cy.url().should("include", "/templates");
-    cy.get("div[class=template-list]").within(() => {
+    cy.get("div[class=template-list]").first().within(() => {
       cy.get(":nth-child(n) > .col")
         .its("length")
         .should("be.gt", 0);
     });
-    cy.get("div[class=template-list]").within(() => {
+    cy.get("div[class=template-list]").first().within(() => {
       cy.get(":nth-child(1) > .col")
         .find("button")
         .contains("View >>")
         .click({ force: true });
     });
-    cy.wait("@getData");
-    cy.get("@getData").should(xhr => {
-      expect(xhr.status).to.equal(200);
-    });
+    cy.wait("@getData").its("response.statusCode").should("eq", 200);
     cy.get(".template-constraint-container:nth-child(1) select.constraint-chooser")
       .select("!=");
   });
@@ -135,26 +127,21 @@ describe("UI Test", function() {
   // });
 
   it("Perform a region search using existing example", function() {
-    cy.server();
-    cy.route("POST", "*/service/query/results").as("getData");
+    cy.intercept("POST", /\/service\/query\/results(\?|$)/).as("getData");
     cy.contains("Regions").click();
     cy.contains("Show Example").click();
     cy.get(".region-text > .form-control").should("not.be.empty");
     cy.get("button")
       .contains("Search")
       .click();
-    cy.wait("@getData");
-    cy.get("@getData").should(xhr => {
-      expect(xhr.status).to.equal(200);
-    });
+    cy.wait("@getData").its("response.statusCode").should("eq", 200);
     cy.get(".results-body .single-feature")
       .its('length')
       .should("be.gt", 0);
   });
 
   it("Successfully clears invalid anonymous token using dialog", function() {
-    cy.server();
-    cy.route("POST", "*/service/query/results").as("queryOrganisms");
+    cy.intercept("POST", /\/service\/query\/results(\?|$)/).as("queryOrganisms");
 
     cy.wait(1000);
     // This request is run when Bluegenes has finished loading.
@@ -164,34 +151,28 @@ describe("UI Test", function() {
       win.bluegenes.events.scrambleTokens();
     });
 
-    cy.route("GET", "*/service/search?*").as("getSearch");
+    cy.intercept("GET", /\/service\/search\?/).as("getSearch");
 
     cy.get(".home .search").within(() => {
       cy.get("input[class=typeahead-search]").type("gene{enter}", { delay: 100 });
     });
 
-    cy.wait("@getSearch");
-    cy.get("@getSearch").should(xhr => {
-      expect(xhr.status).to.equal(401);
-    });
+    cy.wait("@getSearch").its("response.statusCode").should("eq", 401);
 
-    cy.route("GET", "*/service/session?*").as("getSession");
+    cy.intercept("GET", /\/service\/session\?/).as("getSession");
 
     cy.contains("Refresh").click();
 
     cy.wait(1000);
     cy.wait("@getSession");
 
-    cy.route("GET", "*/service/search?*").as("getSecondSearch");
+    cy.intercept("GET", /\/service\/search\?/).as("getSecondSearch");
 
     cy.contains("Home").click();
     cy.get(".home .search").within(() => {
       cy.get("input[class=typeahead-search]").clear().type("gene{enter}", { delay: 100 });
     });
 
-    cy.wait("@getSecondSearch");
-    cy.get("@getSecondSearch").should(xhr => {
-      expect(xhr.status).to.equal(200);
-    });
+    cy.wait("@getSecondSearch").its("response.statusCode").should("eq", 200);
   });
 });
