@@ -9,6 +9,8 @@
 export const GENES_A = "PPARG, HFE, GSTP1, CYP2D6";
 export const GENES_B = "CYP2D6, CYP3A4, CYP2C9, VKORC1";
 export const GENES_A_SIZE = 4;
+// Rows of the template Gene_Protein (gene, then its proteins) for GENES_A.
+export const GENES_A_PROTEIN_ROWS = 135;
 
 // Two proteins of the panel's genes: PPARG and CYP3A4.
 export const PROTEINS = "P37231, P08684";

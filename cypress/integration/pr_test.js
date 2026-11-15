@@ -1,3 +1,5 @@
+import { requireMineData } from "../support/mine";
+
 describe("UI Test", function() {
   beforeEach(function() {
     cy.visit("/");
@@ -38,12 +40,11 @@ describe("UI Test", function() {
         .its("length")
         .should("be.gt", 0);
     });
-    cy.get("div[class=template-list]").first().within(() => {
-      cy.get(":nth-child(1) > .col")
-        .find("button")
-        .contains("View >>")
-        .click({ force: true });
-    });
+    // a template whose first constraint is an organism (an operator dropdown), not a gene lookup
+    cy.get("#All_Proteins_In_Organism_To_Publications")
+      .find("button")
+      .contains("View >>")
+      .click({ force: true });
     cy.wait("@getData").its("response.statusCode").should("eq", 200);
     cy.get(".template-constraint-container:nth-child(1) select.constraint-chooser")
       .select("!=");
@@ -127,6 +128,7 @@ describe("UI Test", function() {
   // });
 
   it("Perform a region search using existing example", function() {
+    requireMineData(this, "Location", "the region search needs features with chromosome locations");
     cy.intercept("POST", /\/service\/query\/results(\?|$)/).as("getData");
     cy.contains("Regions").click();
     cy.contains("Show Example").click();

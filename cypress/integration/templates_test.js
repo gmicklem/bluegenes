@@ -1,4 +1,7 @@
 import { minePage } from "../support/mine";
+import { GENES_A, GENES_A_PROTEIN_ROWS } from "../support/data";
+
+// The demo mine has 9 public templates (/service/templates), one with the aspect Genomics.
 
 describe("Templates Test", function() {
     beforeEach(function() {
@@ -12,13 +15,13 @@ describe("Templates Test", function() {
     });
 
     it("can search templates by categories", function() {
-        cy.get(".template").should("have.length","3");
+        cy.get(".template").should("have.length","9");
         cy.contains("Genomics").click();
         cy.get(".template").should("have.length","1");
     });
 
     it("can load predefined template and show results", function() {
-        cy.contains("View").first().click();
+        cy.get("#All_Proteins_In_Organism_To_Publications").contains("View").click();
         cy.url().should("include","/All_Proteins_In_Organism_To_Publications");
         cy.get('#All_Proteins_In_Organism_To_Publications').within(() => {
             cy.get('select').first().select('!=');
@@ -30,7 +33,7 @@ describe("Templates Test", function() {
     });
 
     it("can run a template search with a list", function() {
-        cy.createGeneList("ABRA,PFB0815w,PFF1275c,gene.60087");
+        cy.createGeneList(GENES_A);
         cy.contains("Templates").click();
         cy.url().should("contain","/templates");
         cy.get("#Gene_Protein").click().within(() => {
@@ -39,7 +42,7 @@ describe("Templates Test", function() {
 
             cy.get(".dropdown-menu").should("exist");
             cy.get(".list-selection").first().click();
-            cy.get(".view-results").should("contain","4").click();
+            cy.get(".view-results").should("contain",String(GENES_A_PROTEIN_ROWS)).click();
         });
         cy.url().should("contain","/results");
     });
@@ -65,7 +68,7 @@ describe("Templates Test", function() {
 
     it("can lookup a gene with a template search", function() {
         cy.get("#Gene_Protein").click().within(() => {
-            cy.get(".constraint-input input").clear().type("MA*{enter}",{delay:100});
+            cy.get(".constraint-input input").clear().type("CYP*{enter}",{delay:100});
             cy.get(".view-results").click();
         })
         cy.url().should("include","/results");
