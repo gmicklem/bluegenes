@@ -146,8 +146,7 @@
                                   [figwheel-sidecar "0.5.19"]
                                   [cider/piggieback "0.4.2"]]
                    :resource-paths ^:replace ["config/dev" "config/defaults" "resources"]
-                   :plugins [[lein-figwheel "0.5.19"]
-                             [lein-doo "0.1.8"]]
+                   :plugins [[lein-figwheel "0.5.19"]]
                    :env {:development true}}
              :kaocha {:dependencies [[lambdaisland/kaocha "1.0.700"]
                                      [lambdaisland/kaocha-cljs "0.0-71"]]}
