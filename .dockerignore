@@ -1,4 +1,8 @@
 # Build outputs and caches; the Dockerfile rebuilds them in the image.
+# .git is excluded (pass --build-arg BLUEGENES_VERSION instead); *.jks are
+# keystores that must not end up in an image.
+.git
+*.jks
 node_modules
 target
 .cpcache

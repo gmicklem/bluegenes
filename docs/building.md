@@ -127,9 +127,11 @@ The release version shown in the UI is `$BLUEGENES_VERSION` if set, otherwise `g
 
 ### docker
 
-BlueGenes has a Dockerfile which builds the uberjar inside Docker (Clojure CLI, JDK 21 and Node 22) and runs it on an `eclipse-temurin:21-jre` image.
+BlueGenes has a Dockerfile which builds the uberjar inside Docker (Clojure CLI, JDK 21 and Node 22) and runs it on an `eclipse-temurin:21-jre` image. The base images are pinned by digest in the Dockerfile.
 
-    docker build -t bluegenes .
+    docker build --build-arg BLUEGENES_VERSION="$(git describe --always)" -t bluegenes .
+
+`.git` is not sent to Docker (see `.dockerignore`), so the version shown in the UI comes from the `BLUEGENES_VERSION` build argument and is `dev` without it.
 
 Run it and the web server should default to port 5000.
 
@@ -155,7 +157,7 @@ This will create a `tools` folder in the current directory mounted as a docker b
 
 ### Dokku
 
-[Dokku](http://dokku.viewdocs.io/dokku/) allows you to push a Git branch and have it automatically build and serve it using the Dockerfile.
+[Dokku](http://dokku.viewdocs.io/dokku/) allows you to push a Git branch and have it automatically build and serve it using the Dockerfile (there is no Procfile or buildpack; the image's `CMD` starts the server). To show a version in the UI, set the build argument, e.g. `dokku docker-options:add bluegenes build '--build-arg BLUEGENES_VERSION=v1.5.0'`.
 
 Once dokku is configured on your remote host, you'll need to add your public key, create a remote for your host and push to it:
 
@@ -173,7 +175,7 @@ You can also deploy docker images that you build locally, to the dokku instance.
 Make sure `youruser` on `dokku-server` is part of the `docker` group. This allows you to stream the file instead of manually transferring it through ssh.
 
 ```
-docker build -t dokku/appname:v1 .
+docker build --build-arg BLUEGENES_VERSION="$(git describe --always)" -t dokku/appname:v1 .
 docker save dokku/appname:v1 | bzip2 | ssh youruser@dokku-server "bunzip2 | docker load"
 ssh youruser@dokku-server
 sudo dokku tags:deploy appname v1
@@ -227,7 +229,7 @@ When deploying BlueGenes to Clojars, the JAR file should include all compiled as
 4. Push your commit and tag using `git push origin` followed by `git push origin v1.0.0` (again, replace *1.0.0* with your version number). Make sure that you push to the intermine repository, not just your fork!
 5. Deploy the new jar to Clojars with `clojure -T:build:deploy deploy`.
 6. Push a new docker image to dockerhub (before pushing, you'll probably want to quickly test it locally).
-    1. `docker build -t bluegenes .`
+    1. `docker build --build-arg BLUEGENES_VERSION=v1.0.0 -t bluegenes .`
     2. `docker tag bluegenes intermine/bluegenes:1.0.0` (remember to use your correct version number)
     3. `docker tag bluegenes intermine/bluegenes:latest`
     4. `docker push intermine/bluegenes:1.0.0`
