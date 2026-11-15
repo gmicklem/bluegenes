@@ -147,9 +147,10 @@
   ; Javascript:
     ;; This favicon is dynamically served; see routes.clj.
     [:link {:href (use-deployment-path "/favicon.ico") :type "image/x-icon" :rel "shortcut icon"}]
-    [:script {:crossorigin "anonymous"
-              :integrity "sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
-              :src "https://code.jquery.com/jquery-3.1.0.min.js"}]
+    ;; jQuery (js/$ in the cljs, and Bootstrap 3's popover/dropdown plugins). The
+    ;; cdnjs file is byte-identical to dist/jquery.min.js in the npm package.
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+            "sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs")
     (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"
             "sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa")
     ;; Graphing library
