@@ -3,7 +3,7 @@
             [reagent.core :as reagent]
             [bluegenes.components.search.typeahead :as search]
             [oops.core :refer [oget ocall]]
-            [bluegenes.components.progress_bar :as progress-bar]
+            [bluegenes.components.progress-bar :as progress-bar]
             [bluegenes.route :as route]
             [bluegenes.components.ui.inputs :refer [password-input]]
             [bluegenes.components.icons :refer [icon-comp]]

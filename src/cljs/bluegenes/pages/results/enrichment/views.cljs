@@ -8,7 +8,7 @@
             [clojure.string :as str]
             [oops.core :refer [oget ocall]]
             [bluegenes.components.icons :refer [icon]]
-            [bluegenes.components.ui.list_dropdown :refer [list-dropdown]]
+            [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]
             [goog.string :as gstring]))
 
 (def css-transition-group

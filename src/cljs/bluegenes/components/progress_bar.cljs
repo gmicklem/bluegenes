@@ -1,4 +1,4 @@
-(ns bluegenes.components.progress_bar
+(ns bluegenes.components.progress-bar
   (:require [re-frame.core :as re-frame :refer [subscribe dispatch]]))
 
 (defn main []

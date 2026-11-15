@@ -1,4 +1,4 @@
-(ns bluegenes.components.ui.results_preview
+(ns bluegenes.components.ui.results-preview
   (:require [bluegenes.components.loader :refer [loader]]
             [clojure.string :refer [split join]]))
 

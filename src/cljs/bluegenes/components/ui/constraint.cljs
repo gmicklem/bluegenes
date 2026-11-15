@@ -6,7 +6,7 @@
             [bluegenes.components.loader :refer [mini-loader]]
             [reagent.core :as reagent :refer [create-class]]
             [dommy.core :as dommy :refer-macros [sel sel1]]
-            [bluegenes.components.ui.list_dropdown :refer [list-dropdown]]
+            [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]
             [cljs-time.coerce :as time-coerce]
             [cljs-time.format :as time-format]))
 

@@ -1,4 +1,4 @@
-(ns bluegenes.components.ui.list_dropdown
+(ns bluegenes.components.ui.list-dropdown
   (:require [re-frame.core :refer [subscribe]]
             [reagent.core :as reagent]
             [oops.core :refer [oget]]

@@ -5,7 +5,7 @@
             [json-html.core :as json-html]
             [clojure.string :refer [join split]]
             [bluegenes.components.icons :as icons]
-            [bluegenes.components.ui.results_preview :refer [preview-table]]
+            [bluegenes.components.ui.results-preview :refer [preview-table]]
             [bluegenes.components.loader :refer [mini-loader]]
             [bluegenes.components.idresolver.events :as evts]
             [bluegenes.components.idresolver.subs :as subs]

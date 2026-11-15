@@ -8,7 +8,7 @@
             [imcljs.path :as im-path]
             [imcljs.query :refer [->xml]]
             [bluegenes.components.loader :refer [mini-loader]]
-            [bluegenes.components.ui.results_preview :refer [preview-table]]
+            [bluegenes.components.ui.results-preview :refer [preview-table]]
             [inflections.core :refer [ordinalize plural]]
             [bluegenes.components.icons :refer [icon]]
             [bluegenes.pages.querybuilder.logic :refer [vec-swap-indices]]))

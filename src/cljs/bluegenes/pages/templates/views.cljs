@@ -5,7 +5,7 @@
             [json-html.core :as json-html]
             [imcljs.path :as im-path]
             [bluegenes.components.ui.constraint :refer [constraint]]
-            [bluegenes.components.ui.results_preview :refer [preview-table]]
+            [bluegenes.components.ui.results-preview :refer [preview-table]]
             [oops.core :refer [oget ocall]]
             [bluegenes.components.loader :refer [mini-loader]]
             [bluegenes.utils :refer [ascii-arrows ascii->svg-arrows compatible-version?]]
