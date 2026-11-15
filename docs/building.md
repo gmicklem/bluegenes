@@ -103,6 +103,19 @@ Cypress also has a really useful interface for debugging failing tests:
 
 *Tip:* You can also run the Cypress tests with BlueGenes deployed to a custom deploy path by editing *cypress.json* `baseUrl` key to include the path (e.g. `"http://localhost:5000/foo/bar"`) and passing the same path as an envvar, `BLUEGENES_DEPLOY_PATH=/foo/bar` when starting the server.
 
+## Continuous integration
+
+GitHub Actions runs `.github/workflows/ci.yml` on pushes to `maint-2026`, `dev` and `master`, on pull requests, and on demand (*Run workflow* in the Actions tab). A newer push to the same branch or pull request cancels the run in progress. It has three jobs:
+
+* `check` (JDK 21): `clojure -M:fmt check`, `npm ci`, `npm run test:unit` (a cljs.test summary with no failures is required), a dev build, a load check of the dev build and of the release bundle (`script/ci/bluegenes-runbundle.js` runs the compiled JavaScript in a node vm with stub DOM globals, which catches load-order bugs that the unit tests cannot), `clojure -T:build uber`, a check of the jar's contents and a smoke start of the jar, which fetches `/`, `/version`, `/api/tools/all` and the hashed JavaScript and CSS files and checks that they carry the hash in `manifest.edn`. The uberjar is kept as the `bluegenes-uberjar` artifact for 7 days; on failure the logs are uploaded as `check-logs`.
+* `smoke-jdk17`: starts that uberjar on JDK 17 and runs the same checks.
+* `library-jar`: `clojure -T:build install`, checks the Clojars-style jar and its pom, resolves it as a consumer would and starts it with `java -cp <jars> bluegenes.core` on JDK 17, which is how rdfc2im runs BlueGenes.
+
+These are the steps of the local gate script in the intermine-planning repository (`scripts/gate-bluegenes.sh`). `script/ci/bluegenes-runbundle.js` is a copy of that repository's `scripts/bluegenes-runbundle.js`; keep the two identical. The Clojure CLI is installed by `.github/actions/setup-build` with the official installer from the Clojure release page, pinned by version and sha256 (to change the version, copy the new `linux-install.sh` digest from the [release](https://github.com/clojure/brew-install/releases)). To run the same checks locally, use the commands in the [Quickstart](/docs/building.md#quickstart); `script/ci/jar-check.sh` and `script/ci/smoke.sh` take the jar and the java command as arguments (see the comments at the top of each).
+
+`.github/workflows/nightly-cypress.yml` is a placeholder for a nightly Cypress run against a local mine. It is not enabled and does not work yet. `.github/dependabot.yml` configures weekly update pull requests for npm packages (minor and patch updates grouped; React major versions ignored) and for the actions. Dependabot cannot update `deps.edn`.
+
+
 # Production Builds
 
 ## Testing a minified instance before deploying:

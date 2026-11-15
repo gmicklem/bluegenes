@@ -2,6 +2,10 @@
 
 # BlueGenes
 
+<!-- The badge points at the maintenance fork for now. When this work is merged
+     upstream, replace gmicklem/bluegenes with intermine/bluegenes (both URLs). -->
+[![CI](https://github.com/gmicklem/bluegenes/actions/workflows/ci.yml/badge.svg)](https://github.com/gmicklem/bluegenes/actions/workflows/ci.yml)
+
 _An InterMine Web-based GUI_
 
 
