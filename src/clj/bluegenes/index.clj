@@ -9,8 +9,7 @@
             [clojure.core.cache.wrapped :as cache]
             [clojure.string :as str]))
 
-;; Hello dear maker of the internet. You want to edit *this* file for prod,
-;; NOT resources/public/index.html.
+;; Hello dear maker of the internet. This file generates the HTML page.
 
 (def bundle-path (-> (utils/read-fingerprints) (utils/get-bundle-path)))
 (def bundle-hash (utils/parse-bundle-hash bundle-path))
@@ -151,7 +150,7 @@
 
    [:div.alert.alert-danger
     [:h3 "Debug: Stylesheets not compiled"]
-    [:p "This page is missing its stylesheet. Please tell your administrator to run <b>'lein less once'</b>."]
+    [:p "This page is missing its stylesheet. Please tell your administrator to run <b>'npm run less'</b>."]
     [:div.clearfix]]])
 
 (defn index

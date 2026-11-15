@@ -8,9 +8,7 @@
   build of :app. It is a vector with one map per module, e.g.
   [{:module-id :app :output-name \"app.1a2b3c4.js\" ...}]; a release build
   (:module-hash-names) puts the content hash in :output-name, a dev build
-  writes plain \"app.js\". Returns nil when there is no readable manifest.
-  (lein-cljsbuild's :fingerprint wrote a map from target path to fingerprinted
-  path instead; that shape is still accepted while project.clj exists.)"
+  writes plain \"app.js\". Returns nil when there is no readable manifest."
   []
   (try (some->> "public/js/compiled/manifest.edn"
                 io/resource
@@ -22,24 +20,18 @@
   "Uses the (hashed) file name of the :app module from the manifest if
   available, and otherwise falls back to the default."
   [fingerprints]
-  (or (cond
-        (sequential? fingerprints)
+  (or (when (sequential? fingerprints)
         (some (fn [{:keys [module-id output-name]}]
                 (when (and (= module-id :app) output-name)
                   (str "/js/compiled/" output-name)))
-              fingerprints)
-        (map? fingerprints) ; lein-cljsbuild
-        (some-> (get fingerprints "resources/public/js/compiled/app.js")
-                ;; Replace backslashes with forward slashes in case of Windows.
-                (str/replace #"\\\\" "/")
-                (str/replace #"resources/public" "")))
+              fingerprints))
       "/js/compiled/app.js"))
 
 (defn parse-bundle-hash
-  "Extracts the hash string from a bundle-path (app.<hash>.js from
-  shadow-cljs, app-<hash>.js from lein-cljsbuild), or \"dev\" if it has none."
+  "Extracts the hash string from a bundle-path (app.<hash>.js), or \"dev\"
+  if it has none (app.js)."
   [bundle-path]
-  (or (second (re-find #"/app[.-]([^/]+)\.js$" bundle-path))
+  (or (second (re-find #"/app\.([^/]+)\.js$" bundle-path))
       "dev"))
 
 (defn read-bundle-hash

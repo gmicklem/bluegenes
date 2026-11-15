@@ -13,12 +13,10 @@
 /cypress/downloads
 config/**/*.edn
 !config/defaults/config.edn
-.lein-failures
 out
 .idea
 *.iml
 node_modules
-.lein-repl-history
 .rebel_readline_history
 .nrepl-port
 .DS_Store
@@ -30,6 +28,5 @@ prepros.cfg
 /.cljs_node_repl/
 /.lsp/
 /*.jks
-/.lein-env
 /.cpcache
 /.shadow-cljs

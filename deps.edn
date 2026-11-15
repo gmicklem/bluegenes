@@ -1,4 +1,4 @@
-;; BlueGenes build configuration (replaces project.clj).
+;; BlueGenes build configuration (replaced project.clj).
 ;;
 ;; :deps holds the server (JVM) runtime only: this is what the uberjar and the
 ;; Clojars pom contain. ClojureScript and the front-end libraries live in the
@@ -82,12 +82,13 @@
 
   ;; Development server: config/dev (git-ignored) shadows config/defaults, and
   ;; :development true (read by yogthos/config) enables code reloading.
-  ;;   clojure -M:dev -m bluegenes.core
-  :dev {:extra-paths ["config/dev"]
+  ;;   clojure -M:dev:cljs:cljs-dev -m bluegenes.dev   (npm run dev: everything)
+  ;;   clojure -M:dev -m bluegenes.core                (only the server)
+  :dev {:extra-paths ["dev" "config/dev"]
         :jvm-opts ["-Ddevelopment=true"]}
 
   ;; Production configuration overrides (git-ignored config/prod).
-  ;;   clojure -M:prod -m bluegenes.core
+  ;;   clojure -M:prod -m bluegenes.core   (after clojure -T:build release)
   :prod {:extra-paths ["config/prod"]}
 
   ;; clojure -M:fmt check | fix   (configuration in .cljfmt.edn)

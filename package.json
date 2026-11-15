@@ -7,6 +7,7 @@
   },
   "description": "Clojure-based GUI for InterMine",
   "scripts": {
+    "dev": "clojure -M:dev:cljs:cljs-dev -m bluegenes.dev",
     "watch": "shadow-cljs watch app",
     "compile": "shadow-cljs compile app",
     "build": "clojure -T:build release",
