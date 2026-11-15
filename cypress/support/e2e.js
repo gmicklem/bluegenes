@@ -39,3 +39,14 @@ before(function () {
     cy.log(`mine ${Cypress.env("MINE_URL")}: web service version ${result.version}`);
   });
 });
+
+// Cypress 6 cleared cookies and local storage before every test but kept the
+// page; Cypress 12+ with testIsolation: true would also blank the page, and
+// with testIsolation: false (set in cypress.config.js) clears nothing. These
+// two calls restore the Cypress 6 behaviour the specs were written for:
+// BlueGenes keeps the login in local storage, so without them a user
+// registered or logged in by one test is still logged in in the next.
+beforeEach(function () {
+  cy.clearAllCookies();
+  cy.clearAllLocalStorage();
+});
