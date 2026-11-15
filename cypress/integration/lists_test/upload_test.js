@@ -41,7 +41,9 @@ describe("Upload Test", function(){
         const filePath = 'gene.csv';
         cy.contains("File Upload").click();
         cy.contains("Browse").click();
-        cy.get('input[type="file"]').attachFile(filePath);
+        // attachFile (cypress-file-upload) took a fixtures-relative path and ignored
+        // visibility; selectFile wants a project-relative path and force for a hidden input
+        cy.get('input[type="file"]').selectFile("cypress/fixtures/" + filePath, { force: true });
         cy.contains("Continue").click();
 
         cy.url().should("include","/save");

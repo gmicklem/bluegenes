@@ -23,7 +23,6 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-import 'cypress-file-upload';
 import { mineName, minePage, mineService } from './mine';
 
 Cypress.Commands.add("openLoginDialogue", () => {
@@ -135,7 +134,9 @@ Cypress.Commands.add('isInViewport', element => {
     cy.contains("Upload").click();
     cy.contains("File Upload").click();
     cy.contains("Browse").click();
-    cy.get('input[type="file"]').attachFile(filePath);
+    // attachFile (cypress-file-upload) took a fixtures-relative path and ignored
+    // visibility; selectFile wants a project-relative path and force for a hidden input
+    cy.get('input[type="file"]').selectFile("cypress/fixtures/" + filePath, { force: true });
     cy.intercept("POST","/api/ids/parse").as("listParse");
     cy.contains("Continue").click();
     cy.wait("@listParse");

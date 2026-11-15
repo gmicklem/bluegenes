@@ -40,7 +40,6 @@
     "bootstrap-material-design": "git+https://github.com/intermine/bootstrap-material-design.git#im-0.0.2",
     "chokidar-cli": "^2.1.0",
     "cypress": "13.17.0",
-    "cypress-file-upload": "^5.0.8",
     "less": "4.9.1",
     "react-highlight.js": "1.0.7",
     "shadow-cljs": "2.28.18"
