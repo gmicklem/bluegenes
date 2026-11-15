@@ -2,17 +2,17 @@
 // (MINE_URL, MINE_NAMESPACE, MINE_NAME). Specs and commands use these instead
 // of hard-coding Biotestmine.
 
-// InterMine webapp root, e.g. http://localhost:9999/biotestmine
+// InterMine webapp root, e.g. http://localhost:8090/humanmine
 export const mineUrl = () => Cypress.env("MINE_URL");
 
 // Full URL of a web service endpoint, for cy.intercept and cy.request,
 // e.g. mineService("query/results")
 export const mineService = (path) => `${mineUrl()}/service/${path}`;
 
-// BlueGenes route of the default mine, e.g. minePage("/search") -> /biotestmine/search
+// BlueGenes route of the default mine, e.g. minePage("/search") -> /humanmine/search
 export const minePage = (path = "") => `/${Cypress.env("MINE_NAMESPACE")}${path}`;
 
-// Name BlueGenes shows for the mine ("Login to BioTestMine")
+// Name BlueGenes shows for the mine ("Login to rdfc2im: 113 gene food/drug-metabolism panel")
 export const mineName = () => Cypress.env("MINE_NAME");
 
 // A test that needs a second, live mine next to the default one: FlyMine, because

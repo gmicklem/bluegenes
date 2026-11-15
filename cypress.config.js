@@ -5,12 +5,14 @@
 //   CYPRESS_BASE_URL       BlueGenes under test (default http://localhost:5000)
 //   CYPRESS_MINE_URL       InterMine webapp the BlueGenes instance uses as its
 //                          default mine; its web service is MINE_URL/service
-//                          (default http://localhost:9999/biotestmine)
+//                          (default http://localhost:8090/humanmine, the rdfc2im demo mine)
 //   CYPRESS_MINE_NAMESPACE BlueGenes namespace of that mine, the first path
 //                          segment of BlueGenes routes such as /<ns>/search
 //                          (default: the last path segment of MINE_URL)
 //   CYPRESS_MINE_NAME      mine name BlueGenes shows, e.g. "Login to <name>": the
-//                          mine's project.title web property (default BioTestMine)
+//                          mine's project.title web property (default
+//                          "rdfc2im: 113 gene food/drug-metabolism panel", the title of
+//                          the demo mine)
 //   CYPRESS_EXTERNAL       set to true to also run the tests tagged @external
 //                          (itExternal in support/mine.js), which need live
 //                          FlyMine next to the default mine (default false)
@@ -95,8 +97,10 @@ module.exports = defineConfig({
     openMode: 2,
   },
   env: {
-    MINE_URL: "http://localhost:9999/biotestmine",
-    MINE_NAME: "BioTestMine",
+    // The rdfc2im demo mine (HumanMine's model, 113 genes). MINE_NAMESPACE, the route
+    // prefix BlueGenes uses for it, comes from the last path segment: "humanmine".
+    MINE_URL: "http://localhost:8090/humanmine",
+    MINE_NAME: "rdfc2im: 113 gene food/drug-metabolism panel",
     EXTERNAL: false,
   },
   e2e: {

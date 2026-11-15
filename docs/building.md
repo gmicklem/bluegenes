@@ -88,7 +88,7 @@ If you need something faster, evaluating `(cljs.test/run-tests)` from a connecte
 
 ### Cypress integration tests
 
-The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine.
+The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine. The defaults of `cypress.config.js` are the rdfc2im demo mine at `http://localhost:8090/humanmine` and a BlueGenes at `http://localhost:5000` that uses it, so against the rdfc2im stack no setting is needed.
 
 The specs are written for the rdfc2im demo mine (HumanMine's model, a panel of 113 human genes), see [Against the rdfc2im local stack](#against-the-rdfc2im-local-stack). Their identifiers are in `cypress/support/data.js`.
 
@@ -99,9 +99,9 @@ Settings (environment variables, or `--env KEY=value` without the `CYPRESS_` pre
 | Variable | Meaning | Default |
 |---|---|---|
 | `CYPRESS_BASE_URL` | BlueGenes under test, including any `BLUEGENES_DEPLOY_PATH` | `http://localhost:5000` |
-| `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:9999/biotestmine` |
+| `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:8090/humanmine` (the rdfc2im demo mine) |
 | `CYPRESS_MINE_NAMESPACE` | BlueGenes namespace of that mine (`BLUEGENES_DEFAULT_NAMESPACE`), the first path segment of BlueGenes routes such as `/humanmine/search` | last path segment of `MINE_URL` |
-| `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `BioTestMine` |
+| `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `rdfc2im: 113 gene food/drug-metabolism panel` |
 | `CYPRESS_ADMIN_USER`, `CYPRESS_ADMIN_PASSWORD` | A superuser of the mine (its `superuser.account` property and that account's password). The specs that need one are skipped, with the reason in their title, when these are not set. Never commit them. | not set |
 | `CYPRESS_EXTERNAL` | `true` also runs the tests tagged `@external` (see below) | `false` |
 | `CYPRESS_RECORD_FIXTURES` | `true` writes the expected export files in `cypress/fixtures/` from what the app exports, instead of comparing with them (see "Recording the fixtures again") | `false` |
