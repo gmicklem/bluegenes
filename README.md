@@ -36,6 +36,8 @@ Check out our [contributing guidelines](https://github.com/intermine/bluegenes/b
 
 [Development resources](docs/developing.md)
 
+Third-party CSS and JavaScript loaded from CDNs in `src/clj/bluegenes/index.clj` are pinned with Subresource Integrity hashes. When bumping one of those URLs, run `script/cdn-sri.sh` to print the new `integrity` value for every CDN URL in that file (or pass URLs as arguments) and paste it next to the URL.
+
 
 ## Need further help?
 
