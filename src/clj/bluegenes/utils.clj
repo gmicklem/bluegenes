@@ -4,35 +4,42 @@
             [clojure.edn :as edn]))
 
 (defn read-fingerprints
-  "Reads manifest.edn which is produced by the ClojureScript compiler's
-  `:fingerprint` option. This is a map from target path to the compiled
-  path with the fingerprinted filename."
+  "Reads public/js/compiled/manifest.edn, which shadow-cljs writes for every
+  build of :app. It is a vector with one map per module, e.g.
+  [{:module-id :app :output-name \"app.1a2b3c4.js\" ...}]; a release build
+  (:module-hash-names) puts the content hash in :output-name, a dev build
+  writes plain \"app.js\". Returns nil when there is no readable manifest.
+  (lein-cljsbuild's :fingerprint wrote a map from target path to fingerprinted
+  path instead; that shape is still accepted while project.clj exists.)"
   []
   (try (some->> "public/js/compiled/manifest.edn"
                 io/resource
                 slurp
-                edn/read-string
-                ;; Replace backslashes with forward slashes in case of Windows.
-                (reduce-kv
-                 (fn [m k v]
-                   (assoc m
-                          (str/replace k #"\\" "/")
-                          (str/replace v #"\\" "/")))
-                 {}))
+                edn/read-string)
        (catch Exception _)))
 
 (defn get-bundle-path
-  "Uses the fingerprinted filename if available, and otherwise falls back
-  to the default."
+  "Uses the (hashed) file name of the :app module from the manifest if
+  available, and otherwise falls back to the default."
   [fingerprints]
-  (or (some-> (get fingerprints "resources/public/js/compiled/app.js")
-              (str/replace #"resources/public" ""))
+  (or (cond
+        (sequential? fingerprints)
+        (some (fn [{:keys [module-id output-name]}]
+                (when (and (= module-id :app) output-name)
+                  (str "/js/compiled/" output-name)))
+              fingerprints)
+        (map? fingerprints) ; lein-cljsbuild
+        (some-> (get fingerprints "resources/public/js/compiled/app.js")
+                ;; Replace backslashes with forward slashes in case of Windows.
+                (str/replace #"\\\\" "/")
+                (str/replace #"resources/public" "")))
       "/js/compiled/app.js"))
 
 (defn parse-bundle-hash
-  "Extracts the hash string from a bundle-path."
+  "Extracts the hash string from a bundle-path (app.<hash>.js from
+  shadow-cljs, app-<hash>.js from lein-cljsbuild), or \"dev\" if it has none."
   [bundle-path]
-  (or (second (re-find #"app-(.*)\.js" bundle-path))
+  (or (second (re-find #"/app[.-]([^/]+)\.js$" bundle-path))
       "dev"))
 
 (defn read-bundle-hash

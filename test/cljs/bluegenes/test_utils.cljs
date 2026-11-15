@@ -1,5 +1,6 @@
 (ns bluegenes.test-utils
   (:require [cljs.core.async :refer [chan put!]]
+            [cljs.test :refer-macros [async]]
             [re-frame.core :as rf]))
 
 ;; Instructions for writing tests can be found in `docs/developing.md`.
@@ -59,7 +60,13 @@
   "Necessary fixtures to use the exports from this namespace.
   Use by calling use-fixtures from your testing namespace:
       (use-fixtures :each utils/fixtures)"
-  {:before (fn []
+  {;; First let events still queued by the previous test (e.g. dispatches from
+   ;; its go blocks) run, so they cannot leak into this one. kaocha-cljs got
+   ;; this for free from its REPL round-trip between tests; the :node-test
+   ;; runner starts the next test immediately.
+   :after (fn []
+            (async done (js/setTimeout done 50)))
+   :before (fn []
              (when (some? @stubbed-storage)
                (reset! stubbed-storage nil))
              (when-let [vars (seq @stubbed-variables)]

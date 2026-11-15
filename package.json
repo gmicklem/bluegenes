@@ -1,11 +1,17 @@
 {
   "name": "bluegenes",
   "version": "1.0.0",
+  "private": true,
   "engines": {
-    "node": "10.x"
+    "node": ">=22"
   },
   "description": "Clojure-based GUI for InterMine",
   "scripts": {
+    "watch": "shadow-cljs watch app",
+    "compile": "shadow-cljs compile app",
+    "less": "lessc --math=always --quiet-deprecations less/site.less resources/public/css/site.css",
+    "less:watch": "chokidar \"less/**/*.less\" -c \"npm run --silent less\" --initial",
+    "test:unit": "shadow-cljs compile test && node target/test/node-tests.js",
     "test": "cypress run --headless --quiet --reporter list"
   },
   "author": "Joshua Heimbach <joshkh@gmail.com>",
@@ -22,11 +28,20 @@
     "bootstrap": "^3.3.7",
     "bootstrap-material-design": "git+https://github.com/intermine/bootstrap-material-design.git#im-0.0.2",
     "chokidar-cli": "^2.1.0",
-    "less": "1.7.5"
+    "highlight.js": "9.12.0",
+    "less": "4.9.1",
+    "react": "16.13.1",
+    "react-day-picker": "7.3.0",
+    "react-dom": "16.13.1",
+    "react-select": "2.4.4",
+    "react-transition-group": "1.2.1"
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "^1.8.0",
+    "@xmldom/xmldom": "0.9.12",
     "cypress": "^6.0.0",
-    "cypress-file-upload": "^5.0.8"
+    "cypress-file-upload": "^5.0.8",
+    "react-highlight.js": "1.0.7",
+    "shadow-cljs": "2.28.18"
   }
 }

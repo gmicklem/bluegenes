@@ -97,7 +97,7 @@
                      cond-> [[:inner 0]]
                      cond->> [[:inner 0]]}}
 
-  :aliases ~(let [compile-less ["npx" "lessc" "less/site.less" "resources/public/css/site.css"]
+  :aliases ~(let [compile-less ["npx" "lessc" "--math=always" "--quiet-deprecations" "less/site.less" "resources/public/css/site.css"]
                   compile-less-prod (conj compile-less "-x")
                   watch-less ["npx" "chokidar" "less/**/*.less" "-c" (clojure.string/join " " compile-less) "--initial"]
                   watch-less-silent (conj watch-less "--silent")]

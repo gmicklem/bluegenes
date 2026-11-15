@@ -1,0 +1,41 @@
+;; ClojureScript builds (replaces the lein-cljsbuild :dev/:min builds, figwheel
+;; and kaocha-cljs). The classpath comes from deps.edn.
+;;
+;;   npm run dev          dev server: shadow watch :app with hot reload, plus Jetty
+;;                        on :5000 and the Less watcher (dev/bluegenes/dev.clj)
+;;   npx shadow-cljs watch app     only the hot-reloading build (shadow UI on :9630)
+;;   npx shadow-cljs compile app   one-off dev build
+;;   clojure -T:build release      production build (advanced, hashed file names,
+;;                        bluegenes.version/release from `git describe`)
+;;   npm run test:unit    = npx shadow-cljs compile test && node target/test/node-tests.js
+;;
+;; Output goes to resources/public/js/compiled, which the Ring server serves as
+;; /js/compiled. A release build writes app.<hash>.js and manifest.edn there;
+;; bluegenes.utils reads the manifest to find the file name.
+{:deps {:aliases [:cljs :cljs-dev :test]}
+ :nrepl {:port 8777}
+ ;; Never let shadow-cljs `npm install` the :npm-deps that jars declare in their
+ ;; deps.cljs (re-frame-10x 0.6.0 does): every npm package is pinned and vetted
+ ;; in package.json.
+ :npm-deps {:install false}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "resources/public/js/compiled"
+        :asset-path "/js/compiled"
+        :modules {:app {:entries [bluegenes.core]}}
+        :devtools {:after-load bluegenes.core/mount-root
+                   :watch-dir "resources/public"
+                   :preloads [devtools.preload day8.re-frame-10x.preload]}
+        :dev {:closure-defines {re-frame.trace/trace-enabled? true
+                                day8.re-frame.tracing/trace-enabled? true}
+              :compiler-options {:external-config {:devtools/config {:features-to-install :all}}}}
+        :release {:module-hash-names 7
+                  :closure-defines {goog.DEBUG false}}}
+
+  ;; The unit tests (test/cljs) run under node; bluegenes.node-env provides the
+  ;; few browser globals they need.
+  :test {:target :node-test
+         :output-to "target/test/node-tests.js"
+         :ns-regexp "-test$"
+         :devtools {:preloads [bluegenes.node-env]}}}}

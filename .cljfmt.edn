@@ -1,0 +1,10 @@
+;; Read by `clojure -M:fmt check|fix` (cljfmt 0.12; was lein-cljfmt 0.6.1 with
+;; the :cljfmt map in project.clj). Since cljfmt 0.11 :indents replaces the
+;; defaults, so the project's additions are :extra-indents. The
+;; consecutive-blank-lines rule (new since 0.6) is off so the existing sources
+;; pass unchanged.
+{:extra-indents {wait-for [[:inner 0]]
+                 cond-> [[:inner 0]]
+                 cond->> [[:inner 0]]}
+ :remove-consecutive-blank-lines? false
+ :paths ["src" "test" "dev" "build.clj"]}

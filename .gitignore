@@ -31,3 +31,5 @@ prepros.cfg
 /.lsp/
 /*.jks
 /.lein-env
+/.cpcache
+/.shadow-cljs
