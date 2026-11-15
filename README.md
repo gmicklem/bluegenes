@@ -36,6 +36,8 @@ Check out our [contributing guidelines](https://github.com/intermine/bluegenes/b
 
 [Development resources](docs/developing.md)
 
+The InterMine libraries BlueGenes builds on (imcljs, im-tables, bluegenes-tool-store) are git dependencies pinned by sha in `deps.edn`; see [InterMine libraries](docs/building.md#intermine-libraries-imcljs-im-tables-bluegenes-tool-store) for how to bump them and how to work against a local checkout.
+
 Third-party CSS and JavaScript loaded from CDNs in `src/clj/bluegenes/index.clj` are pinned with Subresource Integrity hashes. When bumping one of those URLs, run `script/cdn-sri.sh` to print the new `integrity` value for every CDN URL in that file (or pass URLs as arguments) and paste it next to the URL.
 
 

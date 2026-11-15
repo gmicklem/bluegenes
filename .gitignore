@@ -30,3 +30,4 @@ prepros.cfg
 /*.jks
 /.cpcache
 /.shadow-cljs
+/deps.local.edn

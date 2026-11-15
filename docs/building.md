@@ -17,6 +17,10 @@ The build is defined in `deps.edn` (dependencies), `shadow-cljs.edn` (ClojureScr
 
 (`CYPRESS_INSTALL_BINARY=0 npm ci` skips the Cypress download if you do not run the browser tests.)
 
+## InterMine libraries (imcljs, im-tables, bluegenes-tool-store)
+
+BlueGenes consumes its sibling libraries [imcljs](https://github.com/intermine/imcljs), [im-tables](https://github.com/intermine/im-tables-3) and [bluegenes-tool-store](https://github.com/intermine/bluegenes-tool-store) as git dependencies pinned by commit in `deps.edn` (`:git/url` + `:git/sha`; imcljs and the tool store under `:deps`, im-tables under the `:cljs` alias), so a build needs GitHub rather than Clojars. The Clojure CLI fetches them into `~/.gitlibs`. To bump one, push the commit to the library's repository, put its full sha in `deps.edn` (the version comment next to it too), then restart whatever holds the old classpath (`npm run dev`, `npx shadow-cljs watch app`, a REPL); `clojure -Sforce -Spath` re-resolves after a cache problem. The im-tables stylesheet is build output that is not in git, so `clojure -T:build assets` (and `npm run dev`) compiles it with `lessc` from the library's `less/` sources; a Clojars im-tables jar would supply `public/css/im-tables.css` itself. `clojure -T:build jar` writes each git dependency into the pom as the Maven version the library declares (its `VERSION` file or `build.clj`), so the published jar names releases, not shas. To develop against a local checkout, put an override alias in a `deps.local.edn` (git-ignored), for example `{:aliases {:local {:override-deps {org.intermine/im-tables {:local/root "../im-tables-3"}}}}}`, and start the dev environment with `clojure -Sdeps "$(cat deps.local.edn)" -M:dev:cljs:cljs-dev:local -m bluegenes.dev` (shadow-cljs then hot-reloads the library's sources too, and the im-tables CSS is compiled from the checkout at start-up). `-Sdeps` and `~/.clojure/deps.edn` do not affect `clojure -T:build`: release builds always use the pinned shas.
+
 ## Quickstart
 
 These commands are explained in more depth below, but if you know what you want, here's a quick reference of the most useful ones.
