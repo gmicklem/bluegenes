@@ -219,7 +219,8 @@
                   :scm {:url "https://github.com/intermine/bluegenes"
                         :connection "scm:git:git://github.com/intermine/bluegenes.git"
                         :developerConnection "scm:git:ssh://git@github.com/intermine/bluegenes.git"
-                        :tag (str "v" version)}
+                        ;; a release is tagged v<version>; a SNAPSHOT never is
+                        :tag (if (str/ends-with? version "-SNAPSHOT") "HEAD" (str "v" version))}
                   :pom-data [[:description "Bluegenes is a Clojure-powered user interface for InterMine, the biological data warehouse"]
                              [:url "http://www.intermine.org"]
                              [:licenses
