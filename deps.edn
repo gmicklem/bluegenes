@@ -3,31 +3,31 @@
 ;; :deps holds the server (JVM) runtime only: this is what the uberjar and the
 ;; Clojars pom contain. ClojureScript and the front-end libraries live in the
 ;; :cljs alias, which shadow-cljs uses (see shadow-cljs.edn :deps).
-;; Versions are those of project.clj at 1.4.5; only the build toolchain changed.
+;; Versions started as those of project.clj at 1.4.5; the libraries have since been
+;; bumped (im-7os.2).
 ;; Build tasks (release, uber, jar, install, deploy): build.clj.
 {:paths ["src/clj" "config/defaults" "resources"]
 
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+ :deps {org.clojure/clojure {:mvn/version "1.12.6"}
         org.clojure/core.async {:mvn/version "1.0.567"}
-        org.clojure/core.cache {:mvn/version "0.8.2"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
 
         hiccup/hiccup {:mvn/version "1.0.5"}
 
         ;; HTTP
-        clj-http/clj-http {:mvn/version "3.10.0"}
+        clj-http/clj-http {:mvn/version "3.13.1"}
         compojure/compojure {:mvn/version "1.6.2"}
-        ring/ring {:mvn/version "1.8.2"}
+        ring/ring {:mvn/version "1.13.0"}
         cheshire/cheshire {:mvn/version "5.10.0"}
-        metosin/ring-http-response {:mvn/version "0.9.1"}
+        metosin/ring-http-response {:mvn/version "0.9.5"}
         metosin/muuntaja {:mvn/version "0.6.7"}
 
         ;; Config
         yogthos/config {:mvn/version "1.1.7"}
 
         ;; Logging
-        com.taoensso/timbre {:mvn/version "4.10.0"}
-        com.fzakaria/slf4j-timbre {:mvn/version "0.3.19"}
+        com.taoensso/timbre {:mvn/version "6.8.0"}
+        com.fzakaria/slf4j-timbre {:mvn/version "0.4.1"}
 
         ;; InterMine libraries used by the server, pinned as git dependencies
         ;; until they are released to Clojars (README, "Sibling libraries").
@@ -45,22 +45,23 @@
   ;; and im-tables still require (they set the old js/ globals).
   ;; shadow-cljs 2.28 needs Clojure 1.11 or later on its own (build-time) JVM.
   :cljs {:extra-paths ["src/cljs" "src/shim"]
-         :extra-deps {org.clojure/clojure {:mvn/version "1.12.0"}
+         :extra-deps {org.clojure/clojure {:mvn/version "1.12.6"}
                       thheller/shadow-cljs {:mvn/version "2.28.18"}
+                      ;; the version shadow-cljs 2.28.18 is built and tested with
+                      org.clojure/clojurescript {:mvn/version "1.11.132"}
 
                       ;; MVC
-                      re-frame/re-frame {:mvn/version "0.12.0"}
-                      day8.re-frame/async-flow-fx {:mvn/version "0.1.0"}
+                      re-frame/re-frame {:mvn/version "1.4.7"}
+                      day8.re-frame/async-flow-fx {:mvn/version "0.3.0"}
                       day8.re-frame/forward-events-fx {:mvn/version "0.0.6"}
-                      reagent/reagent {:mvn/version "0.10.0"
-                                       :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]}
+                      reagent/reagent {:mvn/version "1.2.0"}
                       prismatic/dommy {:mvn/version "1.1.0"}
-                      metosin/reitit {:mvn/version "0.5.12"}
+                      metosin/reitit {:mvn/version "0.7.2"}
                       json-html/json-html {:mvn/version "0.4.7"}
                       markdown-to-hiccup/markdown-to-hiccup {:mvn/version "0.6.2"}
 
                       ;; HTTP
-                      cljs-http/cljs-http {:mvn/version "0.1.46"}
+                      cljs-http/cljs-http {:mvn/version "0.1.49"}
 
                       ;; Utility libraries
                       com.cognitect/transit-cljs {:mvn/version "0.8.256"}
@@ -76,11 +77,9 @@
                                                :git/sha "c2357cfddf78eb306ff115df6dce0be937092aa1"}}} ; 0.16.0-SNAPSHOT
 
   ;; Development-only front-end tooling (dev build preloads).
-  :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.0"}
-                          day8.re-frame/re-frame-10x {:mvn/version "0.6.0"
-                                                      ;; npm react-highlight.js (devDependency) instead
-                                                      :exclusions [cljsjs/react-highlight]}
-                          day8.re-frame/tracing {:mvn/version "0.5.3"}}}
+  :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}
+                          day8.re-frame/re-frame-10x {:mvn/version "1.12.3"}
+                          day8.re-frame/tracing {:mvn/version "0.6.2"}}}
 
   ;; ClojureScript unit tests (shadow-cljs :test build).
   :test {:extra-paths ["test/cljs"]

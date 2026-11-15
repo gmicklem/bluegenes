@@ -46,6 +46,6 @@
   "Start the BlueGenes server. This is the main entry point for the application"
   [& _args]
   (validate-config env)
-  (timbre/set-level! (keyword (:logging-level env :info)))
+  (timbre/set-min-level! (keyword (:logging-level env :info)))
   (initialise-tools)
   (start-web-server!))

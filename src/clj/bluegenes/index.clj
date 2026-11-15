@@ -6,7 +6,6 @@
             [bluegenes.utils :as utils]
             [imcljs.fetch :as im-fetch]
             [clj-http.client :refer [with-middleware]]
-            [clojure.core.cache.wrapped :as cache]
             [clojure.string :as str]))
 
 ;; Hello dear maker of the internet. This file generates the HTML page.
@@ -46,11 +45,22 @@
 
 (defonce smhp-cache
   ^{:doc
-    "Semantic markup homepage cache. You'll have to restart BlueGenes to clear
-    this when updating the semantic markup (which should be a manual process and
-    happen rarely). If you're wondering why we're not using core.memoize instead,
-    it's because that doesn't handle exceptions well."}
-  (cache/lru-cache-factory {} :threshold 32))
+    "Semantic markup homepage cache: service map -> markup. You'll have to
+    restart BlueGenes to clear this when updating the semantic markup (which
+    should be a manual process and happen rarely). Only successful fetches are
+    cached (an exception is not), which is why this is not core.memoize. The
+    keys are the configured mines, so the map stays small; it is emptied if it
+    ever grows past 32 entries."}
+  (atom {}))
+
+(defn- cached-semantic-markup
+  "The value cached for `k`, or else (f k), cached if it returns."
+  [k f]
+  (if-let [[_ v] (find @smhp-cache k)]
+    v
+    (let [v (f k)]
+      (swap! smhp-cache #(assoc (if (>= (count %) 32) {} %) k v))
+      v)))
 
 (defn fetch-semantic-markup
   "Run an HTTP request to fetch semantic markup to be included with the HTML.
@@ -61,7 +71,7 @@
       (with-middleware [#'clj-http.client/wrap-request ; default middleware
                         #'utils/wrap-timeout] ; very short request timeout
         (case semantic-markup
-          :home (cache/lookup-or-miss smhp-cache service #(im-fetch/semantic-markup % "homepage"))
+          :home (cached-semantic-markup service #(im-fetch/semantic-markup % "homepage"))
           :report (im-fetch/semantic-markup service "reportpage" {:id object-id})))
       (catch Exception e
         (warnf "Failed to acquire semantic markup for %s: %s"

@@ -11,9 +11,6 @@
             [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]
             [goog.string :as gstring]))
 
-(def css-transition-group
-  (reagent/adapt-react-class js/ReactTransitionGroup.CSSTransitionGroup))
-
 (defn popover-table []
   (fn [{:keys [results columnHeaders] :as me}]
     [:div.sidebar-popover
@@ -169,10 +166,9 @@
                 [:h4 "Finding enrichment widgets" [:span [mini-loader "tiny"]]]
                 [:h4 "No Enrichment Widgets Available"])]
         [:div.demo
-         [css-transition-group
-          {:transition-name "fade"
-           :transition-enter-timeout 500
-           :transition-leave-timeout 500}
+         ;; The span is what a CSSTransitionGroup (react-transition-group 1) used
+         ;; to render here; no CSS matched its fade-* classes.
+         [:span
           (map (fn [enrichment-response]
                  ^{:key (first enrichment-response)} [enrichment-results-preview enrichment-response])
                @all-enrichment-results)]]))))
