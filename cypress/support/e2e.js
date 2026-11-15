@@ -50,3 +50,12 @@ beforeEach(function () {
   cy.clearAllCookies();
   cy.clearAllLocalStorage();
 });
+
+// Google Charts throws an unhandled promise rejection, "No data found!", when a chart
+// widget (the chromosome distribution of a list) gets no data. The demo mine has no
+// chromosome locations, so every list page does that; it is not what the specs test.
+Cypress.on("uncaught:exception", (err) => {
+  if (String(err.message).includes("No data found!")) {
+    return false;
+  }
+});

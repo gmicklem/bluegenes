@@ -1,8 +1,10 @@
+import { GENES_A, GENES_B, PROTEINS } from "../../support/data";
+
 describe("Multiple Lists Test", function() {
     beforeEach(function() {
       cy.visit("/");
-      cy.createGeneList("SODB, GBP, GST, CDPK1");
-      cy.createGeneList("CDPK1, CDPK4, ERD2, PFF1575w");
+      cy.createGeneList(GENES_A);
+      cy.createGeneList(GENES_B);
       cy.url().should("include","/lists");
       cy.get(".lists-item").should('have.length',2);
     });
@@ -76,7 +78,7 @@ describe("Multiple Lists Test", function() {
     })   
 
     it("can search for list by keyword",function(){
-        cy.createProteinList("Q8ID23_PLAF7, Q6LFN1");
+        cy.createProteinList(PROTEINS);
         cy.get('.lists-item').should('have.length',3);
 
         cy.get("#lists-keyword-filter").type("Protein{enter}",{delay:100});
@@ -85,7 +87,7 @@ describe("Multiple Lists Test", function() {
     })
 
     it("can filter lists by type",function(){
-        cy.createProteinList("Q8ID23_PLAF7, Q6LFN1");
+        cy.createProteinList(PROTEINS);
         cy.get('.lists-item').should('have.length',3);
 
         cy.contains("Type").parent().find(".icon-selection").click();

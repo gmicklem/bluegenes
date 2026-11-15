@@ -1,8 +1,10 @@
+import { GENES_A, PROTEINS } from "../../support/data";
+
 describe("Sort Lists Test", function() {
     beforeEach(function() {
       cy.visit("/");
-      cy.createGeneList("SODB, GBP, GST, CDPK1");
-      cy.createProteinList("Q8ID23_PLAF7, Q6LFN1");
+      cy.createGeneList(GENES_A);
+      cy.createProteinList(PROTEINS);
       cy.url().should("include","/lists");
       cy.get(".lists-item").should('have.length',2);
     });

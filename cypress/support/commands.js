@@ -57,6 +57,17 @@ Cypress.Commands.add("reactSelect", (index, text) => {
     cy.get('input[role="combobox"]').eq(index).click({ force: true }).type(`${text}{enter}`, { delay: 50, force: true });
 })
 
+// Compares `actual` (the text of a file the app exported) with cypress/fixtures/<fixture>.
+// With CYPRESS_RECORD_FIXTURES=true the fixture is written from `actual` instead, which is
+// how the expected exports are recorded again for another mine (docs/building.md).
+Cypress.Commands.add("expectFixture", (fixture, actual) => {
+    if (String(Cypress.env("RECORD_FIXTURES")) === "true") {
+        cy.writeFile("cypress/fixtures/" + fixture, actual);
+    } else {
+        cy.readFile("cypress/fixtures/" + fixture).should("eq", actual);
+    }
+})
+
 Cypress.Commands.add("openLoginDialogue", () => {
     cy.visit(minePage());
     cy.get('.dropdown-toggle').should("exist").contains('Login').click();
@@ -85,7 +96,7 @@ Cypress.Commands.add("selectFromDropdown", (keyword) => {
 
 Cypress.Commands.add("createGeneList", (geneList) => {
     cy.contains("Upload").click();
-    cy.get(".wizard").find("textarea").type(geneList,{delay:100});
+    cy.typeSlowly(".wizard textarea", geneList);
     cy.contains("Continue").click();
     //Assertion
     cy.get('.title').should("exist");
@@ -103,7 +114,7 @@ Cypress.Commands.add("createProteinList", (proteinList) => {
     // the dropdown shows "Any". Selecting the shown option fires no change event, so trigger
     // one to make the state agree with what is shown.
     cy.get(".select-organism-and-list-type").find("select").eq(1).select("Any").trigger("change");
-    cy.get(".wizard").find("textarea").type(proteinList,{delay:100});
+    cy.typeSlowly(".wizard textarea", proteinList);
     cy.contains("Continue").click();
     cy.contains("Save List").click();
     cy.url().should("include","/results")
@@ -177,7 +188,7 @@ Cypress.Commands.add('isInViewport', element => {
     cy.wait("@listParse");
     cy.get('.title').should("exist");
     cy.url().should("include","/save");
-    cy.get(".save-list > label > input").clear().type(listName,{delay:100});
+    cy.typeSlowly(".save-list > label > input", listName);
     cy.contains("Save List").click();
     cy.intercept("POST",mineService("query/results")).as("resultsLoad");
     cy.url().should("include","/results");
