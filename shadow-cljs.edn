@@ -32,8 +32,10 @@
         ;; and im-tables use, so they are loaded first, before any namespace
         ;; that could read a global at load time (im-tables 0.15.0 read
         ;; js/ReactTransitionGroup in a top-level def). bluegenes.react-globals
-        ;; sets js/React and js/ReactDOM for the tools loaded at run time.
+        ;; sets js/React and js/ReactDOM, and bluegenes.imjs-globals js/imjs, for
+        ;; the tools loaded at run time.
         :modules {:app {:entries [bluegenes.react-globals
+                                  bluegenes.imjs-globals
                                   cljsjs.react-select
                                   cljsjs.highlight
                                   cljsjs.highlight.langs.javascript

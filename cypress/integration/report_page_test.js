@@ -149,4 +149,23 @@ describe("Report Page Test: other mines", function(){
         })
         cy.url().should("include","/flymine/report/Gene/1029368");
     })
+
+    // BlueGenes tools (npm packages that bluegenes-tool-store installs, loaded from /tools/)
+    // take window.React, window.ReactDOM and window.imjs from the page. run-script! catches
+    // what a tool throws, so a missing global (`ReferenceError: imjs is not defined`) leaves
+    // the tool's container empty and nothing else fails. The tools that query the mine
+    // (ArrayExpress, human tissue, protein atlas, expression box swarm) draw an svg or a
+    // canvas; tools that need PDB or EBI servers just show their own error text, so only
+    // require that some tool has drawn something. Needs the tools installed under
+    // BLUEGENES_TOOL_PATH, which bluegenes-tool-store does at start-up.
+    itExternal("renders data in the tools of the report page", function(){
+        cy.get(".report-item-tool", {timeout: 60000}).should("exist");
+        cy.get(".report-item-tool svg, .report-item-tool canvas", {timeout: 60000}).should("exist");
+        cy.window().then((win) => {
+            expect(win.React, "window.React").to.exist;
+            expect(win.ReactDOM, "window.ReactDOM").to.exist;
+            expect(win.imjs, "window.imjs").to.exist;
+            expect(win.imjs.Service, "window.imjs.Service").to.be.a("function");
+        });
+    })
 })
