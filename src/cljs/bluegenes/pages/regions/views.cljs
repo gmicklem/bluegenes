@@ -13,7 +13,7 @@
             [bluegenes.pages.regions.utils :refer [linear->log log->linear parse-bp bp->int int->bp]]
             [clojure.string :as str]
             [oops.core :refer [oget ocall]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
+            [bluegenes.components.ui.inputs :refer [reject-input!]]
             [goog.functions :refer [debounce]]))
 
 (defn dropdown-hover [{:keys [data children]}]
@@ -139,10 +139,11 @@
         input
         [:input.form-control
          {:type "text"
-          :on-change #(when-let [[string number] (parse-bp (oget % :target :value))]
-                        (update-input string)
-                        (set-region! input* string)
-                        (set-region! range* (log->linear number)))
+          :on-change #(if-let [[string number] (parse-bp (oget % :target :value))]
+                        (do (update-input string)
+                            (set-region! input* string)
+                            (set-region! range* (log->linear number)))
+                        (reject-input! % (get-region @input*)))
           :value (get-region @input*)}]
         range
         [:div
@@ -224,10 +225,8 @@
          results (subscribe [:regions/results])]
      {:reagent-render
       (fn []
-        [text-input
-         {:textarea? true
-          :class "form-control"
-          :rows (if @results 3 6)
+        [:textarea.form-control
+         {:rows (if @results 3 6)
           :placeholder "Type genome regions here, or click [SHOW EXAMPLE] below."
           :value @to-search
           :on-change (fn [e]

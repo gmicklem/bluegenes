@@ -5,7 +5,6 @@
             [bluegenes.pages.admin.subs :as subs]
             [bluegenes.components.icons :refer [icon]]
             [oops.core :refer [oget ocall]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.bootstrap :refer [poppable]]
             [bluegenes.utils :refer [md-element compatible-version?]]
             [bluegenes.route :as route]
@@ -211,9 +210,8 @@
            [report-layout-category i category])
          [[:li.add-category.input-group-sm
            {:key "addcat"}
-           [text-input
-            {:class "form-control input-sm"
-             :ref #(when % (reset! input-ref* %))
+           [:input.form-control.input-sm
+            {:ref #(when % (reset! input-ref* %))
              :placeholder "New category"
              :on-change #(dispatch [::events/set-new-category (oget % :target :value)])
              :on-key-press (on-enter

@@ -17,7 +17,6 @@
             [bluegenes.components.bootstrap :refer [poppable]]
             [bluegenes.utils :refer [encode-file]]
             [oops.core :refer [ocall oget]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [goog.functions :refer [debounce]]))
 
 (defn tbl [{:keys [loc collapse]}]
@@ -292,9 +291,8 @@
       [:div.report-page-filter
        [poppable {:data "This will search for keywords in the section titles, use the browser search to find text anywhere in the page."
                   :children [icon-comp "info"]}]
-       [text-input
-        {:class "form-control"
-         :type "text"
+       [:input.form-control
+        {:type "text"
          :placeholder "Topic filter"
          :on-change on-change
          :value @input}]])))
