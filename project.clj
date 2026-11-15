@@ -39,7 +39,6 @@
 
                  ; MVC
                  [re-frame "0.12.0"]
-                 [day8.re-frame/http-fx "0.1.6"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [day8.re-frame/forward-events-fx "0.0.6"]
                  [reagent "0.10.0"]
