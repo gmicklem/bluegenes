@@ -85,6 +85,11 @@
   :test {:extra-paths ["test/cljs"]
          :extra-deps {day8.re-frame/test {:mvn/version "0.1.5"}}}
 
+  ;; Server-side (Clojure) unit tests in test/clj (list the namespaces in
+  ;; bluegenes.test-runner):  clojure -M:test-clj
+  :test-clj {:extra-paths ["test/clj"]
+             :main-opts ["-m" "bluegenes.test-runner"]}
+
   ;; Development server: config/dev (git-ignored) shadows config/defaults, and
   ;; :development true (read by yogthos/config) enables code reloading.
   ;;   clojure -M:dev:cljs:cljs-dev -m bluegenes.dev   (npm run dev: everything)

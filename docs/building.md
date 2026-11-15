@@ -33,6 +33,7 @@ These commands are explained in more depth below, but if you know what you want,
 
     clojure -M:fmt fix          # run cljfmt to fix code indentation (check: clojure -M:fmt check)
     npm run test:unit           # run the ClojureScript unit tests (node)
+    npm run test:server         # run the Clojure (server) unit tests, clojure -M:test-clj
     npm run test:e2e            # run the Cypress UI tests (see "Cypress integration tests")
 
 ## Running a dev environment
@@ -80,6 +81,8 @@ The ClojureScript unit tests (`test/cljs`) run under node with the shadow-cljs `
     npm run test:unit
 
 which is `npx shadow-cljs compile test && node target/test/node-tests.js`. For a watch mode, run `npx shadow-cljs watch test` and `node target/test/node-tests.js` after each rebuild. Node has no DOM; `test/cljs/bluegenes/node_env.cljs` provides the few browser globals the code under test needs.
+
+The server's Clojure tests (`test/clj`) run with `npm run test:server` (`clojure -M:test-clj`); a new test namespace is listed in `test/clj/bluegenes/test_runner.clj`.
 
 If you need something faster, evaluating `(cljs.test/run-tests)` from a connected editor would be even better. Although with async tests, you'll need some way of [having your editor report the results](https://clojurescript.org/tools/testing#detecting-test-completion-success).
 
