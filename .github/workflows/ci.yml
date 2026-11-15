@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # the release build takes its version from `git describe`
 
@@ -97,7 +97,7 @@ jobs:
         run: script/ci/smoke.sh uber-21 target/bluegenes.jar "$JAVA_HOME/bin/java" -jar "$PWD/target/bluegenes.jar"
 
       - name: Upload the uberjar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bluegenes-uberjar
           path: target/bluegenes.jar
@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload logs (failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: check-logs
           path: ${{ env.CI_LOG_DIR }}/
@@ -119,14 +119,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4   # only for script/ci/smoke.sh
+      - uses: actions/checkout@v7   # only for script/ci/smoke.sh
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: bluegenes-uberjar
           path: artifact
@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload logs (failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-jdk17-logs
           path: ci-logs/
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload logs (failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: library-jar-logs
           path: ${{ env.CI_LOG_DIR }}/
