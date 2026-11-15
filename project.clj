@@ -74,7 +74,6 @@
                  [cljsjs/google-analytics "2017.09.21-0"]
                  [day8.re-frame/test "0.1.5"]
                  [org.clojure/data.xml "0.2.0-alpha6"]
-                 [lambdaisland/uri "1.2.1"]
 
                  ; Logging
                  [com.taoensso/timbre "4.10.0"]

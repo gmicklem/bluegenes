@@ -16,7 +16,6 @@
             [bluegenes.pages.regions.subs]
             [bluegenes.version :as version]
             [bluegenes.utils :as utils]
-            [lambdaisland.uri :refer [uri]]
             [clojure.set :as set]))
 
 (reg-sub
