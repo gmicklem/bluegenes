@@ -52,13 +52,9 @@ Note: if you use `lein run` or any alias calling it like `dev` or `repl`, Figwhe
 
 ### Start the web server
 
-If you have OpenJDK 8, run this command:
+Run this command:
 
     lein with-profile +dev run
-
-If you have OpenJDK 9, run this command:
-
-    lein with-profile +java9 figwheel
 
 By default, the web server will be started on http://localhost:5000/. To change this value, edit the corresponding `config.edn`.
 
