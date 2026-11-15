@@ -23,7 +23,21 @@
  {:app {:target :browser
         :output-dir "resources/public/js/compiled"
         :asset-path "/js/compiled"
-        :modules {:app {:entries [bluegenes.core]}}
+        ;; The cljsjs stand-ins (src/shim) set the js/ globals that bluegenes
+        ;; and im-tables 0.15.0 read in top-level defs, so they are loaded
+        ;; first (requiring them in bluegenes.core alone is not enough: im-tables
+        ;; reads js/ReactTransitionGroup before it requires the shim itself).
+        :modules {:app {:entries [cljsjs.react-transition-group
+                                  cljsjs.react-day-picker
+                                  cljsjs.react-select
+                                  cljsjs.highlight
+                                  cljsjs.highlight.langs.javascript
+                                  cljsjs.highlight.langs.perl
+                                  cljsjs.highlight.langs.python
+                                  cljsjs.highlight.langs.ruby
+                                  cljsjs.highlight.langs.java
+                                  cljsjs.highlight.langs.xml
+                                  bluegenes.core]}}
         :devtools {:after-load bluegenes.core/mount-root
                    :watch-dir "resources/public"
                    :preloads [devtools.preload day8.re-frame-10x.preload]}
