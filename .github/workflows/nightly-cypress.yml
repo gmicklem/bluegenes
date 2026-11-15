@@ -1,0 +1,79 @@
+# NOT YET ENABLED. This is a placeholder for the nightly end-to-end run, and it
+# does not work yet: the job below runs only when the repository variable
+# CYPRESS_ENABLED is 'true' (it is not set), and the pieces it will need do not
+# exist yet. Setting the variable now only makes the job fail with "not
+# implemented".
+#
+#   - a local mine to test against: built from the rdfc2im stack (planned,
+#     issue G1; bluegenes cannot run its Cypress suite against nothing; the
+#     tests are written for Biotestmine)
+#   - a Cypress run that works: package.json still has Cypress 6.9, which is
+#     years old and has not been run in this migration (the local gate never runs
+#     Cypress); the plan is Cypress 13 or later (planned, issue F2)
+#
+# When both exist: replace the placeholder step with the steps in the comments
+# and set the variable (Settings > Secrets and variables > Actions > Variables).
+# Until then the job is reported as skipped in the Actions tab every night.
+name: Nightly Cypress (not yet enabled)
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # 03:17 UTC every night, minutes off the hour on purpose
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  cypress:
+    if: ${{ vars.CYPRESS_ENABLED == 'true' }}   # NOT YET ENABLED, see the header
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Placeholder
+        run: echo "nightly Cypress is not implemented yet" && exit 1
+
+      # Intended steps (none of this has been run):
+      #
+      # - uses: actions/checkout@v4
+      #   with:
+      #     fetch-depth: 0
+      #
+      # - uses: ./.github/actions/setup-build        # Java 21, Clojure, Node 22, caches
+      #
+      # # 1. A local mine (future G1): start the rdfc2im stack (InterMine core
+      # #    and its database, loaded with Biotestmine data) with docker
+      # #    compose, wait for http://localhost:9999/biotestmine/service/version
+      # #    to answer, and keep its logs for the failure artifact.
+      #
+      # - run: npm ci                                # with Cypress 13+ (future F2)
+      #   env:
+      #     CYPRESS_INSTALL_BINARY: ""              # the real binary this time
+      #
+      # - run: clojure -T:build uber
+      #
+      # # 2. Start BlueGenes against that mine, as in docs/building.md:
+      # - run: |
+      #     BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
+      #     BLUEGENES_DEFAULT_MINE_NAME=Biotestmine \
+      #     BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
+      #     BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
+      #     nohup java -jar target/bluegenes.jar > bluegenes.log 2>&1 &
+      #   # then wait for http://localhost:5000/version
+      #
+      # # 3. Run Cypress 13+ (future F2):
+      # - run: npx cypress run
+      #
+      # - if: failure()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: cypress-failure
+      #     path: |
+      #       cypress/screenshots
+      #       cypress/videos
+      #       bluegenes.log
+      #     retention-days: 7
