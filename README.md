@@ -2,8 +2,6 @@
 
 # BlueGenes
 
-CircleCI: [![CircleCI](https://circleci.com/gh/intermine/bluegenes.svg?style=svg)](https://circleci.com/gh/intermine/bluegenes)
-
 _An InterMine Web-based GUI_
 
 
