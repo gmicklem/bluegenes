@@ -36,7 +36,7 @@
         org.intermine/imcljs {:git/url "https://github.com/gmicklem/imcljs.git"
                               :git/sha "98c0f103bbb87812c8f948c7d7478ad349298957"} ; 1.7.0-SNAPSHOT
         org.intermine/bluegenes-tool-store {:git/url "https://github.com/gmicklem/bluegenes-tool-store.git"
-                                            :git/sha "8606215f4b3c2180a1e7d89229b348c86fa503aa"}} ; 0.3.0-SNAPSHOT
+                                            :git/sha "10293208c70c329584e3845850a681626422dfae"}} ; 0.3.0-SNAPSHOT
 
  :aliases
  {;; ClojureScript build classpath (shadow-cljs.edn :deps {:aliases [:cljs ...]}).
@@ -74,7 +74,7 @@
                       ;; cljsjs.* namespaces, which src/shim provides. Its compiled CSS
                       ;; is not in git: bluegenes.prep compiles it from its less/.
                       org.intermine/im-tables {:git/url "https://github.com/gmicklem/im-tables-3.git"
-                                               :git/sha "782b44836fd859b3cad1b41b0b5e7dd7ab7ecef1"}}} ; 0.16.0-SNAPSHOT, React 18 + highlight.js 11 line
+                                               :git/sha "146b1c5361da1a9047574e5887e531085a19fd25"}}} ; 0.16.0-SNAPSHOT, React 18 + highlight.js 11 line
 
   ;; Development-only front-end tooling (dev build preloads).
   :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}
