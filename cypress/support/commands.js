@@ -23,7 +23,50 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-import { mineName, minePage, mineService } from './mine';
+import { adminCredentials, mineName, minePage, mineService, testAccount } from './mine';
+
+// BlueGenes' text inputs (login and registration forms, the search box, ...) drop keystrokes
+// when text is typed at Cypress' default speed, and under load even at 200 ms per key
+// ("PPARG" arrived as "PARG", "...-0@example.org" as "...-@eample.org"). So type with a
+// delay, check what arrived and type again from scratch when it differs. Specs that type
+// identifiers or names should use this; pass { enter: true } to press Enter at the end.
+Cypress.Commands.add("typeSlowly", (selector, text, { delay = 50, attempts = 4, enter = false } = {}) => {
+    const attempt = (n) => {
+        cy.get(selector).clear().type(text, { delay });
+        cy.wait(250);
+        cy.get(selector).then(($el) => {
+            if ($el.val() !== text && n < attempts) {
+                attempt(n + 1);
+            }
+        });
+    };
+    attempt(1);
+    cy.get(selector).should("have.value", text);
+    if (enter) {
+        // The search form submits the term it was last rendered with, so Enter pressed
+        // before the form has re-rendered searches for a shorter term (or none).
+        cy.wait(1000);
+        cy.get(selector).type("{enter}");
+    }
+})
+
+// Picks (or creates) an option of the index-th react-select (a combobox input) inside the
+// current subject or `within`. The specs used the generated class names of react-select
+// (".css-1hwfws3"), which change with every react-select version.
+Cypress.Commands.add("reactSelect", (index, text) => {
+    cy.get('input[role="combobox"]').eq(index).click({ force: true }).type(`${text}{enter}`, { delay: 50, force: true });
+})
+
+// Compares `actual` (the text of a file the app exported) with cypress/fixtures/<fixture>.
+// With CYPRESS_RECORD_FIXTURES=true the fixture is written from `actual` instead, which is
+// how the expected exports are recorded again for another mine (docs/building.md).
+Cypress.Commands.add("expectFixture", (fixture, actual) => {
+    if (String(Cypress.env("RECORD_FIXTURES")) === "true") {
+        cy.writeFile("cypress/fixtures/" + fixture, actual);
+    } else {
+        cy.readFile("cypress/fixtures/" + fixture).should("eq", actual);
+    }
+})
 
 Cypress.Commands.add("openLoginDialogue", () => {
     cy.visit(minePage());
@@ -44,7 +87,7 @@ Cypress.Commands.add("openListsTab", () => {
 
 Cypress.Commands.add("searchKeyword", (keyword) => {
     cy.visit(minePage("/search"));
-    cy.get(".searchform > input").type(keyword + '{enter}',{delay:200});
+    cy.typeSlowly(".searchform > input", keyword.replace(/\{enter\}$/, ""), { enter: true });
 })
 
 Cypress.Commands.add("selectFromDropdown", (keyword) => {
@@ -53,7 +96,7 @@ Cypress.Commands.add("selectFromDropdown", (keyword) => {
 
 Cypress.Commands.add("createGeneList", (geneList) => {
     cy.contains("Upload").click();
-    cy.get(".wizard").find("textarea").type(geneList,{delay:100});
+    cy.typeSlowly(".wizard textarea", geneList);
     cy.contains("Continue").click();
     //Assertion
     cy.get('.title').should("exist");
@@ -66,7 +109,12 @@ Cypress.Commands.add("createGeneList", (geneList) => {
 Cypress.Commands.add("createProteinList", (proteinList) => {
     cy.contains("Upload").click();
     cy.contains("List type").parent().find("select").select("Protein");
-    cy.get(".wizard").find("textarea").type(proteinList,{delay:100});
+    // Choosing a list type makes BlueGenes use the mine's default organism ("Homo sapiens"),
+    // which the demo mine's organism list does not contain (its Organism has no name), while
+    // the dropdown shows "Any". Selecting the shown option fires no change event, so trigger
+    // one to make the state agree with what is shown.
+    cy.get(".select-organism-and-list-type").find("select").eq(1).select("Any").trigger("change");
+    cy.typeSlowly(".wizard textarea", proteinList);
     cy.contains("Continue").click();
     cy.contains("Save List").click();
     cy.url().should("include","/results")
@@ -100,34 +148,32 @@ Cypress.Commands.add('isInViewport', element => {
     })
   })
 
-  Cypress.Commands.add('loginToAdminAccount', element => {
-    cy.openLoginDialogue();
-		cy.get(".login-form").should("contain", "Login to " + mineName());
-		cy.get("input#email").type("test_user@mail_account");
-		cy.get("input[type='password']").type("secret");
-    cy.intercept('POST', '/api/auth/login').as('login');
-		cy.get(".login-form")
-			.find("button")
-			.contains('Login')
-		 	.click();
-        cy.wait('@login');
-        cy.get(".logon.dropdown.success").should("exist").click();
-        cy.get(".logon.dropdown.success").should("contain", "test_user@mail_account"); //flaky
-  })
-
+  // Logs in through the BlueGenes login dialogue and checks that the user name shows.
   Cypress.Commands.add('loginToUserAccount', (email,password) => {
     cy.openLoginDialogue();
 		cy.get(".login-form").should("contain", "Login to " + mineName());
-		cy.get("input#email").type(email);
-		cy.get("input[type='password']").type(password);
+		cy.typeSlowly("input#email", email);
+		cy.typeSlowly("input[type='password']", password);
     cy.intercept('POST', '/api/auth/login').as('login');
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
 		 	.click();
-        cy.wait('@login');
+    cy.wait('@login');
     cy.get(".logon.dropdown.success").should("exist").click();
     cy.get(".logon.dropdown.success").should("contain", email); //flaky
+  })
+
+  // The account registered for this spec file by useTestAccount().
+  Cypress.Commands.add('loginToTestAccount', () => {
+    const { username, password } = testAccount();
+    cy.loginToUserAccount(username, password);
+  })
+
+  // The superuser given by CYPRESS_ADMIN_USER and CYPRESS_ADMIN_PASSWORD.
+  Cypress.Commands.add('loginToAdminAccount', () => {
+    const { username, password } = adminCredentials();
+    cy.loginToUserAccount(username, password);
   })
 
   Cypress.Commands.add('createListFromFile', (filePath,listName) => {
@@ -142,9 +188,10 @@ Cypress.Commands.add('isInViewport', element => {
     cy.wait("@listParse");
     cy.get('.title').should("exist");
     cy.url().should("include","/save");
-    cy.get(".save-list > label > input").clear().type(listName,{delay:100});
-    cy.contains("Save List").click();
+    cy.typeSlowly(".save-list > label > input", listName);
+    // register the intercept before the click that causes the request
     cy.intercept("POST",mineService("query/results")).as("resultsLoad");
+    cy.contains("Save List").click();
     cy.url().should("include","/results");
     cy.wait("@resultsLoad");
   })

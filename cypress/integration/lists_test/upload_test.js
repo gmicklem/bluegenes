@@ -1,4 +1,5 @@
 import { minePage } from "../../support/mine";
+import { GENES_A, PROTEINS } from "../../support/data";
 
 describe("Upload Test", function(){
     beforeEach(function(){
@@ -6,7 +7,7 @@ describe("Upload Test", function(){
     });
 
     it("can load free text input", function(){
-        cy.get(".wizard").find("textarea").type("ABRA, CRK2",{delay:100});
+        cy.typeSlowly(".wizard textarea", "PPARG, HFE");
         cy.contains("Continue").click();
         cy.url().should("include","/save");
     });
@@ -14,19 +15,23 @@ describe("Upload Test", function(){
     it("can select list type and organism", function(){
 
         cy.get('.select-organism-and-list-type').within(() => {
-            cy.contains("List type").siblings(".form-group").find("select").select("Exon");
+            cy.contains("List type").siblings(".form-group").find("select").select("Protein");
             // cy.contains("Organism").siblings(".organism-selector").find("select").select("Any");
         })
-        cy.get('.select-organism-and-list-type > :nth-child(2) > .form-group > .form-control').select("Any"); //to rewrite
+        cy.get('.select-organism-and-list-type > :nth-child(2) > .form-group > .form-control').select("Any").trigger("change"); //to rewrite; the trigger is explained at createProteinList
         cy.get('#caseSensitiveCheckbox').check();
 
-        cy.get(".wizard").find("textarea").type("exon.46309,exon.46313",{delay:100});
+        cy.typeSlowly(".wizard textarea", PROTEINS);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
+        // not checked: how many matched. With "Identifiers are case sensitive" ticked, BlueGenes
+        // lower-cases the identifiers (ws/ids.clj parse-ids has the condition the wrong way round),
+        // so UniProt accessions are not found.
+        cy.contains("matched a Protein");
     })
 
     it("can upload and save list", function(){
-        cy.get(".wizard").find("textarea").type("ABRA, CRK2, CDPK1, CDPK4",{delay:100});
+        cy.typeSlowly(".wizard textarea", GENES_A);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
         cy.contains("Save List").click();
@@ -52,7 +57,7 @@ describe("Upload Test", function(){
     });
 
     it("can reset to cancel upload", function(){
-        cy.get(".wizard").find("textarea").type("ABRA, CRK2, CDPK1, CDPK4",{delay:100});
+        cy.typeSlowly(".wizard textarea", GENES_A);
         cy.contains("Reset").click();
         cy.get(".wizard").find("textarea").should("have.value","");
     })

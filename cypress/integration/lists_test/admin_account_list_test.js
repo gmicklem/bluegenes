@@ -1,57 +1,17 @@
-import { mineService } from "../../support/mine";
+import { adminCredentials, describeAdmin, mineService, useTestAccount } from "../../support/mine";
+import { GENES_A } from "../../support/data";
 
-describe("Admin account list test", function() {
+// The tests of this describe build on each other: the lists made by one are used by the
+// next. They run in a fresh account that is deleted at the end of the run.
+describe("Account list test", function() {
+    useTestAccount("lists");
+
     beforeEach(function() {
-        cy.loginToAdminAccount();
+        cy.loginToTestAccount();
     });
-
-    after(function() {
-        cy.get(".logon.dropdown.success").click().should('contain', 'test_user@mail_account');
-        cy.contains("Lists").click();
-        cy.url().should("include","/lists");
-        cy.get(".lists-headers").within(() => {
-            cy.get('[type="checkbox"]').check();
-        })
-        cy.get('.bottom-controls').within(() => {
-            cy.contains("Delete").click({delay:100});
-        })
-        cy.get('.modal-footer').within(() => {
-            cy.contains("Delete list(s)").click({delay:100});
-        })
-        cy.get('.no-lists').should('exist');
-    });
-
-    it("can make a list public",function(){
-        cy.createGeneList("SODB, GBP, GST, CDPK1");
-        cy.url().should("include","/lists");
-        cy.get('.lists-item').its("length").should('be.gt',0);
-
-        cy.get(".lists-item").first().within(() => {
-            cy.get("button").find('svg[class="icon icon-list-more"]')
-            .should("be.visible")
-            .click();
-
-            cy.get("button").find('svg[class="icon icon-list-edit"]')
-            .should("be.visible")
-            .first()
-            .click();
-        });
-
-        cy.get(".modal-body").within(()=>{
-            cy.contains("Tags").parent().find("input").type("im:public{enter}",{delay:100});
-        })
-        cy.get('.modal-footer').within(()=>{
-            cy.contains("Save").click();
-        })
-        cy.get(".logon.dropdown.success").click().within(() =>{
-            cy.contains("Logout").click();
-        });
-        cy.get(".logon.dropdown.warning").click().should("exist");
-        cy.get('.lists-item').its("length").should("be.gt",0);
-    })
 
     it("can add tags to a list",function(){
-        cy.createGeneList("SODB, GBP, GST, CDPK1");
+        cy.createGeneList(GENES_A);
         cy.url().should("include","/lists");
         cy.get('.lists-item').its("length").should('be.gt',0);
 
@@ -100,7 +60,7 @@ describe("Admin account list test", function() {
         cy.get('.bottom-controls').within(() => {
             cy.contains("Move all").click();
         })
-        cy.get(".css-1wy0on6").click().type("List of common genes{enter}",{delay:100},{force:true});
+        cy.reactSelect(0, "List of common genes");
         cy.get(".modal-footer").within(() => {
             cy.contains("Move list(s)").click();
         })
@@ -118,7 +78,7 @@ describe("Admin account list test", function() {
         cy.get('.bottom-controls').within(() => {
             cy.contains("Copy all").click();
         })
-        cy.get(".css-1wy0on6").click().type("List 2{enter}",{delay:100},{force:true});
+        cy.reactSelect(0, "List 2");
         cy.get(".modal-footer").within(() => {
             cy.contains("Copy list(s)").click();
         })
@@ -136,8 +96,8 @@ describe("Admin account list test", function() {
         cy.get('.bottom-controls').within(() => {
             cy.contains("Move all").click();
         })
-        cy.get(".css-1wy0on6").click().type("List 3{enter}",{delay:100},{force:true});
-        cy.get(".css-1hwfws3").click().type("Subfolder 1{enter}",{delay:100},{force:true});
+        cy.reactSelect(0, "List 3");
+        cy.reactSelect(0, "Subfolder 1"); // the same select, now for the next level of the folder path
         cy.intercept("POST",mineService("list/tags")).as("listLoad");
         cy.get(".modal-footer").within(() => {
             cy.contains("Move list(s)").click();
@@ -150,4 +110,54 @@ describe("Admin account list test", function() {
         cy.get('.icon-expand-folder').last().click();
         cy.get('.list-title').should("contain","Gene list");
     })
+});
+
+// Only a superuser can add the im:public tag. The list made here is deleted again, by name,
+// from the admin account (the account itself is not touched otherwise).
+describeAdmin("Admin account list test", function() {
+    beforeEach(function() {
+        cy.loginToAdminAccount();
+    });
+
+    after(function() {
+        const { username, password } = adminCredentials();
+        const auth = { user: username, pass: password };
+        cy.request({ url: mineService("lists"), auth, qs: { format: "json" } }).then(({ body }) => {
+            body.lists
+                .filter((list) => /^Gene list for /.test(list.name))
+                .forEach((list) => {
+                    cy.request({ method: "DELETE", url: mineService("lists"), auth, qs: { name: list.name } });
+                });
+        });
+    });
+
+    it("can make a list public",function(){
+        cy.createGeneList(GENES_A);
+        cy.url().should("include","/lists");
+        cy.get('.lists-item').its("length").should('be.gt',0);
+
+        cy.get(".lists-item").first().within(() => {
+            cy.get("button").find('svg[class="icon icon-list-more"]')
+            .should("be.visible")
+            .click();
+
+            cy.get("button").find('svg[class="icon icon-list-edit"]')
+            .should("be.visible")
+            .first()
+            .click();
+        });
+
+        cy.get(".modal-body").within(()=>{
+            cy.contains("Tags").parent().find("input").type("im:public{enter}",{delay:100});
+        })
+        cy.get('.modal-footer').within(()=>{
+            cy.contains("Save").click();
+        })
+        cy.get(".logon.dropdown.success").click().within(() =>{
+            cy.contains("Logout").click();
+        });
+        cy.get(".logon.dropdown.warning").click().should("exist");
+        cy.get('.lists-item').its("length").should("be.gt",0);
+    })
+
 });

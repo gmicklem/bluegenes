@@ -1,11 +1,19 @@
-import { minePage, mineService } from "../../support/mine";
+import { minePage, mineService, requireMineData } from "../../support/mine";
+
+// The expected files in cypress/fixtures are recorded from the mine's own export (run with
+// CYPRESS_RECORD_FIXTURES=true, see docs/building.md), so they need a mine whose features
+// have chromosome locations. The demo mine has none: the whole file is skipped there.
 
 describe("All Regions Export Test", function(){
+    before(function(){
+        requireMineData(this, "Location", "the exports need features overlapping the regions");
+    });
+
     beforeEach(function(){
         cy.visit(minePage("/regions"));
         cy.get(".input-section").within(() => {
             cy.contains("Show Example").click();
-            cy.get("textarea").should("include.text","MAL");
+            cy.get("textarea").should("include.text","14615455");
             cy.intercept("POST",mineService("query/results")).as("regionSearch");
             cy.get("button").filter(':contains("Search")').click();
             cy.wait("@regionSearch");
@@ -25,7 +33,7 @@ describe("All Regions Export Test", function(){
             cy.contains("TAB").click();
         })
         cy.readFile("cypress/downloads/result.tsv").then(newResult => {
-            cy.readFile("cypress/fixtures/all_regions_result.tsv").should("eq",newResult);
+            cy.expectFixture("all_regions_result.tsv", newResult);
         })
     })
 
@@ -34,7 +42,7 @@ describe("All Regions Export Test", function(){
             cy.contains("CSV").click();
         })
         cy.readFile("cypress/downloads/result.csv").then(newResult => {
-            cy.readFile("cypress/fixtures/all_regions_result.csv").should("eq",newResult);
+            cy.expectFixture("all_regions_result.csv", newResult);
         })
     })
 
@@ -46,7 +54,7 @@ describe("All Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/all_regions_result.gff3").should("eq",body);
+                cy.expectFixture("all_regions_result.gff3", body);
             })
         })
     })
@@ -58,7 +66,7 @@ describe("All Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/all_regions_result.bed").should("eq",body);
+                cy.expectFixture("all_regions_result.bed", body);
             })
           })
     })
@@ -71,7 +79,7 @@ describe("All Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/all_regions_result.fa").should("eq",body);
+                cy.expectFixture("all_regions_result.fa", body);
             })
           })
     })

@@ -1,4 +1,5 @@
-import { itExternal, mineUrl } from "../support/mine";
+import { itExternal, mineUrl, requireMineData } from "../support/mine";
+import { GENES_A, GENE_PRIMARY_IDENTIFIER, GENE_SYMBOL } from "../support/data";
 
 // The report page asks every neighbouring mine for homologues of the gene. FlyMine
 // (an additional mine in BLUEGENES_ADDITIONAL_MINES) is answered with this one gene.
@@ -12,15 +13,16 @@ const stubFlymineHomologues = () => {
 
 describe("Report Page Test", function(){
     beforeEach(function(){
-        cy.searchKeyword("GST");
+        cy.searchKeyword(GENE_SYMBOL);
         stubFlymineHomologues();
-        cy.get(".result").click();
+        // the gene is the first of the hits (there are proteins, pathways and publications too)
+        cy.get(".result").first().click();
         cy.url().should("include","/report");
         cy.get('.report-page-heading').should("exist");
     });
 
     it("can filter the topic of a search result", function(){
-        cy.get(".report-page-filter").find("input").type("Publications{enter}",{delay:100});
+        cy.typeSlowly(".report-page-filter input", "Publications", { enter: true });
         cy.get('.text-highlight').should("include.text","Publications").click();
         cy.get(".report-item").eq(0).within(() => {
             cy.get('.report-item-title').should("include.text","Publications");
@@ -31,14 +33,16 @@ describe("Report Page Test", function(){
     it("can access a topic from the left sidebar", function(){
         cy.get(".toc").within(() => {
             cy.contains("Data").click();
-            cy.contains("Exons").click();
+            cy.contains("Alleles").click();
         })
 
-        cy.get('.report-item-title').contains("Exons")
+        // Alleles is the first topic of the data: topics near the end of the page cannot be
+        // scrolled to the top, and would stay below the fold.
+        cy.get('.report-item-title').contains("Alleles")
         .parent().parent(".report-item")
-        .as('exonsTable');
+        .as('allelesTable');
         cy.wait(100); 
-        cy.isInViewport("@exonsTable");
+        cy.isInViewport("@allelesTable");
     });
 
     it("can collapse and expand a section on report page", function(){
@@ -53,7 +57,10 @@ describe("Report Page Test", function(){
         })
     });
 
+    // The next three tests need the gene's sequence and location, which the demo mine does
+    // not have (no Sequence or Location objects, so the summary has no region link or FASTA).
     it("can perform a region search with its sequence", function(){
+        requireMineData(this, "Location", "the region link of the summary needs a location");
         cy.get(".report-table").should("have.id","summary").within(() => {
             cy.get('.report-table-link > span').click();
         })
@@ -61,6 +68,7 @@ describe("Report Page Test", function(){
     });
 
     it("can view the sequence of a gene", function(){
+        requireMineData(this, "Sequence", "the FASTA value of the summary needs a sequence");
         cy.get(".report-table").should("have.id","summary").within(() => {
             cy.get('.fasta-value > .dropdown').click();
         })
@@ -68,18 +76,19 @@ describe("Report Page Test", function(){
     });
 
     it("can download the sequence of a gene in FASTA format", function(){
+        requireMineData(this, "Sequence", "the FASTA value of the summary needs a sequence");
         cy.get(".report-table").should("have.id","summary").within(() => {
             cy.get('.fasta-value > .fasta-download').click();
         })
-        cy.readFile('cypress/downloads/PF14_0187.fasta').should('contain', 'PF14_0187');
+        cy.readFile('cypress/downloads/' + GENE_PRIMARY_IDENTIFIER + '.fasta').should('contain', GENE_PRIMARY_IDENTIFIER);
     });
 
     it("can expand a section to view the data displayer", function(){
         cy.get('.report-table-heading').contains("Data")
-        .parent(".report-table").find(".report-item").filter(':contains("Exons")')
-        .as('exonsSection');
+        .parent(".report-table").find(".report-item").filter(':contains("Pathways")')
+        .as('pathwaysSection');
 
-        cy.get("@exonsSection").within(() => {
+        cy.get("@pathwaysSection").within(() => {
             cy.get('.im-table').should("exist");
             cy.get('.report-item-toggle').click();
             cy.get('.im-table').should("not.exist");
@@ -91,7 +100,7 @@ describe("Report Page Test", function(){
         cy.get(".sidebar-actions").filter(':visible').within(() => {
             cy.contains("Copy permanent URL").click();
             cy.get(".permanent-url-container").should("be.visible").within(() => {
-                cy.get("input.form-control").should("be.visible").invoke('val').should("include",mineUrl() + "/gene:PF14_0187");
+                cy.get("input.form-control").should("be.visible").invoke('val').should("include",mineUrl() + "/gene:" + GENE_PRIMARY_IDENTIFIER);
                 cy.get("button").contains("Copy").should("be.visible").click({multiple:true});
             });
         })
@@ -104,9 +113,9 @@ describe("Report Page Test", function(){
         cy.get("@listsSection").within(() => {
             cy.get("p").should("contain","This Gene isn't in any lists.");
         })
-        cy.createGeneList('CK1,ABRA,GST');
-        cy.get(".typeahead-search").clear().type("GST{enter}",{delay:100});    
-        cy.get(".result").click();
+        cy.createGeneList(GENES_A);
+        cy.typeSlowly(".typeahead-search", GENE_SYMBOL, { enter: true });
+        cy.get(".result").first().click();
         cy.url().should("include","/report");
 
         cy.get("@listsSection").within(() => {

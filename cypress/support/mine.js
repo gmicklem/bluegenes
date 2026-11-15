@@ -26,3 +26,48 @@ export const itExternal = (title, fn) => {
   const only = String(Cypress.env("EXTERNAL_ONLY")) === "true";
   return (Cypress.env("EXTERNAL") ? (only ? it.only : it) : it.skip)(`${title} @external`, fn);
 };
+
+// Specs that need a superuser of the mine (the home page notice, the report page
+// layout, tagging lists im:public) use describeAdmin, which skips the whole block,
+// with the reason in its title, unless CYPRESS_ADMIN_USER and CYPRESS_ADMIN_PASSWORD
+// are set (the superuser.account of the mine's properties and its password).
+export const adminCredentials = () => {
+  const username = Cypress.env("ADMIN_USER");
+  const password = Cypress.env("ADMIN_PASSWORD");
+  return username && password ? { username, password } : null;
+};
+
+export const describeAdmin = (title, fn) =>
+  adminCredentials()
+    ? describe(title, fn)
+    : describe.skip(`${title} (skipped: needs CYPRESS_ADMIN_USER and CYPRESS_ADMIN_PASSWORD)`, fn);
+
+// A fresh account on the mine for the whole spec file: registered through the web
+// service before the spec starts, deleted (with its lists) when the run ends. Call
+// it inside a describe; the credentials are then testAccount() and
+// cy.loginToTestAccount() logs in with them.
+export const useTestAccount = (label) =>
+  before(function () {
+    cy.task("createTestAccount", label).then((account) => {
+      Cypress.env("TEST_ACCOUNT", account);
+    });
+  });
+
+export const testAccount = () => Cypress.env("TEST_ACCOUNT");
+
+// Skips the running test (call it with `this` from a function(){} test or hook) when the mine
+// has no objects of the given class: a capability check against the mine's own data, so the
+// same specs run unchanged against a mine that has them. Pass a reason for the skip.
+export const requireMineData = (ctx, className, reason) =>
+  cy
+    .request({
+      url: mineService("query/results"),
+      qs: { query: `<query model="genomic" view="${className}.id"></query>`, format: "count" },
+      failOnStatusCode: false, // a model without the class answers with an error
+    })
+    .then(({ status, body }) => {
+      if (status !== 200 || Number(body) === 0) {
+        cy.log(`skipped: the mine has no ${className} objects (${reason})`);
+        ctx.skip();
+      }
+    });

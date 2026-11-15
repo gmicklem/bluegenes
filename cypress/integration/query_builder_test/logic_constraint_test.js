@@ -33,9 +33,9 @@ describe("Query view test", function() {
         cy.get('select').select('Not in list');
         cy.get('select').should('have.value','NOT IN');
 
-        cy.contains('DB identifier').parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
+        cy.contains('Primary Identifier').parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
         cy.get('select').last().select('Contains').should("have.value","CONTAINS");
-        cy.get('input.form-control').click().type("MAL{enter}",{delay:100});
+        cy.get('input.form-control').click().type("CYP{enter}",{delay:100});
       })
     });
 
@@ -80,12 +80,12 @@ describe("Query view test", function() {
       });
 
       cy.get(".query-view-column").within(() => {
-          cy.contains("DB identifier").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
+          cy.contains("Primary Identifier").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
           cy.get('select.constraint-chooser').eq(0).select('!=');
           cy.wait(500);
-          cy.get('.css-1hwfws3').click().type("PFF1360w{enter}",{delay:100});
+          cy.reactSelect(0, "5468");
           
-          cy.contains("DB identifier").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
+          cy.contains("Primary Identifier").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
           cy.get('select.constraint-chooser').eq(1).select('Null');
 
           cy.get(".logic-container").should("exist");

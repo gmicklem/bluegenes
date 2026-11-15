@@ -1,9 +1,10 @@
 import { minePage } from "../../support/mine";
+import { GENES_A } from "../../support/data";
 
 describe("Single List Test", function() {
     beforeEach(function() {
       cy.visit(minePage("/upload"));
-      cy.createGeneList("SODB, GBP, GST, CDPK1");
+      cy.createGeneList(GENES_A);
       cy.contains("Lists").click();
       cy.url().should("include","/lists");
       cy.get('.lists-item').should('have.length',1);
@@ -40,11 +41,11 @@ describe("Single List Test", function() {
             .click();
         })
 
-        cy.get('.modal-body').find("textarea").type("List of algae genes",{delay:100});
+        cy.get('.modal-body').find("textarea").type("List of drug-metabolism genes",{delay:100});
         cy.contains('Save').click();
 
         cy.get(".lists-item").within(() => {
-            cy.get(".list-description").should("have.text","List of algae genes");
+            cy.get(".list-description").should("have.text","List of drug-metabolism genes");
         })       
     });
     it("can delete a list", function(){
@@ -66,7 +67,7 @@ describe("Single List Test", function() {
     });
 
     it("can control the number of lists shown", function(){
-        cy.get(".pagination-controls").within(() => {
+        cy.get(".pagination-controls").first().within(() => {
             cy.contains("Rows per page").siblings(".dropdown").as("rowSelect");
             cy.get("@rowSelect").find("li").filter(".active").should("have.text","20");
             cy.get("@rowSelect").find("button").click();
@@ -84,7 +85,7 @@ describe("Single List Test", function() {
             cy.get('.correction').find("select").select("Benjamini Hochberg");
             cy.get(".dropdown").click();
             cy.get(".list-selection").first().click();
-            cy.get('.text-filter').find("input").type("ABRA{enter}",{delay:100});
+            cy.typeSlowly('.text-filter input', "metabolism", { enter: true });
         })
     })
 });

@@ -25,13 +25,13 @@ describe("Model browser test", function() {
         cy.get(".qb-class").contains("UTRs").click();
         cy.get('.expanded-group > ul').find('.qb-label').filter(':contains("Name")').click();
         cy.get('.expanded-group > ul').find('.qb-label').filter(':contains("Length")').click();
-        cy.get('.expanded-group > ul').find('.qb-label').filter(':contains("DB identifier")').click();
+        cy.get('.expanded-group > ul').find('.qb-label').filter(':contains("Primary Identifier")').click();
       });
 
       cy.get(".query-view-column").within(() => {
         cy.get('.qb-label').should('include.text','Name');
         cy.get('.qb-label').should('include.text','Length');
-        cy.get('.qb-label').should('include.text','DB identifier');
+        cy.get('.qb-label').should('include.text','Primary Identifier');
       });
     });
 
@@ -48,7 +48,8 @@ describe("Model browser test", function() {
     it("allows selection of data type from data model", function(){
       cy.get(".model-browser-column > h4").should("include.text","Model Browser");
       cy.contains("Data Model").click();
-      cy.contains("Gene").click();
+      // many classes of the model have "Gene" in their names
+      cy.contains("a.qb-class", /^Gene$/).click();
       cy.contains("Add summary").click();
 
       cy.get(".query-view-column").within(() => {
