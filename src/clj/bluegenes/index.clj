@@ -19,6 +19,19 @@
 (def im-tables-css (cond-> "/css/im-tables.css"
                      (not= bundle-hash "dev") (utils/insert-filename-css bundle-hash)))
 
+(defn- cdn-css
+  "A stylesheet <link> for a third-party CDN, pinned with Subresource Integrity.
+  Get the integrity value for a new URL with script/cdn-sri.sh."
+  [url integrity]
+  [:link {:href url :rel "stylesheet" :type "text/css"
+          :integrity integrity :crossorigin "anonymous"}])
+
+(defn- cdn-js
+  "A <script> for a third-party CDN, pinned with Subresource Integrity.
+  Get the integrity value for a new URL with script/cdn-sri.sh."
+  [url integrity]
+  [:script {:src url :integrity integrity :crossorigin "anonymous"}])
+
 (defn escape-quotes [s]
   (str/replace s #"\"" (str/re-quote-replacement "\\\"")))
 
@@ -94,12 +107,16 @@
     (when-let [ga4-id (not-empty (:google-analytics env))]
       [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga4-id)}])
     [:script "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)};"]
-    (include-css "https://cdnjs.cloudflare.com/ajax/libs/gridlex/2.2.0/gridlex.min.css")
-    (include-css "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
+    (cdn-css "https://cdnjs.cloudflare.com/ajax/libs/gridlex/2.2.0/gridlex.min.css"
+             "sha384-o81RYrfuKA+/Pm1e2X0xdInWSqumo1IH+DgZ86xYG3yZDxtRdnvBIqWjY87xZ/DS")
+    (cdn-css "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"
+             "sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u")
     (include-css (use-deployment-path bluegenes-css))
     (include-css (use-deployment-path im-tables-css))
-    (include-css "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css")
-    (include-css "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css")
+    (cdn-css "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+             "sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN")
+    (cdn-css "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"
+             "sha384-WtUWHyk39lfUpZQVgokNfSKCJaKAeD6adgLduBLrKTMUuPzFhLtL23y1guFy6lZn")
     ; Meta data:
     [:meta {:charset "utf-8"}]
     [:meta {:content "width=device-width, initial-scale=1", :name "viewport"}]
@@ -123,12 +140,15 @@
     [:script {:crossorigin "anonymous"
               :integrity "sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
               :src "https://code.jquery.com/jquery-3.1.0.min.js"}]
-    [:script {:crossorigin "anonymous"
-              :src "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"}]
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"
+            "sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa")
     ;; Graphing library
-    [:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.2"}]
-    [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5.1.0"}]
-    [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.17.0"}]
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega/5.20.2/vega.min.js"
+            "sha384-oQhebJIeI87crKEbKfAlw34gMOsvVzCMaDQ37e5BJYhc5Z5D+5trWmc5wuGfN89o")
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-lite/5.1.0/vega-lite.min.js"
+            "sha384-EPcfdisJ0A5aMjb/HMRlIxeeVeGGLPZgmIvqRkr+TtNQ3GyjsUrK+tzUjYHtyNxa")
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-embed/6.17.0/vega-embed.min.js"
+            "sha384-yu20vnQGaas7JQJS9zUtAxaXLNh7Tbq39TLd+Hca+SYsUSkpJ6bF5M/gXN8UHz10")
     (when (:semantic-markup options)
       [:script {:type "application/ld+json"}
        (generate-string (fetch-semantic-markup options))])]))
