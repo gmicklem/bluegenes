@@ -33,7 +33,8 @@
 @import "im-tables-overrides";
 @import "datatype-colors";
 @import "components/icons";
-@import url(https://fonts.googleapis.com/css?family=Roboto:400,700,300);
+// (css): keep this as a CSS @import; Less 4 would otherwise download and inline it.
+@import (css) url(https://fonts.googleapis.com/css?family=Roboto:400,700,300);
 
 body {
   background: @body-background-color;
@@ -338,7 +339,9 @@ label {
 
 .results .im-table {
   overflow: visible;
-  margin-left: calc(100vw - 100%);
+  // Was calc(100vw - 100%), which Less 1.7.5 evaluated to calc(0vw); Less 4
+  // keeps calc() as written. 0 is what has always been shipped.
+  margin-left: 0;
   margin-right: 0;
 }
 
