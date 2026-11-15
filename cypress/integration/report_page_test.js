@@ -131,14 +131,6 @@ describe("Report Page Test", function(){
 // needs a default mine with real genes (HumanMine). The FlyMine query is stubbed; the
 // click then opens FlyMine's report page in BlueGenes.
 describe("Report Page Test: other mines", function(){
-    // HumanMine's gene report loads BlueGenes tools (the protein visualizer, for example)
-    // that expect window.React, which BlueGenes no longer sets since the npm migration.
-    // Their uncaught errors say nothing about the sidebar under test, so ignore errors
-    // thrown from tool bundles here until the tools get React again.
-    const ignoreToolErrors = (err) => !/\/tools\//.test(err.stack || "");
-    before(function(){ Cypress.on("uncaught:exception", ignoreToolErrors); });
-    after(function(){ Cypress.off("uncaught:exception", ignoreToolErrors); });
-
     beforeEach(function(){
         cy.searchKeyword("PPARG");
         stubFlymineHomologues();
