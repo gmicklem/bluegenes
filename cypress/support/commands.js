@@ -189,8 +189,9 @@ Cypress.Commands.add('isInViewport', element => {
     cy.get('.title').should("exist");
     cy.url().should("include","/save");
     cy.typeSlowly(".save-list > label > input", listName);
-    cy.contains("Save List").click();
+    // register the intercept before the click that causes the request
     cy.intercept("POST",mineService("query/results")).as("resultsLoad");
+    cy.contains("Save List").click();
     cy.url().should("include","/results");
     cy.wait("@resultsLoad");
   })

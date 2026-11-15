@@ -112,15 +112,16 @@ describe("Enrichment Test", function(){
         cy.createListFromFile("background_genes.csv","Background genes");
         cy.contains("List").click();
         cy.url().should("include","/lists");
-        cy.get(".lists-item").find(".list-title").eq(1).click();
+        // register the intercepts before the click that causes the requests
         cy.intercept("POST",mineService("query/results")).as("resultsLoad");
+        cy.get(".lists-item").find(".list-title").eq(1).click();
         cy.url().should("include","/results");
         cy.wait("@resultsLoad");
+        cy.intercept("POST",mineService("list/enrichment")).as("enrichmentReq");
         cy.get(".enrichment").should("exist").within(() => {
             cy.get(".dropdown").click();
             cy.get(".list-selection").eq(1).click();
         })
-        cy.intercept("POST",mineService("list/enrichment")).as("enrichmentReq");
         cy.wait('@enrichmentReq').its('response.statusCode').should('eq', 200);
     })
 
@@ -128,8 +129,8 @@ describe("Enrichment Test", function(){
         cy.createListFromFile("background_genes.csv","Background genes");
         cy.contains("List").click();
         cy.url().should("include","/lists");
-        cy.get(".lists-item").find(".list-title").eq(0).click();
         cy.intercept("POST",mineService("query/results")).as("resultsLoad");
+        cy.get(".lists-item").find(".list-title").eq(0).click();
         cy.url().should("include","/results");
         cy.wait("@resultsLoad");
         cy.get(".enrichment").should("exist").within(() => {
