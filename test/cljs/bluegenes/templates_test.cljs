@@ -7,60 +7,48 @@
   (require '[re-frame.core :refer [subscribe]])
   (select-keys @(subscribe [:selected-template]) [:name :where]))
 
+;; Pure string tests: nothing here contacts a mine. The templates are copies of two
+;; HumanMine templates (https://www.humanmine.org/humanmine/service/templates).
 (deftest web-service-url
-  (let [service {:root "https://beta.flymine.org/flymine"}]
+  (let [service {:root "https://www.humanmine.org/humanmine"}]
     (are [tmpl url] (= (helpers/web-service-url service tmpl) url)
-      {:name "Gene_transcriptionFactors",
-       :where [{:path "Gene.regulatoryRegions", :type "TFBindingSite"}
-               {:path "Gene",
+      {:name "Gene_Pathway",
+       :where [{:path "Gene",
                 :op "LOOKUP",
                 :code "A",
                 :editable true,
                 :switchable false,
                 :switched "LOCKED",
-                :value "dpp"}
+                :value "pparg"}
                {:path "Gene.organism.name",
                 :op "=",
-                :code "C",
+                :code "B",
                 :editable true,
                 :switchable false,
                 :switched "LOCKED",
-                :value "Drosophila melanogaster"}]}
-      "https://beta.flymine.org/flymine/service/template/results?name=Gene_transcriptionFactors&constraint1=Gene&op1=LOOKUP&value1=dpp&extra1=&constraint2=Gene.organism.name&op2=eq&value2=Drosophila+melanogaster&format=tab&size=10"
-      {:name "Tissue_Flyatlas",
-       :where [{:path "FlyAtlasResult.tissue.name",
-                :op "=",
-                :code "A",
+                :value "Homo sapiens"}]}
+      "https://www.humanmine.org/humanmine/service/template/results?name=Gene_Pathway&constraint1=Gene&op1=LOOKUP&value1=pparg&extra1=&constraint2=Gene.organism.name&op2=eq&value2=Homo+sapiens&format=tab&size=10"
+      {:name "Gene_inGWAS",
+       :where [{:path "GWAS.results.associatedGenes",
+                :op "LOOKUP",
+                :code "D",
                 :editable true,
                 :switchable false,
                 :switched "LOCKED",
-                :value "Ovary"}
-               {:path "FlyAtlasResult.affyCall",
-                :op "=",
-                :code "E",
-                :editable true,
-                :switchable true,
-                :switched "ON",
-                :value "Up"}
-               {:path "FlyAtlasResult.presentCall",
-                :op ">=",
-                :code "C",
-                :editable true,
-                :switchable true,
-                :switched "OFF",
-                :value "3"}
-               {:path "FlyAtlasResult.enrichment",
-                :op ">",
+                :value "PPARG",
+                :extraValue "H. sapiens"}
+               {:path "GWAS.results.pValue",
+                :op "<=",
                 :code "B",
                 :editable true,
                 :switchable true,
-                :switched "OFF",
-                :value "2.0"}
-               {:path "FlyAtlasResult.mRNASignal",
-                :op ">=",
-                :code "D",
+                :switched "ON",
+                :value "1e-04"}
+               {:path "GWAS.results.phenotype",
+                :op "=",
+                :code "C",
                 :editable true,
                 :switchable true,
                 :switched "OFF",
-                :value "100.0"}]}
-      "https://beta.flymine.org/flymine/service/template/results?name=Tissue_Flyatlas&constraint1=FlyAtlasResult.tissue.name&op1=eq&value1=Ovary&constraint2=FlyAtlasResult.affyCall&op2=eq&value2=Up&format=tab&size=10")))
+                :value "*Diabetes*"}]}
+      "https://www.humanmine.org/humanmine/service/template/results?name=Gene_inGWAS&constraint1=GWAS.results.associatedGenes&op1=LOOKUP&value1=PPARG&extra1=H.+sapiens&constraint2=GWAS.results.pValue&op2=le&value2=1e-04&format=tab&size=10")))

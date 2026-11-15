@@ -61,6 +61,9 @@ jobs:
       #     BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
       #     BLUEGENES_DEFAULT_MINE_NAME=Biotestmine \
       #     BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
+      #     # FlyMine is the second mine the @external tests switch to; the nightly
+      #     # needs it only when CYPRESS_EXTERNAL=true. Tests that need a public mine
+      #     # as the default use HumanMine (https://www.humanmine.org/humanmine).
       #     BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
       #     nohup java -jar target/bluegenes.jar > bluegenes.log 2>&1 &
       #   # then wait for http://localhost:5000/version

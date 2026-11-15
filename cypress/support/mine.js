@@ -15,8 +15,14 @@ export const minePage = (path = "") => `/${Cypress.env("MINE_NAMESPACE")}${path}
 // Name BlueGenes shows for the mine ("Login to BioTestMine")
 export const mineName = () => Cypress.env("MINE_NAME");
 
-// A test that needs live FlyMine (BlueGenes started with FlyMine in
-// BLUEGENES_ADDITIONAL_MINES, plus internet access). Its title gets an
-// "@external" tag, and it is skipped unless EXTERNAL=true (CYPRESS_EXTERNAL).
-export const itExternal = (title, fn) =>
-  (Cypress.env("EXTERNAL") ? it : it.skip)(`${title} @external`, fn);
+// A test that needs a second, live mine next to the default one: FlyMine, because
+// these tests are about switching between mines (BlueGenes started with FlyMine in
+// BLUEGENES_ADDITIONAL_MINES, plus internet access). The default mine for them is the
+// public HumanMine or the local demo mine. Its title gets an "@external" tag, and it
+// is skipped unless EXTERNAL=true (CYPRESS_EXTERNAL). With EXTERNAL_ONLY=true as well,
+// only the @external tests of the spec files run (Mocha's it.only), which is the way to
+// run them against a public mine without the other tests of those files.
+export const itExternal = (title, fn) => {
+  const only = String(Cypress.env("EXTERNAL_ONLY")) === "true";
+  return (Cypress.env("EXTERNAL") ? (only ? it.only : it) : it.skip)(`${title} @external`, fn);
+};
