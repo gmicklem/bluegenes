@@ -2,6 +2,7 @@
   ;; The cljsjs namespaces set JS globals that later namespaces read when they
   ;; load, so they come first (shadow-cljs.edn also lists them as entries).
   (:require [bluegenes.react-globals]
+            [bluegenes.imjs-globals]
             [cljsjs.react-select]
             [reagent.dom.client :as rdc]
             [re-frame.core :as re-frame]
