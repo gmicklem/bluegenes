@@ -25,8 +25,7 @@
     "chokidar-cli": "^2.1.0",
     "cypress-downloadfile": "^1.2.1",
     "less": "1.7.5",
-    "wait-on": "^3.3.0",
-    "xmlhttprequest": "^1.8.0"
+    "wait-on": "^3.3.0"
   },
   "devDependencies": {
     "@4tw/cypress-drag-drop": "^1.8.0",
