@@ -5,7 +5,7 @@
             [oops.core :refer [oget ocall]]
             [bluegenes.components.progress-bar :as progress-bar]
             [bluegenes.route :as route]
-            [bluegenes.components.ui.inputs :refer [password-input]]
+            [bluegenes.components.ui.inputs :refer [password-input text-input]]
             [bluegenes.components.icons :refer [icon-comp]]
             [bluegenes.time :as time]
             [clojure.string :as str]
@@ -66,8 +66,9 @@
      [:h2 (str "Recover password on " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [:input.form-control
-       {:type "text"
+      [text-input
+       {:class "form-control"
+        :type "text"
         :id "email"
         :value (:username @credentials)
         :on-change (partial update-form credentials :username)
@@ -91,13 +92,16 @@
   (let [{:keys [error? thinking? message]} @(subscribe [:bluegenes.subs.auth/auth])
         current-mine @(subscribe [:current-mine])
         {:keys [username password]} @credentials
-        submit-fn #(dispatch [:bluegenes.events.auth/register username password])]
+        ;; Read the credentials when the form is submitted, not the ones of this render.
+        submit-fn #(let [{:keys [username password]} @credentials]
+                     (dispatch [:bluegenes.events.auth/register username password]))]
     [:form.login-form
      [:h2 (str "Register on " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [:input.form-control
-       {:type "text"
+      [text-input
+       {:class "form-control"
+        :type "text"
         :id "email"
         :value username
         :on-change (partial update-form credentials :username)
@@ -125,13 +129,16 @@
         current-mine-name @(subscribe [:current-mine-name])
         oauth2-providers @(subscribe [:current-mine/oauth2-providers])
         {:keys [username password]} @credentials
-        submit-fn #(dispatch [:bluegenes.events.auth/login username password])]
+        ;; Read the credentials when the form is submitted, not the ones of this render.
+        submit-fn #(let [{:keys [username password]} @credentials]
+                     (dispatch [:bluegenes.events.auth/login username password]))]
     [:form.login-form
      [:h2 (str "Login to " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [:input.form-control
-       {:type "text"
+      [text-input
+       {:class "form-control"
+        :type "text"
         :id "email"
         :value username
         :on-change (partial update-form credentials :username)

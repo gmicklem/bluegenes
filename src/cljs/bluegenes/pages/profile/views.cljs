@@ -5,7 +5,7 @@
             [bluegenes.pages.profile.events :as events]
             [bluegenes.pages.profile.subs :as subs]
             [bluegenes.components.loader :refer [mini-loader]]
-            [bluegenes.components.ui.inputs :refer [password-input]]
+            [bluegenes.components.ui.inputs :refer [password-input text-input]]
             [bluegenes.version :refer [proper-login-support]]))
 
 (defn generate-api-key []
@@ -66,8 +66,9 @@
   [:div.form-group
    [:label {:for (str "input" id)} label]
    [:div.input-container
-    [:input.form-control
-     {:type type
+    [text-input
+     {:class "form-control"
+      :type type
       :id (str "input" id)
       :value @(subscribe [::subs/inputs [group id]])
       :on-change #(dispatch [::events/set-input [group id] (oget % :target :value)])}]]])
@@ -147,8 +148,9 @@
           [:div.form-group
            [:label "Code for account deletion"]
            [:div.input-container
-            [:input.form-control
-             {:type "text"
+            [text-input
+             {:class "form-control"
+              :type "text"
               :value @deregistration-input
               :on-change #(reset! deregistration-input (oget % :target :value))}]]
            [:div.flex-row

@@ -7,7 +7,7 @@ describe("Upload Test", function(){
     });
 
     it("can load free text input", function(){
-        cy.typeSlowly(".wizard textarea", "PPARG, HFE");
+        cy.get(".wizard textarea").type("PPARG, HFE");
         cy.contains("Continue").click();
         cy.url().should("include","/save");
     });
@@ -21,7 +21,7 @@ describe("Upload Test", function(){
         cy.get('.select-organism-and-list-type > :nth-child(2) > .form-group > .form-control').select("Any").trigger("change"); //to rewrite; the trigger is explained at createProteinList
         cy.get('#caseSensitiveCheckbox').check();
 
-        cy.typeSlowly(".wizard textarea", PROTEINS);
+        cy.get(".wizard textarea").type(PROTEINS);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
         // not checked: how many matched. With "Identifiers are case sensitive" ticked, BlueGenes
@@ -31,7 +31,7 @@ describe("Upload Test", function(){
     })
 
     it("can upload and save list", function(){
-        cy.typeSlowly(".wizard textarea", GENES_A);
+        cy.get(".wizard textarea").type(GENES_A);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
         cy.contains("Save List").click();
@@ -57,7 +57,7 @@ describe("Upload Test", function(){
     });
 
     it("can reset to cancel upload", function(){
-        cy.typeSlowly(".wizard textarea", GENES_A);
+        cy.get(".wizard textarea").type(GENES_A);
         cy.contains("Reset").click();
         cy.get(".wizard").find("textarea").should("have.value","");
     })

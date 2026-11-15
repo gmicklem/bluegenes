@@ -85,7 +85,7 @@ describe("Single List Test", function() {
             cy.get('.correction').find("select").select("Benjamini Hochberg");
             cy.get(".dropdown").click();
             cy.get(".list-selection").first().click();
-            cy.typeSlowly('.text-filter input', "metabolism", { enter: true });
+            cy.get('.text-filter input').type("metabolism{enter}");
         })
     })
 });

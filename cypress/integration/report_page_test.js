@@ -22,7 +22,7 @@ describe("Report Page Test", function(){
     });
 
     it("can filter the topic of a search result", function(){
-        cy.typeSlowly(".report-page-filter input", "Publications", { enter: true });
+        cy.get(".report-page-filter input").type("Publications{enter}");
         cy.get('.text-highlight').should("include.text","Publications").click();
         cy.get(".report-item").eq(0).within(() => {
             cy.get('.report-item-title').should("include.text","Publications");
@@ -114,7 +114,7 @@ describe("Report Page Test", function(){
             cy.get("p").should("contain","This Gene isn't in any lists.");
         })
         cy.createGeneList(GENES_A);
-        cy.typeSlowly(".typeahead-search", GENE_SYMBOL, { enter: true });
+        cy.get(".typeahead-search").clear().type(GENE_SYMBOL + "{enter}");
         cy.get(".result").first().click();
         cy.url().should("include","/report");
 

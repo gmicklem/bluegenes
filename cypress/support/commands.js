@@ -25,31 +25,6 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 import { adminCredentials, mineName, minePage, mineService, testAccount } from './mine';
 
-// BlueGenes' text inputs (login and registration forms, the search box, ...) drop keystrokes
-// when text is typed at Cypress' default speed, and under load even at 200 ms per key
-// ("PPARG" arrived as "PARG", "...-0@example.org" as "...-@eample.org"). So type with a
-// delay, check what arrived and type again from scratch when it differs. Specs that type
-// identifiers or names should use this; pass { enter: true } to press Enter at the end.
-Cypress.Commands.add("typeSlowly", (selector, text, { delay = 50, attempts = 4, enter = false } = {}) => {
-    const attempt = (n) => {
-        cy.get(selector).clear().type(text, { delay });
-        cy.wait(250);
-        cy.get(selector).then(($el) => {
-            if ($el.val() !== text && n < attempts) {
-                attempt(n + 1);
-            }
-        });
-    };
-    attempt(1);
-    cy.get(selector).should("have.value", text);
-    if (enter) {
-        // The search form submits the term it was last rendered with, so Enter pressed
-        // before the form has re-rendered searches for a shorter term (or none).
-        cy.wait(1000);
-        cy.get(selector).type("{enter}");
-    }
-})
-
 // Picks (or creates) an option of the index-th react-select (a combobox input) inside the
 // current subject or `within`. The specs used the generated class names of react-select
 // (".css-1hwfws3"), which change with every react-select version.
@@ -87,20 +62,26 @@ Cypress.Commands.add("openListsTab", () => {
 
 Cypress.Commands.add("searchKeyword", (keyword) => {
     cy.visit(minePage("/search"));
-    cy.typeSlowly(".searchform > input", keyword.replace(/\{enter\}$/, ""), { enter: true });
+    cy.get(".searchform > input").clear().type(keyword.replace(/\{enter\}$/, "") + "{enter}");
 })
 
 Cypress.Commands.add("selectFromDropdown", (keyword) => {
     cy.get('select').then($option => {$option.val(keyword)}).parent().trigger('change');
 })
 
-Cypress.Commands.add("createGeneList", (geneList) => {
+// listName is optional: BlueGenes names the list "Gene list for all organisms <date and time to
+// the second>", so two lists saved within one second need names of their own (the mine refuses
+// the second one with a 400).
+Cypress.Commands.add("createGeneList", (geneList, listName) => {
     cy.contains("Upload").click();
-    cy.typeSlowly(".wizard textarea", geneList);
+    cy.get(".wizard textarea").type(geneList);
     cy.contains("Continue").click();
     //Assertion
     cy.get('.title').should("exist");
     cy.url().should("include","/save");
+    if (listName) {
+        cy.get(".save-list > label > input").clear().type(listName);
+    }
     cy.contains("Save List").click();
     cy.url().should("include","/results")
     cy.contains("Lists").click();
@@ -114,7 +95,7 @@ Cypress.Commands.add("createProteinList", (proteinList) => {
     // the dropdown shows "Any". Selecting the shown option fires no change event, so trigger
     // one to make the state agree with what is shown.
     cy.get(".select-organism-and-list-type").find("select").eq(1).select("Any").trigger("change");
-    cy.typeSlowly(".wizard textarea", proteinList);
+    cy.get(".wizard textarea").type(proteinList);
     cy.contains("Continue").click();
     cy.contains("Save List").click();
     cy.url().should("include","/results")
@@ -152,8 +133,8 @@ Cypress.Commands.add('isInViewport', element => {
   Cypress.Commands.add('loginToUserAccount', (email,password) => {
     cy.openLoginDialogue();
 		cy.get(".login-form").should("contain", "Login to " + mineName());
-		cy.typeSlowly("input#email", email);
-		cy.typeSlowly("input[type='password']", password);
+		cy.get("input#email").type(email);
+		cy.get("input[type='password']").type(password);
     cy.intercept('POST', '/api/auth/login').as('login');
 		cy.get(".login-form")
 			.find("button")
@@ -188,7 +169,8 @@ Cypress.Commands.add('isInViewport', element => {
     cy.wait("@listParse");
     cy.get('.title').should("exist");
     cy.url().should("include","/save");
-    cy.typeSlowly(".save-list > label > input", listName);
+    // the input is prefilled with a default name
+    cy.get(".save-list > label > input").clear().type(listName);
     // register the intercept before the click that causes the request
     cy.intercept("POST",mineService("query/results")).as("resultsLoad");
     cy.contains("Save List").click();

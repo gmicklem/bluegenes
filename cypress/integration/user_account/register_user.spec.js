@@ -23,8 +23,8 @@ describe(__filename, function () {
     cy.openRegisterDialogue();
     const username = getDummyEmail();
     registered.push(username);
-    cy.typeSlowly("input#email", username);
-    cy.typeSlowly("input[type='password']", "test_password");
+    cy.get("input#email").type(username);
+    cy.get("input[type='password']").type("test_password");
     cy.get("button").contains("Register").click();
 
     cy.get(".logon.dropdown").click();
@@ -33,7 +33,7 @@ describe(__filename, function () {
 
   it("it ensures that email is always required", () => {
     cy.openRegisterDialogue();
-    cy.typeSlowly("input[type='password']", "test_password");
+    cy.get("input[type='password']").type("test_password");
     cy.get("button").contains("Register").click();
 
     cy.get(".error-box")
@@ -43,7 +43,7 @@ describe(__filename, function () {
   it("it ensures that password is always required", () => {
     cy.openRegisterDialogue();
     const username = getDummyEmail();
-    cy.typeSlowly("input#email", username);
+    cy.get("input#email").type(username);
     cy.get("button").contains("Register").click();
 
     cy.get(".error-box")
@@ -52,8 +52,8 @@ describe(__filename, function () {
 
   it("it ensures that user email is always unique", () => {
     cy.openRegisterDialogue();
-    cy.typeSlowly("input#email", testAccount().username);
-    cy.typeSlowly("input[type='password']", "test_password");
+    cy.get("input#email").type(testAccount().username);
+    cy.get("input[type='password']").type("test_password");
     cy.get("button").contains("Register").click();
 
     cy.get(".error-box")
