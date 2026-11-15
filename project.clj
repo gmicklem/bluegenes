@@ -42,7 +42,6 @@
                  [day8.re-frame/http-fx "0.1.6"]
                  [day8.re-frame/async-flow-fx "0.1.0"]
                  [day8.re-frame/forward-events-fx "0.0.6"]
-                 [day8.re-frame/undo "0.3.3"]
                  [reagent "0.10.0"]
                  [cljsjs/react-transition-group "1.2.0-0"
                   :exclusions [cljsjs/react cljsjs/react-dom]]
