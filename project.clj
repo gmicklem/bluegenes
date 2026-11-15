@@ -124,7 +124,7 @@
 
   :min-lein-version "2.8.1"
 
-  :source-paths ["src/clj" "src/cljs" "src/cljc" "src/workers" "script/"]
+  :source-paths ["src/clj" "src/cljs" "script/"]
 
   :test-paths ["test/cljs"]
 
