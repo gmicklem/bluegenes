@@ -19,7 +19,6 @@
     "url": "https://github.com/intermine/bluegenes/issues"
   },
   "dependencies": {
-    "@cljs-oss/module-deps": "^1.1.1",
     "bootstrap": "^3.3.7",
     "bootstrap-material-design": "git+https://github.com/intermine/bootstrap-material-design.git#im-0.0.2",
     "chokidar-cli": "^2.1.0",
