@@ -32,9 +32,6 @@
                                  "type-" category)} category]])
                  @categories)))))
 
-(def css-transition-group
-  (reagent/adapt-react-class js/ReactTransitionGroup.CSSTransitionGroup))
-
 (defn web-service-url []
   (let [input-ref* (atom nil)
         url (subscribe [:template-chooser/web-service-url])]

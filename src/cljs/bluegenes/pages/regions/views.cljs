@@ -15,9 +15,6 @@
             [oops.core :refer [oget ocall]]
             [goog.functions :refer [debounce]]))
 
-(def css-transition-group
-  (reagent/adapt-react-class js/ReactTransitionGroup.CSSTransitionGroup))
-
 (defn dropdown-hover [{:keys [data children]}]
   [:span.dropdown.dropdown-hover
    [:a.dropdown-toggle
@@ -239,11 +236,9 @@
   []
   (let [to-search (subscribe [:regions/to-search])]
     (fn []
-      [css-transition-group
-       {:transition-name "fade"
-        :transition-enter-timeout 2000
-        :transition-leave-timeout 2000
-        :component "div"}
+      ;; Was a CSSTransitionGroup (react-transition-group 1) rendering a div; no
+      ;; CSS matched its fade-* classes, it only kept the cross 2 s after clearing.
+      [:div
        (when @to-search
          [:div.clear-textbox
           ;;this is a fancy x-like character, aka &#10006; - NOT just x
