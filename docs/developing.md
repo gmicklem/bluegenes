@@ -9,6 +9,8 @@ BlueGenes uses the [Less](http://lesscss.org/) CSS preprocessor, along with [Boo
 
 ## Writing ClojureScript unit tests
 
+The unit tests live in `test/cljs` (namespaces ending in `-test`) and run under node: `npm run test:unit` (see [building.md](building.md#unit-tests)). There is no DOM: `bluegenes.node-env` (a preload of the `:test` build) supplies `window`, `localStorage`, `DOMParser`/`XMLSerializer` and DOM node types (from `@xmldom/xmldom`), and sets `serverVars`/`initVars` to null. A test that needs more of the browser should stub it there or with `with-redefs`.
+
 ### re-frame.test macros
 
 There are some things you need to pay extra attention to when writing ClojureScript unit tests for re-frame. Firstly, you'd want to wrap the body of a `deftest` with one of the following:

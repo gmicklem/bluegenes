@@ -22,7 +22,7 @@ BlueGenes supports the many methods of specifying configuration keys provided by
 
 ### Configuration via `config.edn` files
 
-Copy and paste `config/defaults/config.edn` to `config/dev/config.edn` or `config/prod/config.edn` and tweak it to match your preferences. The correct config file will be used depending on if you start BlueGenes intended for development or for production. Note that `config/defaults/config.edn` will be used when you build an uberjar or docker image, unless you use `lein with-profile prod uberjar` to bundle `config/prod/config.edn` instead.
+Copy and paste `config/defaults/config.edn` to `config/dev/config.edn` or `config/prod/config.edn` and tweak it to match your preferences. The correct config file will be used depending on if you start BlueGenes intended for development or for production. Note that `config/defaults/config.edn` will be used when you build an uberjar or docker image, unless you use `clojure -T:build uber :prod true` to bundle `config/prod/config.edn` instead.
 
 ### Analytics (optional)
 

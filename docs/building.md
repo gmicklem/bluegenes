@@ -4,57 +4,65 @@ Start by installing the dependencies in [System Requirements](/docs/building.md#
 
 ## System Requirements
 
-* Java 8-11 (we recommend [OpenJDK](https://adoptopenjdk.net/))
-* Latest [Leiningen](https://leiningen.org/)
-* Latest supported [nodejs](https://nodejs.org/). You can check your version using `node -v`. We recommend installing node using [nvm](https://github.com/creationix/nvm)
-* Latest supported [npm](https://www.npmjs.com/)
+* Java 17 or later (we recommend [OpenJDK](https://adoptium.net/); the Docker image uses 21)
+* The [Clojure CLI](https://clojure.org/guides/install_clojure) (`clojure`), 1.11 or later
+* [Node.js](https://nodejs.org/) 22 or later, with npm. You can check your version using `node -v`. We recommend installing node using [nvm](https://github.com/creationix/nvm)
+* git (the release build takes its version string from `git describe`)
+
+The build is defined in `deps.edn` (dependencies), `shadow-cljs.edn` (ClojureScript builds), `build.clj` (production builds, using [tools.build](https://clojure.org/guides/tools_build)) and `package.json` (npm packages and scripts).
 
 ## Download NPM dependencies
 
-    npm install
+    npm ci
+
+(`CYPRESS_INSTALL_BINARY=0 npm ci` skips the Cypress download if you do not run the browser tests.)
 
 ## Quickstart
 
 These commands are explained in more depth below, but if you know what you want, here's a quick reference of the most useful ones.
 
-    lein dev         # start dev server with hot-reloading
-    lein repl        # start dev server with hot-reloading and nrepl (no clean or css)
-    lein prod        # start prod server
-    lein deploy      # build prod release and deploy to clojars
+    npm run dev                 # dev server with hot reloading, Less watcher and nREPL
+    clojure -T:build release    # production JS and CSS under resources/public
+    clojure -M:prod -m bluegenes.core   # start the prod server (after release)
+    clojure -T:build uber       # build target/bluegenes.jar
+    clojure -T:build:deploy deploy      # build the library jar and deploy it to Clojars
 
-    lein format      # run cljfmt to fix code indentation
-    lein kaocha      # run unit tests
-    npx cypress run  # run cypress ui tests
+    clojure -M:fmt fix          # run cljfmt to fix code indentation (check: clojure -M:fmt check)
+    npm run test:unit           # run the ClojureScript unit tests (node)
+    npx cypress run             # run cypress ui tests
 
 ## Running a dev environment
 
 You can start a complete developer environment with automatic compilation of Less CSS and hot-reloading of code changes by running:
 
-    lein dev
+    npm run dev
 
-However, all the output will be thrown into one terminal. If you wish to keep the processes separate, you can start them individually by following the instructions below.
+This runs `clojure -M:dev:cljs:cljs-dev -m bluegenes.dev` (see `dev/bluegenes/dev.clj`), which in one JVM copies the im-tables CSS, starts the Less watcher, starts [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html) watching the `:app` build (dashboard on http://localhost:9630, nREPL on port 8777) and then the web server on http://localhost:5000/. Server-side Clojure code is reloaded on each request.
+
+All the output goes to one terminal. If you wish to keep the processes separate, you can start them individually by following the instructions below.
 
 ### Compile the CSS
 
 We use [less](http://lesscss.org/) to write our styles.
 
-You can compile the Less sources to CSS with the command below:
+    npm run less          # compile once
+    npm run less:watch    # recompile after every change until you exit it with Ctrl+C
 
-    lein less
+The browser page will automatically reload the updated CSS while shadow-cljs is watching. Before the first CSS build in a fresh checkout, copy the im-tables CSS with `clojure -T:build assets`.
 
-It will run in watch mode, recompiling the CSS after every change until you exit it with *Ctrl+C*. The browser page will automatically reload the updated CSS.
+### Make shadow-cljs reload code changes in the browser
 
-### Make Leiningen reload code changes in the browser
+    npx shadow-cljs watch app
 
-    lein figwheel dev
+`npx shadow-cljs compile app` does a single dev build. For a ClojureScript REPL, connect to the nREPL on port 8777 and evaluate `(shadow/repl :app)`.
 
-Note: if you use `lein run` or any alias calling it like `dev` or `repl`, Figwheel will be started automatically.
+If BlueGenes is served under a deploy path (`BLUEGENES_DEPLOY_PATH`, see [Configuring](/docs/configuring.md)), `npm run dev` adjusts the dev build's asset path automatically; with a separate watch, pass it yourself: `npx shadow-cljs watch app --config-merge '{:asset-path "/foo/bar/js/compiled"}'`.
 
 ### Start the web server
 
 Run this command:
 
-    lein with-profile +dev run
+    clojure -M:dev -m bluegenes.core
 
 By default, the web server will be started on http://localhost:5000/. To change this value, edit the corresponding `config.edn`.
 
@@ -63,13 +71,11 @@ By default, the web server will be started on http://localhost:5000/. To change 
 
 ### Unit tests
 
-You can run the ClojureScript unit tests by invoking the test runner kaocha.
+The ClojureScript unit tests (`test/cljs`) run under node with the shadow-cljs `:test` build:
 
-    lein kaocha
+    npm run test:unit
 
-Kaocha also has a watch mode that's useful when editing the tests.
-
-    lein kaocha --watch
+which is `npx shadow-cljs compile test && node target/test/node-tests.js`. For a watch mode, run `npx shadow-cljs watch test` and `node target/test/node-tests.js` after each rebuild. Node has no DOM; `test/cljs/bluegenes/node_env.cljs` provides the few browser globals the code under test needs.
 
 If you need something faster, evaluating `(cljs.test/run-tests)` from a connected editor would be even better. Although with async tests, you'll need some way of [having your editor report the results](https://clojurescript.org/tools/testing#detecting-test-completion-success).
 
@@ -79,9 +85,13 @@ Checklist:
 - You might have to install [additional cypress dependencies](https://docs.cypress.io/guides/guides/continuous-integration.html#Dependencies) to be able to run Cypress.
 - The integration tests are designed to be run against [Biotestmine](https://github.com/intermine/biotestmine). The easiest way to achieve this is by using [intermine_boot](https://github.com/intermine/intermine_boot) to start one locally.
 
-Start BlueGenes connected to your local Biotestmine by using the command below. If your local Biotestmine runs on a different address than http://localhost:9999/biotestmine, you can specify it with the `BLUEGENES_DEFAULT_SERVICE_ROOT` envvar.
+Start BlueGenes connected to your local Biotestmine by using the commands below. If your local Biotestmine runs on a different address than http://localhost:9999/biotestmine, change `BLUEGENES_DEFAULT_SERVICE_ROOT`.
 
-    lein biotestmine
+    clojure -T:build release
+    BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
+    BLUEGENES_DEFAULT_MINE_NAME=Biotestmine BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
+    BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
+    clojure -M -m bluegenes.core
 
 Run all the Cypress tests:
 
@@ -91,7 +101,7 @@ Cypress also has a really useful interface for debugging failing tests:
 
     DEBUG=cypress:* npx cypress open
 
-*Tip:* You can also run the Cypress tests with BlueGenes deployed to a custom deploy path by editing *cypress.json* `baseUrl` key to include the path (e.g. `"http://localhost:5000/foo/bar"`) and passing the same path as an envvar, `BLUEGENES_DEPLOY_PATH=/foo/bar lein biotestmine`
+*Tip:* You can also run the Cypress tests with BlueGenes deployed to a custom deploy path by editing *cypress.json* `baseUrl` key to include the path (e.g. `"http://localhost:5000/foo/bar"`) and passing the same path as an envvar, `BLUEGENES_DEPLOY_PATH=/foo/bar` when starting the server.
 
 # Production Builds
 
@@ -99,23 +109,20 @@ Cypress also has a really useful interface for debugging failing tests:
 
 Most of the time, we develop with uncompressed files since it's faster for hot reloads. But for production, we want things to be extra fast on load and we don't hot-reload changes, so it's better to present minified files that have had all un-necessary code stripped. Clojure uses Google Closure tools (yes, Clojure uses Closure) to minify things.
 
-Sometimes the Closure compiler is overzealous and removes something we actually want to keep. To check what your work looks like in a minified build, run this in the terminal (I'd recommend closing any existing lein run / lein figwheel sessions first).
+Sometimes the Closure compiler is overzealous and removes something we actually want to keep. To check what your work looks like in a minified build, run this in the terminal (stop any running dev server first, as both write to `resources/public`).
 
-    lein with-profile prod cljsbuild once min
-    lein with-profile prod run
+    clojure -T:build release
+    clojure -M:prod -m bluegenes.core
 
-There is also a shortcut that in addition, cleans and compiles CSS.
-
-    lein prod
+`release` cleans, copies the im-tables CSS, compiles the Less with `lessc`, runs `shadow-cljs release app` (advanced compilation; the output file is named `app.<hash>.js` and listed in `resources/public/js/compiled/manifest.edn`) and copies the CSS to `site-<hash>.css`/`im-tables-<hash>.css`. The hash changes whenever the JavaScript changes, which also resets the state BlueGenes keeps in the browser's local storage.
 
 
 ## Deploying your build
 
 ### docker
 
-BlueGenes has a Dockerfile which you can build with a fresh uberjar.
+BlueGenes has a Dockerfile which builds the uberjar inside Docker (Clojure CLI, JDK 21 and Node 22) and runs it on an `eclipse-temurin:21-jre` image.
 
-    lein uberjar
     docker build -t bluegenes .
 
 Run it and the web server should default to port 5000.
@@ -142,7 +149,7 @@ This will create a `tools` folder in the current directory mounted as a docker b
 
 ### Dokku
 
-[Dokku](http://dokku.viewdocs.io/dokku/) allows you to push a Git branch and have it automatically build and serve it using the appropriate docker container. (You can also use BlueGenes with [heroku](https://www.heroku.com/).)
+[Dokku](http://dokku.viewdocs.io/dokku/) allows you to push a Git branch and have it automatically build and serve it using the Dockerfile.
 
 Once dokku is configured on your remote host, you'll need to add your public key, create a remote for your host and push to it:
 
@@ -160,7 +167,6 @@ You can also deploy docker images that you build locally, to the dokku instance.
 Make sure `youruser` on `dokku-server` is part of the `docker` group. This allows you to stream the file instead of manually transferring it through ssh.
 
 ```
-lein uberjar
 docker build -t dokku/appname:v1 .
 docker save dokku/appname:v1 | bzip2 | ssh youruser@dokku-server "bunzip2 | docker load"
 ssh youruser@dokku-server
@@ -175,7 +181,7 @@ It's also possible to compile BlueGenes to a jar that will automatically launch 
 
 To compile and package BlueGenes into an executable jar, run the following command in the project folder:
 
-    lein uberjar
+    clojure -T:build uber
 
 Then, to start the application, execute the jar and pass in a [`config.edn` file](/docs/configuring.md) like so:
 
@@ -183,9 +189,11 @@ Then, to start the application, execute the jar and pass in a [`config.edn` file
 
 For security reasons, the `config.edn` file used to execute the jar can be located anywhere, including your home directory.
 
-You can alternatively bundle `config/prod/config.edn` into the uberjar by including the prod profile:
+You can alternatively bundle `config/prod/config.edn` into the uberjar instead of `config/defaults/config.edn`:
 
-    lein with-profile prod uberjar
+    clojure -T:build uber :prod true
+
+Only `bluegenes.core` is compiled ahead of time; everything else loads from source when the server starts (a few seconds), so a jar built on one JDK (17 or later) runs on any other.
 
 
 ### Launching your uberjar with InterMine
@@ -199,26 +207,25 @@ By default, it launches the latest BlueGenes release from Clojars. If you want t
 
 Official BlueGenes releases can be deployed to [Clojars](https://clojars.org/), under the [org.intermine Clojars organisation](https://clojars.org/groups/org.intermine).
 
-When deploying BlueGenes to Clojars, the JAR file should include all compiled assets. This includes JavaScript, less, and vendor libraries. This allows other projects to include BlueGenes as a dependency and deploy the client and server without needing to compile BlueGenes.
+When deploying BlueGenes to Clojars, the JAR file should include all compiled assets. This includes JavaScript, less, and vendor libraries. This allows other projects to include BlueGenes as a dependency and deploy the client and server without needing to compile BlueGenes (for example `java -cp "lib/*" bluegenes.core` with the jar and its dependencies in `lib/`).
 
-To deploy a compiled JAR to Clojars, simply use the `deploy` alias which automatically includes the `uberjar` profile and targets Clojars.
+`clojure -T:build jar` builds that jar (`target/bluegenes-<version>.jar`: the server sources, an AOT-compiled `bluegenes.core`, the release assets and a pom listing the server dependencies); `clojure -T:build install` also installs it into `~/.m2`. To deploy it to Clojars (needs `CLOJARS_USERNAME` and `CLOJARS_PASSWORD`, a deploy token):
 
-    $ lein deploy
+    $ clojure -T:build:deploy deploy
 
 ### Releasing a new version
 
-1. Update the version number in **project.clj**.
+1. Update the version number (`version` in **build.clj**).
 2. Don't forget to add the new version with notes to **CHANGELOG.md**.
 3. Commit this change and tag it using `git tag -a v1.0.0 -m "Release v1.0.0"`, replacing *1.0.0* with your version number.
 4. Push your commit and tag using `git push origin` followed by `git push origin v1.0.0` (again, replace *1.0.0* with your version number). Make sure that you push to the intermine repository, not just your fork!
-5. Deploy a new uberjar to Clojars with `lein deploy`.
+5. Deploy the new jar to Clojars with `clojure -T:build:deploy deploy`.
 6. Push a new docker image to dockerhub (before pushing, you'll probably want to quickly test it locally).
-    1. `lein uberjar`
-    2. `docker build -t bluegenes .`
-    3. `docker tag bluegenes intermine/bluegenes:1.0.0` (remember to use your correct version number)
-    4. `docker tag bluegenes intermine/bluegenes:latest`
-    5. `docker push intermine/bluegenes:1.0.0`
-    6. `docker push intermine/bluegenes:latest`
+    1. `docker build -t bluegenes .`
+    2. `docker tag bluegenes intermine/bluegenes:1.0.0` (remember to use your correct version number)
+    3. `docker tag bluegenes intermine/bluegenes:latest`
+    4. `docker push intermine/bluegenes:1.0.0`
+    5. `docker push intermine/bluegenes:latest`
 7. Deploy the latest release to dokku with `git push dokku dev:master`.
 8. [Draft a new Github release using the newly pushed tag](https://github.com/intermine/bluegenes/tags). It would be a good idea to follow the structure of previous releases; leave the title blank, and copy the description from what you added to the changelog. It's also useful to include links to the Clojars and Docker Hub releases.
 
