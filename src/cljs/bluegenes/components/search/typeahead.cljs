@@ -5,6 +5,7 @@
             [dommy.core :as dommy :refer-macros [sel1]]
             [bluegenes.route :as route]
             [oops.core :refer [oget]]
+            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.utils :refer [highlight-substring]]
             [clojure.string :as str]))
 
@@ -15,13 +16,16 @@
   (dispatch [::route/navigate ::route/report {:type type, :id id}]))
 
 (defn navigate-to-full-results
-  "Navigate to the full results page. duh."
-  []
-  (let [term @(subscribe [:search-term])
-        evt [::route/navigate ::route/search]]
-    (dispatch (cond-> evt (some? term) (into [nil {:keyword term}])))
-    (when (some? term)
-      (dispatch [:search/full-search term]))))
+  "Navigate to the full results page. duh. The term is the text of the input when
+  the user pressed Enter; without it, the term in the app db is used (which is
+  what a click on the search icon or on \"Show all results\" can do)."
+  ([]
+   (navigate-to-full-results @(subscribe [:search-term])))
+  ([term]
+   (let [evt [::route/navigate ::route/search]]
+     (dispatch (cond-> evt (some? term) (into [nil {:keyword term}])))
+     (when (some? term)
+       (dispatch [:search/full-search term])))))
 
 (defn suggestion
   "The UI element and behaviour for a single suggestion in the dropdown"
@@ -55,7 +59,7 @@
           (navigate-to-report selected-result)
           ;; go to the results page if they just type and press enter without
           ;; selecting a typeahead result
-          (navigate-to-full-results))
+          (navigate-to-full-results (not-empty (oget e :target :value))))
         ;; no matter what the result, stop showing the quicksearch when
         ;; we press enter, kthx.
         (.blur (. e -target))))))
@@ -98,8 +102,9 @@
       :reagent-render
       (fn []
         [:div.dropdown
-         [:input.typeahead-search
-          {:type         "text"
+         [text-input
+          {:class        "typeahead-search"
+           :type         "text"
            :value        @search-term
            :placeholder  "Search for any term"
            :on-change    (fn [e] (dispatch [:bounce-search (oget e :target :value)]))

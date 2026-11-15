@@ -101,9 +101,8 @@ describe("Enrichment Test", function(){
 
     it("can filter enrichment results by text", function(){
         cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
-            cy.typeSlowly(".text-filter > .form-control", "CYP2E1", { enter: true });
-            cy.wait("@enrichmentLoad");
+            // the filter works on the results the page already has: no request follows
+            cy.get(".text-filter > .form-control").type("CYP2E1{enter}");
             cy.get(".enrichment-item").eq(0).should("include.text","CYP2E1");
         })
     })

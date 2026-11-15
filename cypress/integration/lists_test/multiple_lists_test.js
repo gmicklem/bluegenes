@@ -3,8 +3,8 @@ import { GENES_A, GENES_B, PROTEINS } from "../../support/data";
 describe("Multiple Lists Test", function() {
     beforeEach(function() {
       cy.visit("/");
-      cy.createGeneList(GENES_A);
-      cy.createGeneList(GENES_B);
+      cy.createGeneList(GENES_A, "Genes A");
+      cy.createGeneList(GENES_B, "Genes B");
       cy.url().should("include","/lists");
       cy.get(".lists-item").should('have.length',2);
     });

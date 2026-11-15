@@ -12,7 +12,7 @@ describe("Regions Export Test", function(){
     beforeEach(function(){
         cy.visit(minePage("/regions"));
         cy.get(".input-section").within(() => {
-            cy.typeSlowly("textarea", "2:14615455..14619002", { enter: true });
+            cy.get("textarea").type("2:14615455..14619002{enter}");
             cy.get("textarea").should("include.text","14615455");
             cy.intercept("POST",mineService("query/results")).as("regionSearch");
             cy.get("button").filter(':contains("Search")').click();

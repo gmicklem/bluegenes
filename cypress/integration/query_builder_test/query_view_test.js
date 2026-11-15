@@ -150,7 +150,7 @@ describe("Query view test", function() {
     it('can load query from imported XML', function(){
       cy.get('.query-view-column').within(() => {
         cy.contains('Import from XML').click();
-        cy.typeSlowly('textarea.form-control', '<query model="genomic" view="Protein.primaryIdentifier Protein.organism.name Protein.length" sortOrder=""></query>');
+        cy.get('textarea.form-control').type('<query model="genomic" view="Protein.primaryIdentifier Protein.organism.name Protein.length" sortOrder=""></query>');
         cy.contains('Load query').click();
         cy.get('.success').should('have.text','XML loaded successfully');
         cy.get('.qb-label').should('include.text','Protein');

@@ -50,7 +50,7 @@ describeAdmin("Report Page Layout Test", function(){
 
     it("can add a category",function(){
         cy.get("@reportPageLayout").within(() => {
-            cy.typeSlowly(".add-category input", "Interactions", { enter: true });
+            cy.get(".add-category input").type("Interactions{enter}");
             cy.get("li").contains("Interactions").click().parent().should("have.class","active");
             cy.reactSelect(0, "Proteins");
             cy.get(".classes").within(() => {
@@ -135,7 +135,7 @@ describeAdmin("Report Page Layout Test", function(){
     
     it("can move a category up", function(){
         cy.get("@reportPageLayout").within(() => {
-            cy.typeSlowly(".add-category input", "Regions", { enter: true });
+            cy.get(".add-category input").type("Regions{enter}");
             cy.get("li").contains("Interactions").should("exist");
             cy.get("li").contains("Regions").should("exist");
             cy.get(".nav").within(() => {

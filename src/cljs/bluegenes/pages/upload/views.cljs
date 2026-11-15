@@ -10,6 +10,7 @@
             [bluegenes.route :as route]
             [dommy.core :as dommy :refer-macros [sel1]]
             [oops.core :refer [oget oget+ ocall]]
+            [bluegenes.components.ui.inputs :refer [text-input]]
             [clojure.string :as str]))
 
 (def timeout 1500)
@@ -270,13 +271,14 @@
 
             (case @tab
               :file [file-manager]
-              [:textarea.form-control
-               {:on-change (fn [e] (dispatch
+              [text-input
+               {:textarea? true
+                :class (str "form-control" (when @files " disabled"))
+                :on-change (fn [e] (dispatch
                                     [::evts/update-textbox-identifiers
                                      (oget e :target :value)]))
                 :value @textbox-identifiers
                 :placeholder "Type identifiers here, or click [SHOW EXAMPLE] below."
-                :class (when @files "disabled")
                 :spellCheck false
                 :disabled @files
                 :rows 5}])]

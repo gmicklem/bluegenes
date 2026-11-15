@@ -10,7 +10,9 @@ describeAdmin("Admin Account Test", function(){
         cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
         cy.wait('@getPreferences');
-        // the page replaces its inputs with the preferences when they arrive
+        // The page replaces its inputs with the saved preferences when the response is
+        // handled, which is after the request has finished; there is nothing on the page
+        // to wait for while the preferences are the default ones.
         cy.wait(500);
         cy.get('.profile-page > ').first().should("exist").within(() => {
             cy.get('[type="checkbox"]').first().uncheck({force:true}); //flaky
@@ -26,8 +28,10 @@ describeAdmin("Admin Account Test", function(){
         cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
         cy.wait('@getPreferences');
-        cy.wait(500);
         cy.get('.profile-page > ').first().should("exist").within(() => {
+            // the page shows the saved preferences once it has them; edit only then, or
+            // they replace the edit
+            cy.get('[id="input:alias"]').should("have.value", "Admin");
             cy.get('[type="checkbox"]').first().check({force:true}); //flaky
             cy.get('[type="checkbox"]').first().should("be.checked"); 
             cy.contains("Public name").type("{selectall}{backspace}",{delay:100});

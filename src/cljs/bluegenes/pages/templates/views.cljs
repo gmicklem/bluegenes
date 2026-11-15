@@ -7,6 +7,7 @@
             [bluegenes.components.ui.constraint :refer [constraint]]
             [bluegenes.components.ui.results-preview :refer [preview-table]]
             [oops.core :refer [oget ocall]]
+            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.loader :refer [mini-loader]]
             [bluegenes.utils :refer [ascii-arrows ascii->svg-arrows compatible-version?]]
             [bluegenes.pages.templates.helpers :refer [categories-from-tags]]
@@ -286,8 +287,9 @@
                       (reset! input value)
                       (debounced value)))]
     (fn []
-      [:input.form-control.input-lg
-       {:id "template-text-filter"
+      [text-input
+       {:class "form-control input-lg"
+        :id "template-text-filter"
         :type "text"
         :value @input
         :placeholder "Search for keywords"

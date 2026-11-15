@@ -33,6 +33,7 @@ These commands are explained in more depth below, but if you know what you want,
 
     clojure -M:fmt fix          # run cljfmt to fix code indentation (check: clojure -M:fmt check)
     npm run test:unit           # run the ClojureScript unit tests (node)
+    npm run test:server         # run the Clojure (server) unit tests, clojure -M:test-clj
     npm run test:e2e            # run the Cypress UI tests (see "Cypress integration tests")
 
 ## Running a dev environment
@@ -81,11 +82,13 @@ The ClojureScript unit tests (`test/cljs`) run under node with the shadow-cljs `
 
 which is `npx shadow-cljs compile test && node target/test/node-tests.js`. For a watch mode, run `npx shadow-cljs watch test` and `node target/test/node-tests.js` after each rebuild. Node has no DOM; `test/cljs/bluegenes/node_env.cljs` provides the few browser globals the code under test needs.
 
+The server's Clojure tests (`test/clj`) run with `npm run test:server` (`clojure -M:test-clj`); a new test namespace is listed in `test/clj/bluegenes/test_runner.clj`.
+
 If you need something faster, evaluating `(cljs.test/run-tests)` from a connected editor would be even better. Although with async tests, you'll need some way of [having your editor report the results](https://clojurescript.org/tools/testing#detecting-test-completion-success).
 
 ### Cypress integration tests
 
-The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine.
+The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine. The defaults of `cypress.config.js` are the rdfc2im demo mine at `http://localhost:8090/humanmine` and a BlueGenes at `http://localhost:5000` that uses it, so against the rdfc2im stack no setting is needed.
 
 The specs are written for the rdfc2im demo mine (HumanMine's model, a panel of 113 human genes), see [Against the rdfc2im local stack](#against-the-rdfc2im-local-stack). Their identifiers are in `cypress/support/data.js`.
 
@@ -96,9 +99,9 @@ Settings (environment variables, or `--env KEY=value` without the `CYPRESS_` pre
 | Variable | Meaning | Default |
 |---|---|---|
 | `CYPRESS_BASE_URL` | BlueGenes under test, including any `BLUEGENES_DEPLOY_PATH` | `http://localhost:5000` |
-| `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:9999/biotestmine` |
+| `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:8090/humanmine` (the rdfc2im demo mine) |
 | `CYPRESS_MINE_NAMESPACE` | BlueGenes namespace of that mine (`BLUEGENES_DEFAULT_NAMESPACE`), the first path segment of BlueGenes routes such as `/humanmine/search` | last path segment of `MINE_URL` |
-| `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `BioTestMine` |
+| `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `rdfc2im: 113 gene food/drug-metabolism panel` |
 | `CYPRESS_ADMIN_USER`, `CYPRESS_ADMIN_PASSWORD` | A superuser of the mine (its `superuser.account` property and that account's password). The specs that need one are skipped, with the reason in their title, when these are not set. Never commit them. | not set |
 | `CYPRESS_EXTERNAL` | `true` also runs the tests tagged `@external` (see below) | `false` |
 | `CYPRESS_RECORD_FIXTURES` | `true` writes the expected export files in `cypress/fixtures/` from what the app exports, instead of comparing with them (see "Recording the fixtures again") | `false` |
@@ -140,7 +143,7 @@ To test this checkout rather than the stack's BlueGenes, start it on another por
 * Organism names: `Organism` has only a taxon id, so the search page has no organism filter (1 search test) and the default organism of the upload and template pages, "Homo sapiens", matches nothing (upload tests choose "Any" with `createProteinList`).
 * A Gene Ontology enrichment widget: the enrichment spec uses the pathway widget instead; the widget's data set filter finds nothing because the pathways' data set names differ from the widget's.
 
-**Typing.** BlueGenes' inputs lose keystrokes when text is typed at Cypress' speed ("PPARG" arrived as "PARG", even at 200 ms per key); use `cy.typeSlowly(selector, text, { enter })` (types with a delay, checks the value, retypes) for identifiers, names and passwords. The generated class names of react-select (`.css-1hwfws3`) change with its version; use `cy.reactSelect(index, text)`.
+**Typing.** `cy.type` works at its default speed on every text input the specs use, because those inputs are `text-input` components (`src/cljs/bluegenes/components/ui/inputs.cljs`). Reagent's own controlled `<input>` drops keystrokes under React 18's `createRoot` ("PPARG" arrived as "PARG"); new text inputs should use `text-input`, and handlers should read the text from the event target. The generated class names of react-select (`.css-1hwfws3`) change with its version; use `cy.reactSelect(index, text)`.
 
 **Recording the fixtures again.** The expected exports in `cypress/fixtures/` are compared with `cy.expectFixture(name, actualText)`. The two enrichment files (`all_enrichment_result.tsv`, `checked_enrichment_result.tsv`) were recorded from the demo mine; the input lists (`gene.csv`, `enrichment_gene.csv`, `background_genes.csv`) are small hand-written gene lists. To record them again after the mine's data or the widgets changed, run the spec with `CYPRESS_RECORD_FIXTURES=true`, check the written files against the web service (for the enrichment files, `POST /service/list/enrichment` with the same list gives the same p-values), and commit them:
 

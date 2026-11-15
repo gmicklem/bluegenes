@@ -7,7 +7,7 @@ describe("Upload Test", function(){
     });
 
     it("can load free text input", function(){
-        cy.typeSlowly(".wizard textarea", "PPARG, HFE");
+        cy.get(".wizard textarea").type("PPARG, HFE");
         cy.contains("Continue").click();
         cy.url().should("include","/save");
     });
@@ -21,17 +21,27 @@ describe("Upload Test", function(){
         cy.get('.select-organism-and-list-type > :nth-child(2) > .form-group > .form-control').select("Any").trigger("change"); //to rewrite; the trigger is explained at createProteinList
         cy.get('#caseSensitiveCheckbox').check();
 
-        cy.typeSlowly(".wizard textarea", PROTEINS);
+        cy.get(".wizard textarea").type(PROTEINS);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
-        // not checked: how many matched. With "Identifiers are case sensitive" ticked, BlueGenes
-        // lower-cases the identifiers (ws/ids.clj parse-ids has the condition the wrong way round),
-        // so UniProt accessions are not found.
-        cy.contains("matched a Protein");
+        // With "Identifiers are case sensitive" ticked, the server must leave the case of the
+        // identifiers alone, so both UniProt accessions are found.
+        cy.contains("2 of your 2 identifiers matched a Protein");
+    })
+
+    it("finds identifiers typed in the wrong case when they are not case sensitive", function(){
+        cy.get('.select-organism-and-list-type').within(() => {
+            cy.contains("List type").siblings(".form-group").find("select").select("Protein");
+        })
+        cy.get('.select-organism-and-list-type > :nth-child(2) > .form-group > .form-control').select("Any").trigger("change"); //see createProteinList
+        cy.get(".wizard textarea").type(PROTEINS.toLowerCase());
+        cy.contains("Continue").click();
+        cy.url().should("include","/save");
+        cy.contains("2 of your 2 identifiers matched a Protein");
     })
 
     it("can upload and save list", function(){
-        cy.typeSlowly(".wizard textarea", GENES_A);
+        cy.get(".wizard textarea").type(GENES_A);
         cy.contains("Continue").click();
         cy.url().should("include","/save");
         cy.contains("Save List").click();
@@ -57,7 +67,7 @@ describe("Upload Test", function(){
     });
 
     it("can reset to cancel upload", function(){
-        cy.typeSlowly(".wizard textarea", GENES_A);
+        cy.get(".wizard textarea").type(GENES_A);
         cy.contains("Reset").click();
         cy.get(".wizard").find("textarea").should("have.value","");
     })

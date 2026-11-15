@@ -6,6 +6,7 @@
             [oops.core :refer [ocall oget]]
             [bluegenes.route :as route]
             [reagent.core :as reagent]
+            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.top-scroll :as top-scroll]))
 
 (defn results-display
@@ -49,17 +50,21 @@
       {:on-submit (fn [evt]
                     ;; Don't submit the form; that just makes a redirect.
                     (ocall evt :preventDefault)
-                    (when (not-empty search-term)
-                      ;; Set :suggestion-results to nil to force a :bounce-search next
-                      ;; time we try to show suggestions, to avoid outdated results.
-                      (dispatch [:handle-suggestions])
-                      (dispatch [::route/navigate ::route/search nil {:keyword search-term}])))}
-      [:input {:type "text"
-               :value search-term
-               :placeholder "Type a new search term here"
-               :on-change #(dispatch [:search/set-search-term (oget % :target :value)])
-               :autoFocus true
-               :ref (fn [el] (when el (.focus el)))}]
+                    ;; Search for what is in the input now, not for the term of the
+                    ;; render this handler was made in, which may be several
+                    ;; keystrokes old (the state is a render behind the input).
+                    (let [term (-> (oget evt :target) (ocall :querySelector "input") (oget :value))]
+                      (when (not-empty term)
+                        ;; Set :suggestion-results to nil to force a :bounce-search next
+                        ;; time we try to show suggestions, to avoid outdated results.
+                        (dispatch [:handle-suggestions])
+                        (dispatch [::route/navigate ::route/search nil {:keyword term}]))))}
+      [text-input {:type "text"
+                   :value search-term
+                   :placeholder "Type a new search term here"
+                   :on-change #(dispatch [:search/set-search-term (oget % :target :value)])
+                   :autoFocus true
+                   :ref #(some-> % (ocall :focus))}]
       [:button "Search"]]]))
 
 (defn search-form

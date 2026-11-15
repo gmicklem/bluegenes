@@ -19,8 +19,8 @@ describe("User Account Test", function() {
     it("can create a new user account", function(){
         cy.openRegisterDialogue();
         cy.get(".login-form").should("exist");
-        cy.typeSlowly("input#email", username);
-		cy.typeSlowly("input[type='password']", password);
+        cy.get("input#email").type(username);
+		cy.get("input[type='password']").type(password);
         cy.intercept('POST', '/api/auth/register').as('register');
         cy.get("button").contains("Register").click();
         cy.wait("@register");
@@ -33,8 +33,6 @@ describe("User Account Test", function() {
         cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
         cy.wait('@getPreferences');
-        // the page replaces its inputs with the preferences when they arrive
-        cy.wait(500);
         cy.get('.profile-page > ').eq(0).as("userPreferences").within(() => {
             cy.get('[type="checkbox"]').first().uncheck({force:true}); //still flaky
             cy.contains("Save changes").should("not.be.disabled").click(); 
@@ -159,7 +157,7 @@ describe("User Account Test", function() {
             cy.contains("Start account deletion").click();
             cy.get("code").then(($code) => {
                 const deletionCode = $code.text();
-                cy.typeSlowly("input", deletionCode);
+                cy.get("input").type(deletionCode);
             })
             cy.intercept({ method: "DELETE", url: /\/service\/user(\?|$)/ }).as("deleteAccount");
             cy.get("button").contains("Delete account").click();
@@ -169,8 +167,8 @@ describe("User Account Test", function() {
         cy.get(".logon.dropdown.warning").should("exist");
         cy.openLoginDialogue();
         cy.get(".login-form").should("contain", "Login to " + mineName());
-        cy.typeSlowly("input#email", username);
-        cy.typeSlowly("input[type='password']", password);
+        cy.get("input#email").type(username);
+        cy.get("input[type='password']").type(password);
         cy.intercept('POST', '/api/auth/login').as('login');
         cy.get(".login-form")
           .find("button")
