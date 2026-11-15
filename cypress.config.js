@@ -55,6 +55,23 @@ module.exports = defineConfig({
           .pop();
       }
       env.EXTERNAL = env.EXTERNAL === true || env.EXTERNAL === "true";
+      on("task", {
+        // Used by the `before` hook in support/e2e.js. Resolves (never
+        // rejects) so the spec can fail with its own message.
+        async checkMine(url) {
+          try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+            const body = (await res.text()).trim();
+            if (res.ok && /^\d+$/.test(body)) {
+              return { ok: true, version: body };
+            }
+            return { ok: false, error: `HTTP ${res.status}: ${body.slice(0, 80)}` };
+          } catch (e) {
+            const cause = e.cause && (e.cause.code || e.cause.message);
+            return { ok: false, error: cause ? `${e.message} (${cause})` : e.message };
+          }
+        },
+      });
       return config;
     },
   },

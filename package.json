@@ -14,7 +14,10 @@
     "less": "lessc --math=always --quiet-deprecations less/site.less resources/public/css/site.css",
     "less:watch": "chokidar \"less/**/*.less\" -c \"npm run --silent less\" --initial",
     "test:unit": "shadow-cljs compile test && node target/test/node-tests.js",
-    "test": "cypress run --headless --quiet --reporter list"
+    "test": "npm run test:e2e",
+    "test:e2e": "cypress run",
+    "test:smoke": "cypress run --spec cypress/e2e/smoke_cypress_runtime.cy.js",
+    "cypress:open": "cypress open --e2e"
   },
   "author": "Joshua Heimbach <joshkh@gmail.com>",
   "license": "SEE LICENSE IN LICENCE",
