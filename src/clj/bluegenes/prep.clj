@@ -1,6 +1,6 @@
 (ns bluegenes.prep
-  "This namespace is called by leiningen before `bluegenes.core` to perform
-  some preparation tasks prior to starting BlueGenes.
+  "Build-time preparation tasks, run by build.clj (`clojure -T:build assets`,
+  `clojure -T:build fingerprint-css`) in a JVM with the :cljs classpath.
   Do not require this namespace and use it from the rest of the project!"
   (:require [clojure.java.io :as io]
             [taoensso.timbre :refer [error]]
@@ -24,12 +24,12 @@
       (catch IllegalArgumentException _
         (error "Failed to read CSS from im-tables dependency. You are likely trying to use an older im-tables version which requires manual copying of its CSS into BlueGenes. If you don't do this now, im-tables will look weird!")))))
 
-(defn prepare-assets []
+(defn prepare-assets [& _]
   (copy-im-tables-css))
 
 ;; Below is called directly as they depend on files that come later in the
 ;; build process.
-(defn fingerprint-css []
+(defn fingerprint-css [& _]
   (let [fingerprint (utils/read-bundle-hash)]
     ;; Assertion can also fail if you don't include "resources" in :resource-paths.
     (assert (not= fingerprint "dev") "fingerprint-css should only be run for a production build")

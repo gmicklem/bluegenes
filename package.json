@@ -9,6 +9,7 @@
   "scripts": {
     "watch": "shadow-cljs watch app",
     "compile": "shadow-cljs compile app",
+    "build": "clojure -T:build release",
     "less": "lessc --math=always --quiet-deprecations less/site.less resources/public/css/site.css",
     "less:watch": "chokidar \"less/**/*.less\" -c \"npm run --silent less\" --initial",
     "test:unit": "shadow-cljs compile test && node target/test/node-tests.js",

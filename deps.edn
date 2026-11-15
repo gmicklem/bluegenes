@@ -4,6 +4,7 @@
 ;; Clojars pom contain. ClojureScript and the front-end libraries live in the
 ;; :cljs alias, which shadow-cljs uses (see shadow-cljs.edn :deps).
 ;; Versions are those of project.clj at 1.4.5; only the build toolchain changed.
+;; Build tasks (release, uber, jar, install, deploy): build.clj.
 {:paths ["src/clj" "config/defaults" "resources"]
 
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
@@ -91,4 +92,11 @@
 
   ;; clojure -M:fmt check | fix   (configuration in .cljfmt.edn)
   :fmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.12.0"}}
-        :main-opts ["-m" "cljfmt.main"]}}}
+        :main-opts ["-m" "cljfmt.main"]}
+
+  ;; clojure -T:build <task>   (tasks: see build.clj)
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
+          :ns-default build}
+
+  ;; clojure -T:build:deploy deploy   (human release step; drags in the AWS SDK)
+  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}}}}
