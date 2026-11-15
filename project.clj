@@ -84,7 +84,6 @@
   :deploy-repositories {"clojars" {:sign-releases false}}
   :codox {:language :clojurescript}
   :plugins [[lein-cljsbuild "1.1.7"]
-            [org.clojure/core.unify "0.5.7"]
             [lein-codox "0.10.5"]
             [lein-ancient "0.6.15"]
             [lein-pdo "0.1.1"]
