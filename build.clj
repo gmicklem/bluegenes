@@ -72,7 +72,8 @@
   "7 hex digits identifying the front end: SHA-256 over the release version
   string, every file the release JS and CSS are built from (src/cljs,
   src/shim, less, shadow-cljs.edn, deps.edn, package-lock.json) and the
-  contents of every jar on the :cljs classpath (so a new SNAPSHOT counts).
+  contents of every jar on the :cljs classpath (so a new SNAPSHOT counts;
+  git dependencies are pinned by the sha in deps.edn).
   It names app.<hash>.js and site-/im-tables-<hash>.css and is the key that
   resets the state saved in users' browsers, so it must only change when
   the front end does. shadow-cljs' own :module-hash-names hashes the output,
@@ -202,6 +203,29 @@
              :main 'bluegenes.core})
     (println "Created" uber-file)))
 
+(defn- git-lib-version
+  "The Maven version a git dependency is (to be) published as: its VERSION
+  file, else the (def version \"...\") of its build.clj."
+  [lib {:deps/keys [root]}]
+  (let [version-file (io/file root "VERSION")
+        build-file (io/file root "build.clj")]
+    (or (when (.exists version-file) (str/trim (slurp version-file)))
+        (when (.exists build-file)
+          (second (re-find #"\(def version \"([^\"]+)\"\)" (slurp build-file))))
+        (throw (ex-info (str "No version found for git dependency " lib) {:root root})))))
+
+(defn- pom-basis
+  "The basis with a :mvn/version on each git dependency (deps.edn pins the
+  unreleased InterMine libraries by git sha), so that write-pom lists them
+  instead of skipping them; consumers resolve that version from Clojars or
+  ~/.m2."
+  [basis]
+  (update basis :libs
+          #(reduce-kv (fn [libs lib coord]
+                        (assoc libs lib (cond-> coord
+                                          (:git/sha coord) (assoc :mvn/version (git-lib-version lib coord)))))
+                      {} %)))
+
 (defn jar
   "The library jar published to Clojars: the server sources with an
   AOT-compiled bluegenes.core (so that `java -cp <this jar and its
@@ -213,7 +237,7 @@
     (b/write-pom {:class-dir class-dir
                   :lib lib
                   :version version
-                  :basis basis
+                  :basis (pom-basis basis)
                   :src-dirs ["src/clj"]
                   :resource-dirs ["config/defaults" "resources"]
                   :scm {:url "https://github.com/intermine/bluegenes"
