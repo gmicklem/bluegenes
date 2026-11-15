@@ -1,6 +1,6 @@
 (ns bluegenes.version)
 
-;; This makes the `release` version passed using closure-defines (see project.clj)
+;; This makes the `release` version passed using closure-defines (build.clj, cljs task)
 ;; available like any def-ed thing, with dev as the fallback value.
 (goog-define release "dev")
 

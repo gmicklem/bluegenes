@@ -60,10 +60,17 @@
   "Necessary fixtures to use the exports from this namespace.
   Use by calling use-fixtures from your testing namespace:
       (use-fixtures :each utils/fixtures)"
-  {;; First let events still queued by the previous test (e.g. dispatches from
-   ;; its go blocks) run, so they cannot leak into this one. kaocha-cljs got
-   ;; this for free from its REPL round-trip between tests; the :node-test
-   ;; runner starts the next test immediately.
+  {;; After each test, let events it left queued run before the next test
+   ;; starts. They come from the :im-chan effect: its go block dispatches
+   ;; :authentication/store-token once the stubbed channel delivers, which is
+   ;; after a test has returned. In bluegenes.events-test, reuse-anonymous-token
+   ;; and reuse-login-token (already run-test-sync, which cannot make a go
+   ;; block synchronous) and each run-test-async test leave one behind; without
+   ;; the wait, wait-for in reuse-persisted-login-token, use-oauth2-token,
+   ;; replace-invalid-token and clear-invalid-login-token catches the token of
+   ;; the test two before (6 failures). kaocha-cljs got this for free from its
+   ;; REPL round-trip between tests; the :node-test runner starts the next test
+   ;; immediately.
    :after (fn []
             (async done (js/setTimeout done 50)))
    :before (fn []

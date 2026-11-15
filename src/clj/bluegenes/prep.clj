@@ -15,7 +15,7 @@
 (defn copy-im-tables-css []
   (let [source-file im-tables-css
         target-file (resource-path im-tables-css)]
-    ;; css dir is missing after a lein clean.
+    ;; css dir is missing after `clojure -T:build clean`.
     (io/make-parents target-file)
     (try
       (->> (io/resource source-file)
