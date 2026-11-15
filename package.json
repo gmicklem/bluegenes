@@ -44,7 +44,6 @@
     "chokidar-cli": "^2.1.0",
     "cypress": "13.17.0",
     "less": "4.9.1",
-    "react-highlight.js": "1.0.7",
     "shadow-cljs": "2.28.18"
   },
   "overrides": {
