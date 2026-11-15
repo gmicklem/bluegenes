@@ -3,7 +3,6 @@
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.string :as s :refer [split join blank?]]
             [json-html.core :as json-html]
-            [bluegenes.components.lighttable :as lighttable]
             [imcljs.path :as im-path]
             [bluegenes.components.ui.constraint :refer [constraint]]
             [bluegenes.components.ui.results_preview :refer [preview-table]]

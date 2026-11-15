@@ -7,7 +7,6 @@
             [bluegenes.components.icons :as icons]
             [bluegenes.components.ui.results_preview :refer [preview-table]]
             [bluegenes.components.loader :refer [mini-loader]]
-            [bluegenes.components.lighttable :as lighttable]
             [bluegenes.components.idresolver.events :as evts]
             [bluegenes.components.idresolver.subs :as subs]
             [oops.core :refer [oget oget+ ocall]]
