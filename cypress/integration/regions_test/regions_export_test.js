@@ -1,11 +1,19 @@
-import { minePage, mineService } from "../../support/mine";
+import { minePage, mineService, requireMineData } from "../../support/mine";
+
+// The expected files in cypress/fixtures are recorded from the mine's own export (run with
+// CYPRESS_RECORD_FIXTURES=true, see docs/building.md), so they need a mine whose features
+// have chromosome locations. The demo mine has none: the whole file is skipped there.
 
 describe("Regions Export Test", function(){
+    before(function(){
+        requireMineData(this, "Location", "the exports need features overlapping the regions");
+    });
+
     beforeEach(function(){
         cy.visit(minePage("/regions"));
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:29733..37349{enter}",{delay:200});
-            cy.get("textarea").should("include.text","MAL");
+            cy.typeSlowly("textarea", "2:14615455..14619002", { enter: true });
+            cy.get("textarea").should("include.text","14615455");
             cy.intercept("POST",mineService("query/results")).as("regionSearch");
             cy.get("button").filter(':contains("Search")').click();
             cy.wait("@regionSearch");
@@ -25,7 +33,7 @@ describe("Regions Export Test", function(){
             cy.contains("TAB").click();
         })
         cy.readFile("cypress/downloads/result.tsv").then(newResult => {
-            cy.readFile("cypress/fixtures/region_result.tsv").should("eq",newResult);
+            cy.expectFixture("region_result.tsv", newResult);
         })
     })
 
@@ -34,7 +42,7 @@ describe("Regions Export Test", function(){
             cy.contains("CSV").click();
         })
         cy.readFile("cypress/downloads/result.csv").then(newResult => {
-            cy.readFile("cypress/fixtures/region_result.csv").should("eq",newResult);
+            cy.expectFixture("region_result.csv", newResult);
         })
     })
 
@@ -46,7 +54,7 @@ describe("Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/region_result.gff3").should("eq",body);
+                cy.expectFixture("region_result.gff3", body);
             })
         })
     })
@@ -58,7 +66,7 @@ describe("Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/region_result.bed").should("eq",body);
+                cy.expectFixture("region_result.bed", body);
             })
           })
     })
@@ -70,7 +78,7 @@ describe("Regions Export Test", function(){
         cy.wait('@records').its('request').then((req) => {
             cy.request(req)
             .then(({ body, headers }) => {
-                cy.readFile("cypress/fixtures/region_result.fa").should("eq",body);
+                cy.expectFixture("region_result.fa", body);
             })
           })
     })

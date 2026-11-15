@@ -54,3 +54,20 @@ export const useTestAccount = (label) =>
   });
 
 export const testAccount = () => Cypress.env("TEST_ACCOUNT");
+
+// Skips the running test (call it with `this` from a function(){} test or hook) when the mine
+// has no objects of the given class: a capability check against the mine's own data, so the
+// same specs run unchanged against a mine that has them. Pass a reason for the skip.
+export const requireMineData = (ctx, className, reason) =>
+  cy
+    .request({
+      url: mineService("query/results"),
+      qs: { query: `<query model="genomic" view="${className}.id"></query>`, format: "count" },
+      failOnStatusCode: false, // a model without the class answers with an error
+    })
+    .then(({ status, body }) => {
+      if (status !== 200 || Number(body) === 0) {
+        cy.log(`skipped: the mine has no ${className} objects (${reason})`);
+        ctx.skip();
+      }
+    });

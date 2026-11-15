@@ -1,4 +1,12 @@
-import { minePage, mineService } from "../../support/mine";
+import { minePage, mineService, requireMineData } from "../../support/mine";
+
+// The demo mine has chromosomes (1..22, X) but no Location objects, so a region search finds
+// no features. The tests that need features to click, list or skip to are skipped with
+// requireMineData (a count of Location objects asked of the mine); the tests of the search
+// form, which only look at the region headers, run everywhere.
+const needsFeatures = (ctx) =>
+    requireMineData(ctx, "Location", "the test needs features overlapping a region");
+
 
 describe("Regions Test", function(){
     beforeEach(function(){
@@ -6,29 +14,31 @@ describe("Regions Test", function(){
     });
 
     it("can search a gene region given by example", function(){
+        needsFeatures(this);
         cy.get(".input-section").within(() => {
             cy.contains("Show Example").click();
-            cy.get("textarea").should("include.text","MAL");
+            cy.get("textarea").should("include.text","14615455");
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
             cy.get(".single-feature").its("length").should("be.gt",0);
-            cy.contains("exon.46111").click();
+            cy.get(".single-feature").first().click();
         })
         cy.url().should("include","/report");
     });
 
     it("can type in chromosome coordinates and select features", function(){
+        needsFeatures(this);
 
         cy.get(".input-section").within(() => {
-            cy.get("textarea").type("MAL1:0..100000",{delay:100});
+            cy.get("textarea").type("1:0..100000",{delay:100});
             cy.get('button[class="btn dropdown-toggle"]').click();
-            cy.contains("P. falciparum 3D7").click();
+            cy.get(".dropdown-menu li").first().click(); // the first organism of the mine
             cy.contains("Features to include").children().click();
             cy.contains("Gene").children().click();
             cy.get("button").filter(':contains("Search")').click();
         })
-        cy.get(".results").within(() => {
+        cy.get(".results").first().within(() => {
             cy.get(".single-feature").its("length").should("be.gt",0);
             cy.contains("Next").click();
             cy.get(".single-feature").its("length").should("be.gt",0);
@@ -39,7 +49,7 @@ describe("Regions Test", function(){
 
     it("can search regions with interbase coordinates", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:0..30000",{delay:100});
+            cy.get("textarea").clear().type("1:0..30000",{delay:100});
             cy.get(".radio-group").within(() => {
                 cy.contains("interbase").within(() => {
                     cy.get(".check").should("not.be.visible");
@@ -51,13 +61,13 @@ describe("Regions Test", function(){
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
-            cy.get("#region-result-0 > span").should("include.text","MAL1 1..30000");
+            cy.get("#region-result-0 > span").should("include.text","1 1..30000");
         })
     })
 
     it("can perform region search in the leading strand", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:0..30000",{delay:100});
+            cy.get("textarea").clear().type("1:0..30000",{delay:100});
             cy.get(".togglebutton").within(() => {
                 cy.get('.toggle').click();
                 cy.wait(500);
@@ -70,7 +80,7 @@ describe("Regions Test", function(){
     })
     it("can perform region search in the lagging strand", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:30000..0",{delay:100});
+            cy.get("textarea").clear().type("1:30000..0",{delay:100});
             cy.get(".togglebutton").within(() => {
                 cy.get('.toggle').click();
                 cy.wait(500);
@@ -84,7 +94,7 @@ describe("Regions Test", function(){
 
     it("can extend gene search region by clicking tick marks", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
             cy.get(".extend-region").within(() => {
                 cy.get(".slider-ticks").eq(0).within(() => {
                     cy.contains("1k").click();
@@ -95,13 +105,13 @@ describe("Regions Test", function(){
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").should("exist").within(() => {
-            cy.get("#region-result-0").should("include.text","MAL1 9000..41000");
+            cy.get("#region-result-0").should("include.text","1 9000..41000");
         })
     })
 
     it("can extend gene search region by sliders", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
             cy.get(".extend-region").within(() => {
                 cy.get('input[type="range"]').eq(0)
                 .then($el => $el[0].stepUp(40))
@@ -112,13 +122,13 @@ describe("Regions Test", function(){
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
-            cy.get("#region-result-0").should("include.text","MAL1 0..50000");
+            cy.get("#region-result-0").should("include.text","1 0..50000");
         })
     })
 
     it("can extend gene search region by inputing in the text box", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:40000..60000",{delay:100});
+            cy.get("textarea").clear().type("1:40000..60000",{delay:100});
             cy.get(".extend-region").within(() => {
                 cy.get("input.form-control").eq(1).clear().type("38k{enter}",{delay:100});
                 cy.get("input.form-control").eq(1).should("have.value","38k");
@@ -126,13 +136,13 @@ describe("Regions Test", function(){
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
-            cy.get("#region-result-0").should("include.text","MAL1 2000..98000");
+            cy.get("#region-result-0").should("include.text","1 2000..98000");
         })
     })
 
     it("can lock gene search region extension", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:10000..20000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..20000",{delay:100});
             cy.get(".extend-region").within(() => {
                 cy.get(".icon-lock").click();
                 cy.get("input.form-control").eq(1).clear().type("3.8k{enter}",{delay:100});
@@ -143,14 +153,14 @@ describe("Regions Test", function(){
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
-            cy.get("#region-result-0").should("include.text","MAL1 6200..22500");
+            cy.get("#region-result-0").should("include.text","1 6200..22500");
         })
 
     })
 
     it("can select the organism in which to perform region search", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("MAL1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
             cy.get(".organism-selection").within(() => {
                 cy.get(".dropdown-toggle").click();
                 cy.get(".dropdown-menu").within(() => {
@@ -166,12 +176,13 @@ describe("Regions Test", function(){
     })
 
     it("can create a list by feature type", function(){
+        needsFeatures(this);
         cy.get(".input-section").within(() => {
             cy.contains("Show Example").click();
-            cy.get("textarea").should("include.text","MAL");
+            cy.get("textarea").should("include.text","14615455");
             cy.get("button").filter(':contains("Search")').click();
         })
-        cy.get(".results").within(() => {
+        cy.get(".results").first().within(() => {
             cy.get(".single-feature").its("length").should("be.gt",0);
         })
         cy.get(".results-actions").within(() => {
@@ -187,12 +198,13 @@ describe("Regions Test", function(){
     })
 
     it("can view all features in search region in a results table", function(){
+        needsFeatures(this);
         cy.get(".input-section").within(() => {
             cy.contains("Show Example").click();
-            cy.get("textarea").should("include.text","MAL");
+            cy.get("textarea").should("include.text","14615455");
             cy.get("button").filter(':contains("Search")').click();
         })
-        cy.get(".results").within(() => {
+        cy.get(".results").first().within(() => {
             cy.get(".single-feature").its("length").should("be.gt",0);
         })
         cy.get(".results-actions").within(() => {
@@ -205,19 +217,20 @@ describe("Regions Test", function(){
     })
 
     it("can skip to selected region of search results", function(){
+        needsFeatures(this);
         cy.get(".input-section").within(() => {
             cy.contains("Show Example").click();
-            cy.get("textarea").should("include.text","MAL");
+            cy.get("textarea").should("include.text","14615455");
             cy.get("button").filter(':contains("Search")').click();
         })
-        cy.get(".results").within(() => {
+        cy.get(".results").first().within(() => {
             cy.get(".single-feature").its("length").should("be.gt",0);
         })
         cy.get("#region-skip-to-bar").within(() => {
-            cy.get(".results-count").contains("MAL9").click();
+            cy.get(".results-count").contains("3").click();
             cy.wait(500);
         })
-        cy.get(".results").eq(2).as("MAL9results");
-        cy.isInViewport("@MAL9results");
+        cy.get(".results").eq(2).as("thirdResults");
+        cy.isInViewport("@thirdResults");
     })
 })
