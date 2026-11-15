@@ -61,6 +61,8 @@ describe("Main page test", function() {
         cy.url().should("include", "/querybuilder");
     });
     
+    // Switching mines needs a second mine; FlyMine is added to the default mine with
+    // BLUEGENES_ADDITIONAL_MINES.
     itExternal("can access other intermine instances", function() {
         cy.get(".minename > .dropdown-toggle").click();
         cy.contains("FlyMine").click();

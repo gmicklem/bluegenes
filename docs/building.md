@@ -136,16 +136,25 @@ To test this checkout rather than the stack's BlueGenes, start it on another por
 
 The stack's demo mine does not have Biotestmine's data, so tests that search for or upload Biotestmine identifiers, use its model labels or its seeded `test_user@mail_account` account, or compare exports with `cypress/fixtures/`, fail there until the specs and fixtures are recorded again for that mine. The account specs also register fixed user names, so they pass only once per fresh mine.
 
-#### Tests that need FlyMine (`@external`)
+#### Tests that need a second mine (`@external`)
 
-Two tests follow links from the default mine into live FlyMine, so they need internet access and a BlueGenes started with FlyMine in `BLUEGENES_ADDITIONAL_MINES` (as in the Biotestmine example above). Their titles end in `@external`, and they are skipped unless `CYPRESS_EXTERNAL=true`:
+Two tests switch between mines, so they need internet access and a BlueGenes started with FlyMine in `BLUEGENES_ADDITIONAL_MINES` next to its default mine (as in the Biotestmine example above). The default mine should be the public HumanMine (`https://www.humanmine.org/humanmine`, name `HumanMine`) or the local demo mine; FlyMine is only the mine being switched to. Their titles end in `@external`, and they are skipped unless `CYPRESS_EXTERNAL=true`:
 
 * `main_page_test.js`: "can access other intermine instances" (mine switcher to FlyMine)
-* `report_page_test.js`: "can access homologue of the gene in other mines" (homologue link into FlyMine; the FlyMine query itself is stubbed)
+* `report_page_test.js`: "can access homologue of the gene in other mines" (search for PPARG, open the human gene, follow the homologue link into FlyMine; the FlyMine query itself is stubbed)
 
-        CYPRESS_EXTERNAL=true npm run test:e2e
+With `CYPRESS_EXTERNAL_ONLY=true` as well, only these tests run. That is how to run them against a public mine, which the rest of the suite must never touch (see below):
 
-Do not use FlyMine or another production mine as the default mine (`CYPRESS_MINE_URL`): the account, list and admin specs register users, save lists and change the home page notice on the default mine.
+    clojure -T:build release
+    SERVER_PORT=5001 BLUEGENES_DEFAULT_SERVICE_ROOT=https://www.humanmine.org/humanmine \
+    BLUEGENES_DEFAULT_MINE_NAME=HumanMine BLUEGENES_DEFAULT_NAMESPACE=humanmine \
+    BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
+    clojure -M:prod -m bluegenes.core &
+    CYPRESS_EXTERNAL=true CYPRESS_EXTERNAL_ONLY=true CYPRESS_BASE_URL=http://localhost:5001 \
+    CYPRESS_MINE_URL=https://www.humanmine.org/humanmine CYPRESS_MINE_NAME=HumanMine \
+    npx cypress run --spec cypress/integration/main_page_test.js,cypress/integration/report_page_test.js
+
+Do not run the whole suite with a public mine (HumanMine, FlyMine) as the default mine (`CYPRESS_MINE_URL`): the account, list and admin specs register users, save lists and change the home page notice on the default mine.
 
 *Tip:* With BlueGenes under a deploy path (`BLUEGENES_DEPLOY_PATH=/foo/bar`), include the path in `CYPRESS_BASE_URL` (`http://localhost:5000/foo/bar`).
 

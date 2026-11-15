@@ -1,13 +1,19 @@
 import { itExternal, mineUrl } from "../support/mine";
 
+// The report page asks every neighbouring mine for homologues of the gene. FlyMine
+// (an additional mine in BLUEGENES_ADDITIONAL_MINES) is answered with this one gene.
+const stubFlymineHomologues = () => {
+    cy.intercept('POST', 'https://www.flymine.org/flymine/service/query/results', {statusCode: 200,
+    body: {"modelName":"genomic","columnHeaders":["Gene > Id","Gene > Symbol","Gene > DB identifier","Gene > Secondary Identifier","Gene > Organism > Short Name"],"rootClass":"Gene","start":0,"views":["Gene.id","Gene.symbol","Gene.primaryIdentifier","Gene.secondaryIdentifier","Gene.organism.shortName"],"results":[
+    [1029368,"Eip75B","FBgn0000568","CG8127","D. melanogaster"]
+    ],"executionTime":"2021.08.12 13:10::26","wasSuccessful":true,"error":null,"statusCode":200}
+    })
+};
+
 describe("Report Page Test", function(){
     beforeEach(function(){
         cy.searchKeyword("GST");
-        cy.intercept('POST', 'https://www.flymine.org/flymine/service/query/results', {statusCode: 200,
-        body: {"modelName":"genomic","columnHeaders":["Gene > Id","Gene > Symbol","Gene > DB identifier","Gene > Secondary Identifier","Gene > Organism > Short Name"],"rootClass":"Gene","start":0,"views":["Gene.id","Gene.symbol","Gene.primaryIdentifier","Gene.secondaryIdentifier","Gene.organism.shortName"],"results":[
-        [1029368,"Eip75B","FBgn0000568","CG8127","D. melanogaster"]
-        ],"executionTime":"2021.08.12 13:10::26","wasSuccessful":true,"error":null,"statusCode":200}
-        })
+        stubFlymineHomologues();
         cy.get(".result").click();
         cy.url().should("include","/report");
         cy.get('.report-page-heading').should("exist");
@@ -117,9 +123,34 @@ describe("Report Page Test", function(){
         cy.url().should("include","/results");
         cy.get(".im-table").should("exist");
     })
+})
+
+// The "Other mines" box of a gene report page queries the neighbouring mines for
+// homologues, so this needs a second mine: FlyMine (BLUEGENES_ADDITIONAL_MINES) next to
+// the default mine. It is about FlyMine on purpose, whatever the default mine is, and it
+// needs a default mine with real genes (HumanMine). The FlyMine query is stubbed; the
+// click then opens FlyMine's report page in BlueGenes.
+describe("Report Page Test: other mines", function(){
+    // HumanMine's gene report loads BlueGenes tools (the protein visualizer, for example)
+    // that expect window.React, which BlueGenes no longer sets since the npm migration.
+    // Their uncaught errors say nothing about the sidebar under test, so ignore errors
+    // thrown from tool bundles here until the tools get React again.
+    const ignoreToolErrors = (err) => !/\/tools\//.test(err.stack || "");
+    before(function(){ Cypress.on("uncaught:exception", ignoreToolErrors); });
+    after(function(){ Cypress.off("uncaught:exception", ignoreToolErrors); });
+
+    beforeEach(function(){
+        cy.searchKeyword("PPARG");
+        stubFlymineHomologues();
+        // The human gene among the PPARG hits (there are mouse and rat genes too).
+        cy.contains(".result", "Homo sapiens").first().click();
+        cy.url().should("include","/report/Gene");
+        cy.get('.report-page-heading').should("exist");
+    });
 
     itExternal("can access homologue of the gene in other mines", function(){
-        cy.get(".other-mine").within(() => {
+        // The sidebar is rendered twice (one copy is hidden at any width).
+        cy.get(".other-mine").filter(":visible").within(() => {
             cy.get(".mine").should("include.text","FlyMine");
             cy.get("img").should("exist");
             cy.contains("Eip75B").should("exist").click(); //An example of a gene in flymine, not necessarily the homologue

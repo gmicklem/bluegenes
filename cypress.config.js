@@ -13,7 +13,9 @@
 //                          mine's project.title web property (default BioTestMine)
 //   CYPRESS_EXTERNAL       set to true to also run the tests tagged @external
 //                          (itExternal in support/mine.js), which need live
-//                          FlyMine (default false)
+//                          FlyMine next to the default mine (default false)
+//   CYPRESS_EXTERNAL_ONLY  with CYPRESS_EXTERNAL=true, run only those tests of
+//                          the spec files you select (default false)
 // The same keys can be passed as `npx cypress run --env MINE_URL=...`.
 // See docs/building.md, section "Cypress integration tests".
 const { defineConfig } = require("cypress");
