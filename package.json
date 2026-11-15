@@ -26,7 +26,6 @@
     "cypress-downloadfile": "^1.2.1",
     "less": "1.7.5",
     "wait-on": "^3.3.0",
-    "ws": "^7.3.1",
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
