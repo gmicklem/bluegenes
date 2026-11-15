@@ -69,7 +69,6 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [inflections "0.13.2"]
                  [binaryage/oops "0.7.0"]
-                 [inflections "0.13.2"]
                  [day8.re-frame/test "0.1.5"]
                  [org.clojure/data.xml "0.2.0-alpha6"]
 
