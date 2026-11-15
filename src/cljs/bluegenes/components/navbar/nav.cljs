@@ -16,11 +16,20 @@
 
 (def ^:const logo-path "/model/images/logo.png")
 
-;; This logo is banned! It's just the InterMine logo, and some mines
-;; have it set as /branding:images.logo while they have a proper logo
-;; under `logo-path`. I'll just sneak it in here and everything will
-;; look nice :-)
+;; The InterMine logo that older mines still set as /branding:images.logo
+;; (web.properties) while they have a proper logo under `logo-path`. It is only
+;; a sentinel to compare against, never loaded: the host it used to live on
+;; (cdn.rawgit.com) is gone, and `usable-logo` turns it into nil so the
+;; callers fall back to the mine's own `logo-path`.
 (def ignore-logo-path "https://cdn.rawgit.com/intermine/design-materials/78a13db5/logos/intermine/squareish/45x45.png")
+
+(defn usable-logo
+  "The logo path from a mine's branding, or nil when it is empty or the
+  banned InterMine logo (`ignore-logo-path`)."
+  [branding-path]
+  (when-not (or (empty? branding-path)
+                (= branding-path ignore-logo-path))
+    branding-path))
 
 (defn mine-icon
   "returns the icon set for a specific mine, or a default.
@@ -33,10 +42,7 @@
     (let [branding-path (or (get-in details [:images :logo]) ; Path when it's from registry.
                             (get-in details [:branding :images :logo])) ; Path when it's the current mine.
           fallback-path (str (get-mine-url details) logo-path)] ; Fallback path.
-      (if (or (empty? branding-path)
-              (= branding-path ignore-logo-path))
-        fallback-path
-        branding-path))}])
+      (or (usable-logo branding-path) fallback-path))}])
 
 (defn update-form [atom key evt]
   (swap! atom assoc key (oget evt :target :value)))
@@ -216,7 +222,7 @@
   (let [logo    (get-in current-mine [:branding :images :logo])
         service (get-in current-mine [:service :root])]
     [:img.active-mine-image
-     {:src (or logo (str service logo-path))}]))
+     {:src (or (usable-logo logo) (str service logo-path))}]))
 
 (defn mine-entry
   "Output a single mine in the mine picker"
