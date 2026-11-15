@@ -4,7 +4,6 @@
             [bluegenes.pages.reportpage.components.toc :as toc]
             [bluegenes.pages.reportpage.components.sidebar :as sidebar]
             [bluegenes.pages.reportpage.utils :as utils :refer [description-dropdown]]
-            #_[bluegenes.components.table :as table]
             [bluegenes.components.lighttable :as lighttable]
             [bluegenes.components.loader :refer [loader mini-loader]]
             [bluegenes.components.tools.views :as tools]

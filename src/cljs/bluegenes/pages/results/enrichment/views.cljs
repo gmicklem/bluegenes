@@ -1,7 +1,6 @@
 (ns bluegenes.pages.results.enrichment.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [bluegenes.components.table :as table]
             [bluegenes.components.loader :refer [mini-loader]]
             [bluegenes.pages.results.subs]
             [imcljs.path :as path]

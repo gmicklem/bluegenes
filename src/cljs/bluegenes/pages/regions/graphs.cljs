@@ -1,7 +1,6 @@
 (ns bluegenes.pages.regions.graphs
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [bluegenes.components.table :as table]
             [bluegenes.pages.regions.events]
             [bluegenes.pages.regions.subs]
             [bluegenes.components.imcontrols.views :as im-controls]

@@ -3,7 +3,6 @@
             [reagent.core :as reagent]
             [bluegenes.pages.regions.graphs :as graphs]
             [bluegenes.components.icons :refer [icon]]
-            [bluegenes.components.table :as table]
             [bluegenes.components.loader :refer [loader]]
             [bluegenes.pages.regions.events :refer [prepare-export-query]]
             [bluegenes.components.imcontrols.views :as im-controls]

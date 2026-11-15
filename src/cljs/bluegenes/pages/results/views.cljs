@@ -1,7 +1,6 @@
 (ns bluegenes.pages.results.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [bluegenes.components.table :as table]
             [bluegenes.pages.results.events]
             [bluegenes.pages.results.subs]
             [bluegenes.pages.results.enrichment.views :as enrichment]
