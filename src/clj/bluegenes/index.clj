@@ -143,12 +143,12 @@
     (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"
             "sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa")
     ;; Graphing library
-    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega/5.20.2/vega.min.js"
-            "sha384-oQhebJIeI87crKEbKfAlw34gMOsvVzCMaDQ37e5BJYhc5Z5D+5trWmc5wuGfN89o")
-    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-lite/5.1.0/vega-lite.min.js"
-            "sha384-EPcfdisJ0A5aMjb/HMRlIxeeVeGGLPZgmIvqRkr+TtNQ3GyjsUrK+tzUjYHtyNxa")
-    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-embed/6.17.0/vega-embed.min.js"
-            "sha384-yu20vnQGaas7JQJS9zUtAxaXLNh7Tbq39TLd+Hca+SYsUSkpJ6bF5M/gXN8UHz10")
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega/5.33.1/vega.min.js"
+            "sha384-NMXhl2TbCXxcN7o4ROC56Funm78m4AylL8gMg/7Kn4YU+wrm23K9l7cY8lDRXQ9d")
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-lite/5.23.0/vega-lite.min.js"
+            "sha384-D9LYH0esGjcxQJsBuxOuXtCDJGXRWW1+KhluzWPqi0rLJmiR/ygPChefaD+rFFDQ")
+    (cdn-js "https://cdnjs.cloudflare.com/ajax/libs/vega-embed/6.29.0/vega-embed.min.js"
+            "sha384-M+Ax7e/WFJpxSOF09HzI+Sj4wg9ottVd/uxmV2ItGGh02fLH28t2FAOJx3TJBap5")
     (when (:semantic-markup options)
       [:script {:type "application/ld+json"}
        (generate-string (fetch-semantic-markup options))])]))
