@@ -71,7 +71,6 @@
                  [inflections "0.13.2"]
                  [binaryage/oops "0.7.0"]
                  [inflections "0.13.2"]
-                 [cljsjs/google-analytics "2017.09.21-0"]
                  [day8.re-frame/test "0.1.5"]
                  [org.clojure/data.xml "0.2.0-alpha6"]
 
