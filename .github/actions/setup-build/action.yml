@@ -1,0 +1,90 @@
+name: Set up the BlueGenes build
+description: >-
+  Java (Temurin), the Clojure CLI (pinned official installer), Node with the npm
+  cache, and caches for the Maven, gitlibs, clj and shadow-cljs directories.
+  Run actions/checkout first (the cache keys hash files from the checkout).
+
+inputs:
+  java-versions:
+    description: >-
+      Temurin major version(s), one per line. With several, the LAST one becomes
+      the default JAVA_HOME and the others are available as JAVA_HOME_<n>_X64.
+    default: "21"
+  node-version:
+    description: Node.js version
+    default: "22"
+  clojure-version:
+    description: Clojure CLI version (a release of github.com/clojure/brew-install)
+    default: "1.12.6.1673"
+  clojure-installer-sha256:
+    description: >-
+      sha256 of that release's linux-install.sh. The script itself downloads
+      clojure-tools-<version>.tar.gz from the same release and checks the sha256
+      embedded in the script before unpacking it.
+    default: "5ae63b082ed33bf4c29bf1a8317c5c15249d1bc753676b2f5177fb3804ad6f77"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java-versions }}
+
+    # The Clojure CLI is installed with the official installer from the Clojure
+    # core team's release page rather than with a third-party setup action: no
+    # extra code runs in the job, and the script and the tarball are both checked
+    # against pinned sha256 sums. To upgrade: pick a release at
+    # https://github.com/clojure/brew-install/releases, copy the sha256 of its
+    # linux-install.sh (the asset's digest) here and into the defaults above.
+    - name: Install the Clojure CLI ${{ inputs.clojure-version }}
+      shell: bash
+      env:
+        CLOJURE_VERSION: ${{ inputs.clojure-version }}
+        INSTALLER_SHA256: ${{ inputs.clojure-installer-sha256 }}
+      run: |
+        set -euo pipefail
+        dir=$(mktemp -d)
+        curl -fsSL --retry 5 --retry-connrefused -o "$dir/linux-install.sh" \
+          "https://github.com/clojure/brew-install/releases/download/${CLOJURE_VERSION}/linux-install.sh"
+        echo "${INSTALLER_SHA256}  $dir/linux-install.sh" | sha256sum -c -
+        # the installer downloads into its working directory
+        (cd "$dir" && bash linux-install.sh --prefix "$HOME/.local/clojure")
+        echo "$HOME/.local/clojure/bin" >> "$GITHUB_PATH"
+        rm -rf "$dir"
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: package-lock.json
+
+    # Dependencies: ~/.m2 and ~/.gitlibs change only with deps.edn.
+    # org/intermine/bluegenes in ~/.m2 is the library jar that the library-jar
+    # job installs; it is excluded so that it never comes back from a cache.
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+          !~/.m2/repository/org/intermine/bluegenes
+          ~/.gitlibs
+        key: clj-deps-${{ runner.os }}-${{ hashFiles('deps.edn') }}
+        restore-keys: |
+          clj-deps-${{ runner.os }}-
+
+    # Build caches: classpath cache and the shadow-cljs compiler cache.
+    - uses: actions/cache@v4
+      with:
+        path: |
+          .cpcache
+          .shadow-cljs
+        key: clj-build-${{ runner.os }}-${{ hashFiles('deps.edn', 'shadow-cljs.edn', 'package-lock.json') }}
+        restore-keys: |
+          clj-build-${{ runner.os }}-
+
+    - name: Show tool versions
+      shell: bash
+      run: |
+        java -version
+        clojure --version
+        echo "node $(node -v), npm $(npm -v)"
