@@ -5,7 +5,7 @@
             [oops.core :refer [oget ocall]]
             [bluegenes.components.progress-bar :as progress-bar]
             [bluegenes.route :as route]
-            [bluegenes.components.ui.inputs :refer [password-input text-input]]
+            [bluegenes.components.ui.inputs :refer [password-input]]
             [bluegenes.components.icons :refer [icon-comp]]
             [bluegenes.time :as time]
             [clojure.string :as str]
@@ -66,9 +66,8 @@
      [:h2 (str "Recover password on " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [text-input
-       {:class "form-control"
-        :type "text"
+      [:input.form-control
+       {:type "text"
         :id "email"
         :value (:username @credentials)
         :on-change (partial update-form credentials :username)
@@ -99,9 +98,8 @@
      [:h2 (str "Register on " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [text-input
-       {:class "form-control"
-        :type "text"
+      [:input.form-control
+       {:type "text"
         :id "email"
         :value username
         :on-change (partial update-form credentials :username)
@@ -136,9 +134,8 @@
      [:h2 (str "Login to " (:name current-mine))]
      [:div.form-group
       [:label "Email"]
-      [text-input
-       {:class "form-control"
-        :type "text"
+      [:input.form-control
+       {:type "text"
         :id "email"
         :value username
         :on-change (partial update-form credentials :username)

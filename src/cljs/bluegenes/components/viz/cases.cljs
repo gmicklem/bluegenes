@@ -2,7 +2,8 @@
   (:require [reagent.core :as r]
             [oops.core :refer [oget]]
             [goog.string :refer [parseInt]]
-            [bluegenes.components.viz.common :refer [vega-lite]]))
+            [bluegenes.components.viz.common :refer [vega-lite]]
+            [bluegenes.components.ui.inputs :refer [reject-input!]]))
 
 (def config
   {:accepts ["ids"]
@@ -82,9 +83,10 @@
    [:label label]
    [:input.form-control
     {:type "number"
-     :on-change #(when-let [x (parseInt (oget % :target :value))]
-                   (when (pos? x)
-                     (reset! atom x)))
+     :on-change #(let [x (parseInt (oget % :target :value))]
+                   (if (pos? x)
+                     (reset! atom x)
+                     (reject-input! % @atom)))
      :value @atom}]])
 
 ;; Suggestions:

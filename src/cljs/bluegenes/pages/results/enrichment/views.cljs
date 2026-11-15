@@ -7,7 +7,6 @@
             [bluegenes.components.bootstrap :refer [popover poppable tooltip]]
             [clojure.string :as str]
             [oops.core :refer [oget ocall]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.icons :refer [icon]]
             [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]
             [goog.string :as gstring]))
@@ -177,9 +176,8 @@
 (defn text-filter []
   (let [value (subscribe [:enrichment/text-filter])]
     [:label.text-filter "Filter enrichment results"
-     [text-input
-      {:class "form-control"
-       :type "text"
+     [:input.form-control
+      {:type "text"
        :value @value
        :on-change (fn [e]
                     (let [value (.. e -target -value)]

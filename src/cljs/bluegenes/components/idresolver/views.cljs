@@ -10,7 +10,6 @@
             [bluegenes.components.idresolver.events :as evts]
             [bluegenes.components.idresolver.subs :as subs]
             [oops.core :refer [oget oget+ ocall]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [imcljs.path :as path]
             [bluegenes.route :as route]))
 
@@ -461,7 +460,7 @@
          (when-not upgrade?
            [:div.save-list
             [:label "List Name"
-             [text-input
+             [:input
               {:type "text"
                :value @list-name
                :on-change (fn [e]

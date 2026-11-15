@@ -6,7 +6,6 @@
             [oops.core :refer [ocall oget]]
             [bluegenes.route :as route]
             [reagent.core :as reagent]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.top-scroll :as top-scroll]))
 
 (defn results-display
@@ -59,12 +58,12 @@
                         ;; time we try to show suggestions, to avoid outdated results.
                         (dispatch [:handle-suggestions])
                         (dispatch [::route/navigate ::route/search nil {:keyword term}]))))}
-      [text-input {:type "text"
-                   :value search-term
-                   :placeholder "Type a new search term here"
-                   :on-change #(dispatch [:search/set-search-term (oget % :target :value)])
-                   :autoFocus true
-                   :ref #(some-> % (ocall :focus))}]
+      [:input {:type "text"
+               :value search-term
+               :placeholder "Type a new search term here"
+               :on-change #(dispatch [:search/set-search-term (oget % :target :value)])
+               :autoFocus true
+               :ref (fn [el] (when el (.focus el)))}]
       [:button "Search"]]]))
 
 (defn search-form

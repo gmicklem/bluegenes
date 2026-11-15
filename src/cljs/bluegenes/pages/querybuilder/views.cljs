@@ -3,7 +3,6 @@
             [reagent.core :as reagent]
             [clojure.string :as string :refer [split join lower-case]]
             [oops.core :refer [ocall oget]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.components.ui.constraint :refer [constraint]]
             [bluegenes.components.bootstrap :refer [tooltip poppable]]
             [imcljs.path :as im-path]
@@ -846,10 +845,8 @@
              :target "_blank"
              :title "More information on the PathQuery API"}
          [:svg.icon.icon-external [:use {:xlinkHref "#icon-external"}]]]]
-       [text-input
-        {:textarea? true
-         :class "form-control"
-         :rows 10
+       [:textarea.form-control
+        {:rows 10
          :autoFocus true
          :value @query-input
          :on-change #(reset! query-input (oget % :target :value))}]
@@ -868,16 +865,13 @@
    [:div.input-group
     [:label {:for id} label]
     (if textarea?
-      [text-input
-       {:textarea? true
-        :class "form-control"
-        :id id
+      [:textarea.form-control
+       {:id id
         :rows 3
         :value @state*
         :on-change #(reset! state* (oget % :target :value))}]
-      [text-input
-       {:class "form-control"
-        :id id
+      [:input.form-control
+       {:id id
         :type "text"
         :value @state*
         :on-change #(reset! state* (oget % :target :value))}])]

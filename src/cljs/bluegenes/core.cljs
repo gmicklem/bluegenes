@@ -5,6 +5,7 @@
             [bluegenes.imjs-globals]
             [cljsjs.react-select]
             [reagent.dom.client :as rdc]
+            [bluegenes.reagent-inputs :as reagent-inputs]
             [re-frame.core :as re-frame]
             [bluegenes.utils]
             [im-tables.core]
@@ -35,6 +36,8 @@
         (.css "display" "block")))
 
 (defn ^:export init []
+  ;; Before the first render: text inputs that keep every keystroke under createRoot.
+  (reagent-inputs/install!)
   (re-frame/dispatch-sync [:boot])
   ;(dev-setup)
   ; Initialize our bootstrap dropdowns

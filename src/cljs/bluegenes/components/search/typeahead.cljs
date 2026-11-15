@@ -5,7 +5,6 @@
             [dommy.core :as dommy :refer-macros [sel1]]
             [bluegenes.route :as route]
             [oops.core :refer [oget]]
-            [bluegenes.components.ui.inputs :refer [text-input]]
             [bluegenes.utils :refer [highlight-substring]]
             [clojure.string :as str]))
 
@@ -102,9 +101,8 @@
       :reagent-render
       (fn []
         [:div.dropdown
-         [text-input
-          {:class        "typeahead-search"
-           :type         "text"
+         [:input.typeahead-search
+          {:type         "text"
            :value        @search-term
            :placeholder  "Search for any term"
            :on-change    (fn [e] (dispatch [:bounce-search (oget e :target :value)]))
