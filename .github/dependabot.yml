@@ -1,0 +1,36 @@
+# Dependabot version updates. They must also be enabled in the repository
+# settings (Settings > Code security > Dependabot version updates).
+#
+# deps.edn (Maven and git dependencies) is not covered: Dependabot has no
+# Clojure ecosystem. Those dependencies are updated by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # The React 16 family is pinned to the versions that the ClojureScript
+      # libraries (reagent, re-frame, im-tables) are built against; do not
+      # propose new majors until the React/reagent upgrade (issue E2).
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    # the workflows, and the local composite action in .github/actions/
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
