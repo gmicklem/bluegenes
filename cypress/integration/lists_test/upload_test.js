@@ -1,6 +1,8 @@
+import { minePage } from "../../support/mine";
+
 describe("Upload Test", function(){
     beforeEach(function(){
-        cy.visit("/biotestmine/upload");
+        cy.visit(minePage("/upload"));
     });
 
     it("can load free text input", function(){

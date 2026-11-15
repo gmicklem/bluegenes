@@ -1,8 +1,10 @@
+import { mineName } from "../../support/mine";
+
 describe(__filename, function() {
 
 	it("it should login user successfully", function() {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input#email").type("test_user@mail_account");
 		cy.get("input[type='password']").type("secret");
 		cy.get(".login-form")
@@ -15,7 +17,7 @@ describe(__filename, function() {
 
 	it("it should logout user successfully", function() {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input#email").type("test_user@mail_account");
 		cy.get("input[type='password']").type("secret");
 		cy.get(".login-form")
@@ -29,7 +31,7 @@ describe(__filename, function() {
 
 	it("it ensures password is not empty", function() {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input#email").type("test_user@mail_account");
 		cy.get(".login-form")
 			.find("button")
@@ -40,7 +42,7 @@ describe(__filename, function() {
 	});
 	it("it ensures username is not empty", function() {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input[type='password']").type("test_password");
 		cy.get(".login-form")
 			.find("button")
@@ -52,7 +54,7 @@ describe(__filename, function() {
 
 	it("it errors out on invalid user credentials", () => {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input#email").type("test_user@gmail.com");
 		cy.get("input[type='password']").type("secret");
 		cy.get(".login-form")
@@ -66,7 +68,7 @@ describe(__filename, function() {
 
 	it("it errors out on invalid password", () => {
 		cy.openLoginDialogue()
-		cy.get('.login-form').should('to.contain', 'Login to BioTestMine')
+		cy.get('.login-form').should('to.contain', "Login to " + mineName())
 		cy.get("input#email").type("test_user@mail_account");
 		cy.get("input[type='password']").type("test");
 		cy.get(".login-form")

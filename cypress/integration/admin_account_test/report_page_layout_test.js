@@ -1,7 +1,9 @@
+import { minePage } from "../../support/mine";
+
 describe("Report Page Layout Test", function(){
     beforeEach(function(){
         cy.loginToAdminAccount();
-        cy.visit("/biotestmine/admin");
+        cy.visit(minePage("/admin"));
         cy.contains("Report page layout").parent().should("have.class","well").as("reportPageLayout");
         cy.get("@reportPageLayout").within(() => {
             cy.get("Select").select("MRNA");

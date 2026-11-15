@@ -1,3 +1,5 @@
+import { mineUrl } from "../support/mine";
+
 describe("Report Page Test", function(){
     beforeEach(function(){
         cy.searchKeyword("GST");
@@ -83,7 +85,7 @@ describe("Report Page Test", function(){
         cy.get(".sidebar-actions").filter(':visible').within(() => {
             cy.contains("Copy permanent URL").click();
             cy.get(".permanent-url-container").should("be.visible").within(() => {
-                cy.get("input.form-control").should("be.visible").invoke('val').should("include","http://localhost:9999/biotestmine/gene:PF14_0187");
+                cy.get("input.form-control").should("be.visible").invoke('val').should("include",mineUrl() + "/gene:PF14_0187");
                 cy.get("button").contains("Copy").should("be.visible").click({multiple:true});
             });
         })

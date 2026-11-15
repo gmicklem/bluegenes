@@ -1,6 +1,8 @@
+import { minePage } from "../../support/mine";
+
 describe("Query view test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine/querybuilder");
+      cy.visit(minePage("/querybuilder"));
     });
 
     // it.only("can change the order of attributes", function(){

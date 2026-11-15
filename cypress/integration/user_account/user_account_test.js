@@ -1,6 +1,8 @@
+import { mineName, minePage, mineService } from "../../support/mine";
+
 describe("User Account Test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine");
+      cy.visit(minePage());
     });
 
     it.only("can create a new user account", function(){
@@ -17,7 +19,7 @@ describe("User Account Test", function() {
 
     it("can set user preferences", function(){
         cy.loginToUserAccount("test_user_account@mail.com","password");
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.intercept('GET', '/user/preferences').as('getPreferences');
         cy.wait('@getPreferences');
         cy.get('.profile-page > ').eq(0).as("userPreferences").within(() => {
@@ -30,7 +32,7 @@ describe("User Account Test", function() {
 
     it("can generate API access key", function(){
         cy.loginToUserAccount("test_user_account@mail.com","password");
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(1).as("generateAPI").within(() => {
             cy.contains("Generate a new API key").click();
             cy.get(".success").should("include.text","New API key successfully generated.");
@@ -98,7 +100,7 @@ describe("User Account Test", function() {
 
     it.only("can build and save a query", function(){
         cy.loginToUserAccount("test_user_account@mail.com","password");
-        cy.visit("/biotestmine/querybuilder");
+        cy.visit(minePage("/querybuilder"));
         cy.get(".model-browser-root").within(() => {
             cy.selectFromDropdown("Protein");        
             cy.contains("Add summary").click();
@@ -109,7 +111,7 @@ describe("User Account Test", function() {
             cy.get("div.input-group").type("Protein summary", {delay:100});
             cy.contains("Save Query").click();
           });
-          cy.visit("/biotestmine/querybuilder");
+          cy.visit(minePage("/querybuilder"));
           cy.get("div.panel-body").last().as("savedQueriesTab").within(()=>{
             cy.contains("Saved Queries").click();
             cy.get('table').contains('td','Protein summary');
@@ -120,11 +122,11 @@ describe("User Account Test", function() {
 
     it.only("can change user password", function(){
         cy.loginToUserAccount("test_user_account@mail.com","password")
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(2).as("changePassword").within(() => {
             cy.contains("Old password").siblings(".form-control").type("password");
             cy.contains("New password").siblings(".form-control").type("newpassword");
-            cy.intercept("POST","/biotestmine/service/user").as("waitPasswordChange");
+            cy.intercept("POST",mineService("user")).as("waitPasswordChange");
             cy.get("button").contains("Save password").click();
             cy.wait("@waitPasswordChange");
             // cy.wait(500); //change?
@@ -135,7 +137,7 @@ describe("User Account Test", function() {
 
     it.only("can delete an account", function(){
         cy.loginToUserAccount("test_user_account@mail.com","newpassword")
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.get(".settings-group").eq(3).as("deleteAccountSection").within(() => {
             cy.contains("Start account deletion").click();
             cy.get("code").then(($code) => {
@@ -145,7 +147,7 @@ describe("User Account Test", function() {
             cy.get("button").contains("Delete account").click();
         })
         cy.openLoginDialogue();
-        cy.get(".login-form").should("contain", "Login to BioTestMine");
+        cy.get(".login-form").should("contain", "Login to " + mineName());
         cy.get("input#email").type("test_user_account@mail.com");
         cy.get("input[type='password']").type("newpassword");
         cy.intercept('POST', '/api/auth/login').as('login');

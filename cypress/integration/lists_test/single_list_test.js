@@ -1,6 +1,8 @@
+import { minePage } from "../../support/mine";
+
 describe("Single List Test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine/upload");
+      cy.visit(minePage("/upload"));
       cy.createGeneList("SODB, GBP, GST, CDPK1");
       cy.contains("Lists").click();
       cy.url().should("include","/lists");

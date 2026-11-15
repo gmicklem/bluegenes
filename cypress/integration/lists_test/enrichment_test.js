@@ -1,3 +1,5 @@
+import { mineService } from "../../support/mine";
+
 Cypress.on('uncaught:exception', (err, runnable) => {
     if (err.message.includes('Can not create edge')) {
         // Cytoscape.js tools are throwing this - ignore for now.
@@ -60,7 +62,7 @@ describe("Enrichment Test", function(){
     // Applying enrichment filters
     it("can select the test correction method", function(){
         cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST","/biotestmine/service/list/enrichment").as("enrichmentLoad");
+            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
             cy.get(".correction").find("select").select("Benjamini Hochberg");
             cy.wait("@enrichmentLoad");
             cy.get(".enrichment-p-value").eq(0).should("have.text","1.78e-7");
@@ -69,7 +71,7 @@ describe("Enrichment Test", function(){
 
     it("can select the p-value", function(){
         cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST","/biotestmine/service/list/enrichment").as("enrichmentLoad");
+            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
             cy.contains("Max p-value").parent().find("select").eq(0).select("1.00");
             cy.wait("@enrichmentLoad");
             cy.contains("Gene Ontology Enrichment").should("include.text","(21)");
@@ -78,7 +80,7 @@ describe("Enrichment Test", function(){
 
     it("can filter enrichment results by ontology", function(){
         cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST","/biotestmine/service/list/enrichment").as("enrichmentLoad");
+            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
             cy.get(".enrichment-filter > div > select").select("molecular_function");
             cy.wait("@enrichmentLoad");
             cy.contains("Gene Ontology Enrichment").should("include.text","(1)");
@@ -87,7 +89,7 @@ describe("Enrichment Test", function(){
 
     it("can filter enrichment results by text", function(){
         cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST","/biotestmine/service/list/enrichment").as("enrichmentLoad");
+            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
             // The typing in command has many workarounds here because it's super flaky.
             cy.get(".text-filter > .form-control").type("x");
             cy.get(".text-filter > .form-control").click().wait(500).clear().type("symbiosis{enter}",{delay:200}); //very flaky
@@ -101,14 +103,14 @@ describe("Enrichment Test", function(){
         cy.contains("List").click();
         cy.url().should("include","/lists");
         cy.get(".lists-item").find(".list-title").eq(1).click();
-        cy.intercept("POST","/biotestmine/service/query/results").as("resultsLoad");
+        cy.intercept("POST",mineService("query/results")).as("resultsLoad");
         cy.url().should("include","/results");
         cy.wait("@resultsLoad");
         cy.get(".enrichment").should("exist").within(() => {
             cy.get(".dropdown").click();
             cy.get(".list-selection").eq(1).click();
         })
-        cy.intercept("POST","/biotestmine/service/list/enrichment").as("enrichmentReq");
+        cy.intercept("POST",mineService("list/enrichment")).as("enrichmentReq");
         cy.wait('@enrichmentReq').its('response.statusCode').should('eq', 200);
     })
 
@@ -117,7 +119,7 @@ describe("Enrichment Test", function(){
         cy.contains("List").click();
         cy.url().should("include","/lists");
         cy.get(".lists-item").find(".list-title").eq(0).click();
-        cy.intercept("POST","/biotestmine/service/query/results").as("resultsLoad");
+        cy.intercept("POST",mineService("query/results")).as("resultsLoad");
         cy.url().should("include","/results");
         cy.wait("@resultsLoad");
         cy.get(".enrichment").should("exist").within(() => {

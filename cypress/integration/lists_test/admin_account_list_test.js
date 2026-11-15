@@ -1,3 +1,5 @@
+import { mineService } from "../../support/mine";
+
 describe("Admin account list test", function() {
     beforeEach(function() {
         cy.loginToAdminAccount();
@@ -136,7 +138,7 @@ describe("Admin account list test", function() {
         })
         cy.get(".css-1wy0on6").click().type("List 3{enter}",{delay:100},{force:true});
         cy.get(".css-1hwfws3").click().type("Subfolder 1{enter}",{delay:100},{force:true});
-        cy.intercept("POST","/biotestmine/service/list/tags").as("listLoad");
+        cy.intercept("POST",mineService("list/tags")).as("listLoad");
         cy.get(".modal-footer").within(() => {
             cy.contains("Move list(s)").click();
         })

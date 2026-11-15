@@ -1,6 +1,8 @@
+import { minePage } from "../support/mine";
+
 describe("Search Test", function(){
     beforeEach(function(){
-        cy.visit("/biotestmine/search");
+        cy.visit(minePage("/search"));
     });
 
     it("can be accessed from navigation bar", function(){

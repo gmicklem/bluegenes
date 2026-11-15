@@ -1,6 +1,8 @@
+import { minePage, mineService } from "../../support/mine";
+
 describe("Regions Test", function(){
     beforeEach(function(){
-        cy.visit("/biotestmine/regions");
+        cy.visit(minePage("/regions"));
     });
 
     it("can search a gene region given by example", function(){
@@ -178,7 +180,7 @@ describe("Regions Test", function(){
                 cy.contains("Gene").click();
             })
         })
-        cy.intercept("POST","/biotestmine/service/query/results").as("queryResults");
+        cy.intercept("POST",mineService("query/results")).as("queryResults");
         cy.wait("@queryResults");
         cy.url().should("include","/results");
         cy.get(".query-title").should("include.text","Gene");
@@ -196,7 +198,7 @@ describe("Regions Test", function(){
         cy.get(".results-actions").within(() => {
             cy.contains("View all in results table").click();
         })
-        cy.intercept("POST","/biotestmine/service/query/results").as("queryResults");
+        cy.intercept("POST",mineService("query/results")).as("queryResults");
         cy.wait("@queryResults");
         cy.contains("Query Results").should("exist");
         cy.url().should("include","/results");

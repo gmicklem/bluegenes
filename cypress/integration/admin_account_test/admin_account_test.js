@@ -1,10 +1,12 @@
+import { mineName, minePage } from "../../support/mine";
+
 describe("Admin Account Test", function(){
     beforeEach(function(){
         cy.loginToAdminAccount();
     });
 
     it("can set user preferences in profile page",function(){
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.intercept('GET', '/user/preferences').as('getPreferences');
         cy.wait('@getPreferences');
         cy.get('.profile-page > ').first().should("exist").within(() => {
@@ -27,7 +29,7 @@ describe("Admin Account Test", function(){
     })
 
     it("can set and clear homepage notice",function(){
-        cy.visit("/biotestmine/admin"); //direct use of cy.visit can be flaky sometimes
+        cy.visit(minePage("/admin")); //direct use of cy.visit can be flaky sometimes
         cy.get(".admin-page .nav").contains('Home').click();
         cy.contains("Set homepage notice").parent().as("setHomepageNotice");
 
@@ -37,11 +39,11 @@ describe("Admin Account Test", function(){
             cy.get(".success").should("include.text","Successfully saved changes to notice text.");
         })
 
-        cy.visit("/biotestmine");
-        cy.get(".text-center").first().should("have.text","BioTestMine");
+        cy.visit(minePage());
+        cy.get(".text-center").first().should("have.text",mineName());
         cy.contains("A new list has been added!");
 
-        cy.visit("/biotestmine/admin");
+        cy.visit(minePage("/admin"));
         cy.get(".admin-page .nav").contains('Home').click();
         cy.get("@setHomepageNotice").within(() => {
             cy.contains("Clear notice").click();
@@ -50,13 +52,13 @@ describe("Admin Account Test", function(){
     })
 
     it("can update installed tools",function(){
-        cy.visit("/biotestmine/tools");
+        cy.visit(minePage("/tools"));
         cy.contains("Update installed tools").click();
         cy.get(".alert").should("include.text","A tool operation is in progress...");
     })
 
     it("can generate API access key",function(){
-        cy.visit("/biotestmine/profile");
+        cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(1).within(() => {
             cy.contains("Generate a new API key").click();
             cy.get(".success").should("include.text","New API key successfully generated.");

@@ -1,6 +1,8 @@
+import { minePage } from "../support/mine";
+
 describe("Templates Test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine/templates");
+      cy.visit(minePage("/templates"));
     });
 
     it("can filter templates by search", function() {

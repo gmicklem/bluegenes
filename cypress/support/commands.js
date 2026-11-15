@@ -24,14 +24,15 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 import 'cypress-file-upload';
+import { mineName, minePage, mineService } from './mine';
 
 Cypress.Commands.add("openLoginDialogue", () => {
-    cy.visit('/biotestmine');
+    cy.visit(minePage());
     cy.get('.dropdown-toggle').should("exist").contains('Login').click();
 })
 
 Cypress.Commands.add("openRegisterDialogue", () => {
-    cy.visit('/biotestmine');
+    cy.visit(minePage());
     cy.get('.dropdown-toggle').contains('Login').click();
     cy.get('a.btn-block').contains('Create new account').click();
 })
@@ -43,7 +44,7 @@ Cypress.Commands.add("openListsTab", () => {
 })
 
 Cypress.Commands.add("searchKeyword", (keyword) => {
-    cy.visit("/biotestmine/search");
+    cy.visit(minePage("/search"));
     cy.get(".searchform > input").type(keyword + '{enter}',{delay:200});
 })
 
@@ -102,7 +103,7 @@ Cypress.Commands.add('isInViewport', element => {
 
   Cypress.Commands.add('loginToAdminAccount', element => {
     cy.openLoginDialogue();
-		cy.get(".login-form").should("contain", "Login to BioTestMine");
+		cy.get(".login-form").should("contain", "Login to " + mineName());
 		cy.get("input#email").type("test_user@mail_account");
 		cy.get("input[type='password']").type("secret");
     cy.intercept('POST', '/api/auth/login').as('login');
@@ -117,7 +118,7 @@ Cypress.Commands.add('isInViewport', element => {
 
   Cypress.Commands.add('loginToUserAccount', (email,password) => {
     cy.openLoginDialogue();
-		cy.get(".login-form").should("contain", "Login to BioTestMine");
+		cy.get(".login-form").should("contain", "Login to " + mineName());
 		cy.get("input#email").type(email);
 		cy.get("input[type='password']").type(password);
     cy.intercept('POST', '/api/auth/login').as('login');
@@ -142,7 +143,7 @@ Cypress.Commands.add('isInViewport', element => {
     cy.url().should("include","/save");
     cy.get(".save-list > label > input").clear().type(listName,{delay:100});
     cy.contains("Save List").click();
-    cy.intercept("POST","/biotestmine/service/query/results").as("resultsLoad");
+    cy.intercept("POST",mineService("query/results")).as("resultsLoad");
     cy.url().should("include","/results");
     cy.wait("@resultsLoad");
   })

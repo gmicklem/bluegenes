@@ -1,6 +1,8 @@
+import { minePage } from "../../support/mine";
+
 describe("Query view test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine/querybuilder");
+      cy.visit(minePage("/querybuilder"));
     });
     
     it("can add length constraint on query editor", function(){

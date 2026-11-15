@@ -1,6 +1,8 @@
+import { minePage } from "../../support/mine";
+
 describe("Model browser test", function() {
     beforeEach(function() {
-      cy.visit("/biotestmine/querybuilder");
+      cy.visit(minePage("/querybuilder"));
     });
 
     // Model browser
