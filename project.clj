@@ -73,7 +73,6 @@
                  [inflections "0.13.2"]
                  [cljsjs/google-analytics "2017.09.21-0"]
                  [day8.re-frame/test "0.1.5"]
-                 [cljs-bean "1.5.0"]
                  [org.clojure/data.xml "0.2.0-alpha6"]
                  [lambdaisland/uri "1.2.1"]
 

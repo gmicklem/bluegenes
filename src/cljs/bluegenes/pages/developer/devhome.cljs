@@ -5,7 +5,6 @@
             [bluegenes.pages.developer.icons :as icons]
             [clojure.string :refer [blank?]]
             [bluegenes.route :as route]
-            [cljs-bean.core :refer [->clj]]
             [bluegenes.version :as version]
             [bluegenes.config :refer [server-vars]]))
 

@@ -35,7 +35,6 @@
             [imcljs.path :as im-path]
             [clojure.string :as str :refer [join split]]
             [cljs.core.async :refer [put! chan <! >! timeout close!]]
-            [cljs-bean.core :refer [->clj]]
             [bluegenes.utils :refer [read-registry-mine]]
             [bluegenes.pages.templates.helpers :refer [prepare-template-query]]))
 
