@@ -177,11 +177,15 @@ jobs:
           test -f "$HOME/.m2/repository/org/intermine/bluegenes/$version/bluegenes-$version.pom"
 
       # Resolve the installed jar the way a consumer does, from a bare deps.edn.
+      # The pom names the InterMine libraries by the Maven version they declare;
+      # until those are on Clojars, the consumer also gets the git coordinates
+      # deps.edn pins them with (a top-level coordinate wins over the pom's).
       - name: Start `java -cp ... bluegenes.core` on JDK 17
         run: |
           cons=$(mktemp -d)
-          echo "{:deps {org.intermine/bluegenes {:mvn/version \"$BLUEGENES_VERSION\"}}}" > "$cons/deps.edn"
-          cp=$(cd "$cons" && clojure -Spath | tr ':' '\n' | grep '\.jar$' | paste -sd: -)
+          clojure -M -e "(spit \"$cons/deps.edn\" (pr-str {:deps (into {'org.intermine/bluegenes {:mvn/version \"$BLUEGENES_VERSION\"}} (filter (comp :git/sha val)) (:deps (clojure.edn/read-string (slurp \"deps.edn\"))))}))"
+          cat "$cons/deps.edn"
+          cp=$(cd "$cons" && clojure -Spath | tr ':' '\n' | grep -E '\.jar$|/\.gitlibs/' | paste -sd: -)
           echo "classpath: $(echo "$cp" | tr ':' '\n' | grep -c .) jars"
           test -n "$cp"
           java17="${JAVA_HOME_17_X64:?setup-java did not export JAVA_HOME_17_X64}/bin/java"
