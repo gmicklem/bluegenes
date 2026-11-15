@@ -4,7 +4,8 @@
     clojure -T:build clean            ; delete target/ and the compiled assets
     clojure -T:build assets           ; copy im-tables CSS from its jar (was `lein assets`)
     clojure -T:build css              ; lessc -x less/site.less -> resources/public/css/site.css
-    clojure -T:build cljs             ; shadow-cljs release app (advanced, hashed file name)
+    clojure -T:build cljs             ; shadow-cljs release app (advanced), named
+                                      ; app.<hash of the build inputs>.js
     clojure -T:build fingerprint-css  ; site.css -> site-<hash>.css (was `lein fingerprint-css`)
     clojure -T:build release          ; all of the above in order (was `lein build`)
     clojure -T:build uber             ; release, then target/bluegenes.jar with every
@@ -17,11 +18,14 @@
                                       ; CLOJARS_USERNAME and CLOJARS_PASSWORD)
 
   Needs node_modules (npm ci) for lessc and shadow-cljs. The release version
-  shown in the UI (bluegenes.version/release) is `git describe --always`, or
-  \"dev\" outside a git checkout."
-  (:require [clojure.java.io :as io]
+  shown in the UI (bluegenes.version/release) is $BLUEGENES_VERSION, else
+  `git describe --always`, else \"dev\"."
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.tools.build.api :as b]))
+            [clojure.tools.build.api :as b])
+  (:import [java.nio.file Files]
+           [java.security MessageDigest]))
 
 (def lib 'org.intermine/bluegenes)
 (def version "1.5.0-SNAPSHOT")
@@ -51,10 +55,61 @@
                              :main-args ["-e" expr]})]
     (sh! (:command-args cmd))))
 
-(defn- git-describe []
-  (let [{:keys [exit out]} (b/process {:command-args ["git" "describe" "--always"]
-                                       :out :capture :err :ignore})]
-    (if (and (zero? exit) (not (str/blank? out))) (str/trim out) "dev")))
+(defn- git-describe
+  "The release version shown in the UI: $BLUEGENES_VERSION if set (Docker
+  builds without .git), else `git describe --always`, else \"dev\"."
+  []
+  (if-let [v (not-empty (System/getenv "BLUEGENES_VERSION"))]
+    v
+    (let [{:keys [exit out]} (b/process {:command-args ["git" "describe" "--always"]
+                                         :out :capture :err :ignore})]
+      (if (and (zero? exit) (not (str/blank? out))) (str/trim out) "dev"))))
+
+(defn- files-under [dir]
+  (->> (file-seq (io/file dir)) (filter #(.isFile %)) (map #(.getPath %))))
+
+(defn- bundle-hash
+  "7 hex digits identifying the front end: SHA-256 over the release version
+  string, every file the release JS and CSS are built from (src/cljs,
+  src/shim, less, shadow-cljs.edn, deps.edn, package-lock.json) and the
+  contents of every jar on the :cljs classpath (so a new SNAPSHOT counts).
+  It names app.<hash>.js and site-/im-tables-<hash>.css and is the key that
+  resets the state saved in users' browsers, so it must only change when
+  the front end does. shadow-cljs' own :module-hash-names hashes the output,
+  which is not reproducible: gensym'd symbol names (p1__50613#) inside
+  quoted spec forms depend on compilation order and the cache."
+  [version]
+  (let [md (MessageDigest/getInstance "SHA-256")
+        add! (fn [^String label ^bytes content]
+               (.update md (.getBytes (str label "\n") "UTF-8"))
+               (.update md content))
+        files (sort (concat (mapcat files-under ["src/cljs" "src/shim" "less"])
+                            ["shadow-cljs.edn" "deps.edn" "package-lock.json"]))
+        jars (->> (:classpath-roots (basis [:cljs]))
+                  (filter #(str/ends-with? % ".jar"))
+                  (sort-by #(.getName (io/file %))))]
+    (add! "version" (.getBytes ^String version "UTF-8"))
+    (doseq [f files] (add! f (Files/readAllBytes (.toPath (io/file f)))))
+    (doseq [j jars] (add! (.getName (io/file j)) (Files/readAllBytes (.toPath (io/file j)))))
+    (subs (apply str (map #(format "%02x" (bit-and % 0xff)) (.digest md))) 0 7)))
+
+(def ^:private compiled-dir "resources/public/js/compiled")
+
+(defn- hash-bundle-name!
+  "Renames the release app.js to app.<hash>.js and records the new name in
+  manifest.edn, which bluegenes.utils reads to find the file."
+  [hash]
+  (let [manifest (io/file compiled-dir "manifest.edn")
+        modules (edn/read-string (slurp manifest))
+        out-name (str "app." hash ".js")]
+    (when-not (some #(= "app.js" (:output-name %)) modules)
+      (throw (ex-info "manifest.edn has no :output-name \"app.js\"" {:modules (map :output-name modules)})))
+    (Files/move (.toPath (io/file compiled-dir "app.js"))
+                (.toPath (io/file compiled-dir out-name))
+                (make-array java.nio.file.CopyOption 0))
+    (spit manifest (pr-str (mapv #(cond-> % (= "app.js" (:output-name %)) (assoc :output-name out-name))
+                                 modules)))
+    (println "Release bundle" (str compiled-dir "/" out-name))))
 
 (defn- clean-release
   "Deletes the compiled assets and target/classes, keeping any jars built
@@ -81,11 +136,15 @@
   (`npx shadow-cljs` would use shadow-cljs.edn's :deps aliases, which add the
   dev tooling and the test libraries)."
   [_]
-  (let [cmd (b/java-command {:basis (basis [:cljs])
+  (let [version (git-describe)
+        hash (bundle-hash version)
+        cmd (b/java-command {:basis (basis [:cljs])
                              :main 'clojure.main
                              :main-args ["-m" "shadow.cljs.devtools.cli" "release" "app" "--config-merge"
-                                         (pr-str {:closure-defines {'bluegenes.version/release (git-describe)}})]})]
-    (sh! (:command-args cmd))))
+                                         (pr-str {:closure-defines {'bluegenes.version/release version}})]})]
+    (b/delete {:path compiled-dir})
+    (sh! (:command-args cmd))
+    (hash-bundle-name! hash)))
 
 (defn fingerprint-css [_]
   (run-clj! [:cljs] "(require 'bluegenes.prep) (bluegenes.prep/fingerprint-css) (shutdown-agents)"))

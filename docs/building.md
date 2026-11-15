@@ -116,7 +116,11 @@ Sometimes the Closure compiler is overzealous and removes something we actually 
 
 The release build runs shadow-cljs in a JVM with only the `:cljs` alias's classpath, so the dev tooling (`:cljs-dev`) and test libraries (`:test`) that `shadow-cljs.edn` adds for dev builds stay out of it. The JavaScript is compiled for ES2018 (`:output-feature-set :es2018`), which every browser from 2018-2020 on supports (Chrome 64, Firefox 58, Safari 12, Edge 79); the shadow-cljs default would be ES2020.
 
-`release` cleans, copies the im-tables CSS, compiles the Less with `lessc`, runs `shadow-cljs release app` (advanced compilation; the output file is named `app.<hash>.js` and listed in `resources/public/js/compiled/manifest.edn`) and copies the CSS to `site-<hash>.css`/`im-tables-<hash>.css`. The hash changes whenever the JavaScript changes, which also resets the state BlueGenes keeps in the browser's local storage.
+`release` cleans, copies the im-tables CSS, compiles the Less with `lessc`, runs `shadow-cljs release app` (advanced compilation), renames its `app.js` to `app.<hash>.js` (recorded in `resources/public/js/compiled/manifest.edn`) and copies the CSS to `site-<hash>.css`/`im-tables-<hash>.css`.
+
+The hash is also the version key of the state BlueGenes keeps in the browser's local storage: when it changes, users' saved state is reset. So it is computed from the build *inputs*, not from the compiled output: SHA-256 (first 7 hex digits) over the release version string, every file under `src/cljs`, `src/shim` and `less`, `shadow-cljs.edn`, `deps.edn`, `package-lock.json`, and the contents of every jar on the `:cljs` classpath. Two clean builds of the same commit give the same hash; any change to the front end, its dependencies or the version gives a new one. (The compiled JavaScript itself is not byte-for-byte reproducible: gensym'd symbol names inside quoted spec forms depend on compilation order and the shadow-cljs cache, which is why shadow's `:module-hash-names` is not used.)
+
+The release version shown in the UI is `$BLUEGENES_VERSION` if set, otherwise `git describe --always`, otherwise `dev`.
 
 
 ## Deploying your build
