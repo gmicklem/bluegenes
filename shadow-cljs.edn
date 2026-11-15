@@ -16,7 +16,7 @@
 {:deps {:aliases [:cljs :cljs-dev :test]}
  :nrepl {:port 8777}
  ;; Never let shadow-cljs `npm install` the :npm-deps that jars declare in their
- ;; deps.cljs (re-frame-10x 0.6.0 does): every npm package is pinned and vetted
+ ;; deps.cljs (re-frame 1.4 asks for react 18 there): every npm package is pinned and vetted
  ;; in package.json.
  :npm-deps {:install false}
 
