@@ -9,10 +9,11 @@
 //   CYPRESS_MINE_NAMESPACE BlueGenes namespace of that mine, the first path
 //                          segment of BlueGenes routes such as /<ns>/search
 //                          (default: the last path segment of MINE_URL)
-//   CYPRESS_MINE_NAME      mine name BlueGenes shows, e.g. "Login to <name>"
-//                          (default BioTestMine)
-//   CYPRESS_EXTERNAL       set to true to also run the tests tagged @external,
-//                          which need live FlyMine (default false)
+//   CYPRESS_MINE_NAME      mine name BlueGenes shows, e.g. "Login to <name>": the
+//                          mine's project.title web property (default BioTestMine)
+//   CYPRESS_EXTERNAL       set to true to also run the tests tagged @external
+//                          (itExternal in support/mine.js), which need live
+//                          FlyMine (default false)
 // The same keys can be passed as `npx cypress run --env MINE_URL=...`.
 // See docs/building.md, section "Cypress integration tests".
 const { defineConfig } = require("cypress");

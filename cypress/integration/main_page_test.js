@@ -1,3 +1,5 @@
+import { itExternal } from "../support/mine";
+
 describe("Main page test", function() {
     beforeEach(function() {
       cy.visit("/");
@@ -59,7 +61,7 @@ describe("Main page test", function() {
         cy.url().should("include", "/querybuilder");
     });
     
-    it("can access other intermine instances", function() {
+    itExternal("can access other intermine instances", function() {
         cy.get(".minename > .dropdown-toggle").click();
         cy.contains("FlyMine").click();
         cy.url().should("contain","/flymine");

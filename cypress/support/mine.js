@@ -14,3 +14,9 @@ export const minePage = (path = "") => `/${Cypress.env("MINE_NAMESPACE")}${path}
 
 // Name BlueGenes shows for the mine ("Login to BioTestMine")
 export const mineName = () => Cypress.env("MINE_NAME");
+
+// A test that needs live FlyMine (BlueGenes started with FlyMine in
+// BLUEGENES_ADDITIONAL_MINES, plus internet access). Its title gets an
+// "@external" tag, and it is skipped unless EXTERNAL=true (CYPRESS_EXTERNAL).
+export const itExternal = (title, fn) =>
+  (Cypress.env("EXTERNAL") ? it : it.skip)(`${title} @external`, fn);

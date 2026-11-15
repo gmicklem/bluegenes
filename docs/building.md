@@ -29,7 +29,7 @@ These commands are explained in more depth below, but if you know what you want,
 
     clojure -M:fmt fix          # run cljfmt to fix code indentation (check: clojure -M:fmt check)
     npm run test:unit           # run the ClojureScript unit tests (node)
-    npx cypress run             # run cypress ui tests
+    npm run test:e2e            # run the Cypress UI tests (see "Cypress integration tests")
 
 ## Running a dev environment
 
@@ -81,27 +81,69 @@ If you need something faster, evaluating `(cljs.test/run-tests)` from a connecte
 
 ### Cypress integration tests
 
-Checklist:
-- You might have to install [additional cypress dependencies](https://docs.cypress.io/guides/guides/continuous-integration.html#Dependencies) to be able to run Cypress.
-- The integration tests are designed to be run against [Biotestmine](https://github.com/intermine/biotestmine). The easiest way to achieve this is by using [intermine_boot](https://github.com/intermine/intermine_boot) to start one locally.
+The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine.
 
-Start BlueGenes connected to your local Biotestmine by using the commands below. If your local Biotestmine runs on a different address than http://localhost:9999/biotestmine, change `BLUEGENES_DEFAULT_SERVICE_ROOT`.
+On Linux, Cypress needs Xvfb and the GTK/X11 libraries listed under [Linux prerequisites](https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites) (`apt-get install xvfb libgtk-3-0 libgbm1 libnss3 libxss1 libasound2 libxtst6 xauth` on Debian/Ubuntu, where Ubuntu 24.04 and later name two of them `libgtk-3-0t64` and `libasound2t64`; GitHub's Ubuntu runners already have them).
+
+Settings (environment variables, or `--env KEY=value` without the `CYPRESS_` prefix):
+
+| Variable | Meaning | Default |
+|---|---|---|
+| `CYPRESS_BASE_URL` | BlueGenes under test, including any `BLUEGENES_DEPLOY_PATH` | `http://localhost:5000` |
+| `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:9999/biotestmine` |
+| `CYPRESS_MINE_NAMESPACE` | BlueGenes namespace of that mine (`BLUEGENES_DEFAULT_NAMESPACE`), the first path segment of BlueGenes routes such as `/biotestmine/search` | last path segment of `MINE_URL` |
+| `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `BioTestMine` |
+| `CYPRESS_EXTERNAL` | `true` also runs the tests tagged `@external` (see below) | `false` |
+
+Commands:
+
+    npm run test:smoke      # Cypress itself and the page shell; needs only BlueGenes at CYPRESS_BASE_URL
+    npm run test:e2e        # the whole suite (same as npm test)
+    npx cypress run --spec cypress/integration/search_test.js    # one spec
+    npm run cypress:open    # interactive runner, useful for debugging failing tests
+
+Before each spec, a hook asks `<MINE_URL>/service/version`; if the mine does not answer, the spec stops at once with a message saying which URL failed, instead of every test timing out. Results go to `cypress/results/` (JUnit XML, one file per spec), and screenshots of failures to `cypress/screenshots/`.
+
+#### Against Biotestmine (the data the suite was written for)
+
+The specs, their search terms, gene identifiers and the expected export files in `cypress/fixtures/` come from [Biotestmine](https://github.com/intermine/biotestmine) (for example, with [intermine_boot](https://github.com/intermine/intermine_boot)). With Biotestmine at http://localhost:9999/biotestmine, the defaults need no settings:
 
     clojure -T:build release
     BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
-    BLUEGENES_DEFAULT_MINE_NAME=Biotestmine BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
+    BLUEGENES_DEFAULT_MINE_NAME=BioTestMine BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
     BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
-    clojure -M -m bluegenes.core
+    clojure -M:prod -m bluegenes.core &
+    npm run test:e2e
 
-Run all the Cypress tests:
+#### Against the rdfc2im local stack
 
-    npx cypress run
+The rdfc2im stack serves an InterMine webapp at http://localhost:8090/<mine> and its own BlueGenes at http://localhost:5000. With the mine path `humanmine` (`CYPRESS_MINE_NAME` is that mine's `project.title`; check it with `curl -s http://localhost:8090/humanmine/service/web-properties`):
 
-Cypress also has a really useful interface for debugging failing tests:
+    CYPRESS_MINE_URL=http://localhost:8090/humanmine CYPRESS_MINE_NAME="HumanMine" npm run test:e2e
 
-    DEBUG=cypress:* npx cypress open
+To test this checkout rather than the stack's BlueGenes, start it on another port against the stack's mine and point `CYPRESS_BASE_URL` at it:
 
-*Tip:* You can also run the Cypress tests with BlueGenes deployed to a custom deploy path by editing *cypress.json* `baseUrl` key to include the path (e.g. `"http://localhost:5000/foo/bar"`) and passing the same path as an envvar, `BLUEGENES_DEPLOY_PATH=/foo/bar` when starting the server.
+    clojure -T:build release
+    SERVER_PORT=5001 BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:8090/humanmine \
+    BLUEGENES_DEFAULT_MINE_NAME=HumanMine BLUEGENES_DEFAULT_NAMESPACE=humanmine \
+    clojure -M:prod -m bluegenes.core &
+    CYPRESS_BASE_URL=http://localhost:5001 CYPRESS_MINE_URL=http://localhost:8090/humanmine \
+    CYPRESS_MINE_NAME="HumanMine" npm run test:e2e
+
+The stack's demo mine does not have Biotestmine's data, so tests that search for or upload Biotestmine identifiers, use its model labels or its seeded `test_user@mail_account` account, or compare exports with `cypress/fixtures/`, fail there until the specs and fixtures are recorded again for that mine. The account specs also register fixed user names, so they pass only once per fresh mine.
+
+#### Tests that need FlyMine (`@external`)
+
+Two tests follow links from the default mine into live FlyMine, so they need internet access and a BlueGenes started with FlyMine in `BLUEGENES_ADDITIONAL_MINES` (as in the Biotestmine example above). Their titles end in `@external`, and they are skipped unless `CYPRESS_EXTERNAL=true`:
+
+* `main_page_test.js`: "can access other intermine instances" (mine switcher to FlyMine)
+* `report_page_test.js`: "can access homologue of the gene in other mines" (homologue link into FlyMine; the FlyMine query itself is stubbed)
+
+        CYPRESS_EXTERNAL=true npm run test:e2e
+
+Do not use FlyMine or another production mine as the default mine (`CYPRESS_MINE_URL`): the account, list and admin specs register users, save lists and change the home page notice on the default mine.
+
+*Tip:* With BlueGenes under a deploy path (`BLUEGENES_DEPLOY_PATH=/foo/bar`), include the path in `CYPRESS_BASE_URL` (`http://localhost:5000/foo/bar`).
 
 ## Continuous integration
 

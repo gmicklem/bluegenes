@@ -1,4 +1,4 @@
-import { mineUrl } from "../support/mine";
+import { itExternal, mineUrl } from "../support/mine";
 
 describe("Report Page Test", function(){
     beforeEach(function(){
@@ -118,7 +118,7 @@ describe("Report Page Test", function(){
         cy.get(".im-table").should("exist");
     })
 
-    it("can access homologue of the gene in other mines", function(){
+    itExternal("can access homologue of the gene in other mines", function(){
         cy.get(".other-mine").within(() => {
             cy.get(".mine").should("include.text","FlyMine");
             cy.get("img").should("exist");
