@@ -31,8 +31,10 @@
         ;; The cljsjs stand-ins (src/shim) set the js/ globals that bluegenes
         ;; and im-tables use, so they are loaded first, before any namespace
         ;; that could read a global at load time (im-tables 0.15.0 read
-        ;; js/ReactTransitionGroup in a top-level def).
-        :modules {:app {:entries [cljsjs.react-select
+        ;; js/ReactTransitionGroup in a top-level def). bluegenes.react-globals
+        ;; sets js/React and js/ReactDOM for the tools loaded at run time.
+        :modules {:app {:entries [bluegenes.react-globals
+                                  cljsjs.react-select
                                   cljsjs.highlight
                                   cljsjs.highlight.langs.javascript
                                   cljsjs.highlight.langs.perl

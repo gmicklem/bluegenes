@@ -1,3 +1,7 @@
+## Tools
+
+BlueGenes tools are npm packages (for example `@intermine/bluegenes-protein-visualizer`) that bluegenes-tool-store installs under `BLUEGENES_TOOL_PATH` and that the report page loads at run time from `/tools/`. They are built against React as a page global, so BlueGenes sets `window.React` and `window.ReactDOM` (`src/shim/bluegenes/react_globals.cljs`, loaded first by the `:app` module). Tools therefore get the React version that BlueGenes itself uses, currently React 18, and have to work with it (`ReactDOM.render` still works in React 18 but warns; prefer `ReactDOM.createRoot`). `window.ReactDOMServer` is not set. `script/ci/bluegenes-runbundle.js` fails the build check if either global is missing from the compiled bundle.
+
 ## Styling
 
 BlueGenes uses the [Less](http://lesscss.org/) CSS preprocessor, along with [Bootstrap 3](https://getbootstrap.com/docs/3.3/) and a fork of [Bootstrap Material Design](https://github.com/intermine/bootstrap-material-design). We recommend referencing existing markup and the following resources.
