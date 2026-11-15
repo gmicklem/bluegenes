@@ -187,10 +187,12 @@
                            :options @available-templates}]}]]
              [:div.btn-group-sm
               [:button.btn.btn-default.btn-fab
+               ;; react-select 5: the ref is the Select instance; its value is a
+               ;; prop (kept by the state manager around it).
                {:on-click #(when-let [select-elem @select-ref*]
-                             (when-let [children (seq (js->clj (oget select-elem :state :value) :keywordize-keys true))]
+                             (when-let [children (seq (js->clj (oget select-elem :props :value) :keywordize-keys true))]
                                (dispatch [::events/children-add category-index children])
-                               (ocall (oget select-elem :select) :clearValue)))}
+                               (ocall select-elem :clearValue)))}
                [icon "plus"]]]]])])])))
 
 (defn report-layout-selector []

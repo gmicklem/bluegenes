@@ -2,7 +2,7 @@
   ;; The cljsjs namespaces set JS globals that later namespaces read when they
   ;; load, so they come first (shadow-cljs.edn also lists them as entries).
   (:require [cljsjs.react-select]
-            [reagent.dom :as dom]
+            [reagent.dom.client :as rdc]
             [re-frame.core :as re-frame]
             [bluegenes.utils]
             [im-tables.core]
@@ -20,10 +20,12 @@
 ;    (devtools/install!)
 ;    (println "dev mode")))
 
+;; React 18 root, created on first mount; hot reloads render into it again.
+(defonce root (delay (rdc/create-root (ocall js/document "getElementById" "app"))))
+
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
-  (dom/render [views/main-panel]
-              (ocall js/document "getElementById" "app"))
+  (rdc/render @root [views/main-panel])
   ;; Development mode helper code snippet
   ;; Uncomment this code to keep modals open after shadow-cljs hot reloads.
   #_(-> (js/$ "#myModalsID") ; Replace with your modal id.
