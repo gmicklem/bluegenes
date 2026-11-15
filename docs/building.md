@@ -87,6 +87,8 @@ If you need something faster, evaluating `(cljs.test/run-tests)` from a connecte
 
 The browser tests use [Cypress](https://docs.cypress.io/) 13 and run headless in its bundled Electron. The configuration is `cypress.config.js`; the 22 specs are in `cypress/integration/` and a smoke test is `cypress/e2e/smoke_cypress_runtime.cy.js`. Cypress needs a BlueGenes server, and every spec except the smoke test also needs the InterMine mine that BlueGenes uses as its default mine.
 
+The specs are written for the rdfc2im demo mine (HumanMine's model, a panel of 113 human genes), see [Against the rdfc2im local stack](#against-the-rdfc2im-local-stack). Their identifiers are in `cypress/support/data.js`.
+
 On Linux, Cypress needs Xvfb and the GTK/X11 libraries listed under [Linux prerequisites](https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites) (`apt-get install xvfb libgtk-3-0 libgbm1 libnss3 libxss1 libasound2 libxtst6 xauth` on Debian/Ubuntu, where Ubuntu 24.04 and later name two of them `libgtk-3-0t64` and `libasound2t64`; GitHub's Ubuntu runners already have them).
 
 Settings (environment variables, or `--env KEY=value` without the `CYPRESS_` prefix):
@@ -95,9 +97,11 @@ Settings (environment variables, or `--env KEY=value` without the `CYPRESS_` pre
 |---|---|---|
 | `CYPRESS_BASE_URL` | BlueGenes under test, including any `BLUEGENES_DEPLOY_PATH` | `http://localhost:5000` |
 | `CYPRESS_MINE_URL` | InterMine webapp root of BlueGenes' default mine (the service is `<MINE_URL>/service`); must be the same as BlueGenes' `BLUEGENES_DEFAULT_SERVICE_ROOT` | `http://localhost:9999/biotestmine` |
-| `CYPRESS_MINE_NAMESPACE` | BlueGenes namespace of that mine (`BLUEGENES_DEFAULT_NAMESPACE`), the first path segment of BlueGenes routes such as `/biotestmine/search` | last path segment of `MINE_URL` |
+| `CYPRESS_MINE_NAMESPACE` | BlueGenes namespace of that mine (`BLUEGENES_DEFAULT_NAMESPACE`), the first path segment of BlueGenes routes such as `/humanmine/search` | last path segment of `MINE_URL` |
 | `CYPRESS_MINE_NAME` | Mine name BlueGenes shows ("Login to ..."): the mine's `project.title` web property (`<MINE_URL>/service/web-properties`), which replaces `BLUEGENES_DEFAULT_MINE_NAME` once the mine has answered | `BioTestMine` |
+| `CYPRESS_ADMIN_USER`, `CYPRESS_ADMIN_PASSWORD` | A superuser of the mine (its `superuser.account` property and that account's password). The specs that need one are skipped, with the reason in their title, when these are not set. Never commit them. | not set |
 | `CYPRESS_EXTERNAL` | `true` also runs the tests tagged `@external` (see below) | `false` |
+| `CYPRESS_RECORD_FIXTURES` | `true` writes the expected export files in `cypress/fixtures/` from what the app exports, instead of comparing with them (see "Recording the fixtures again") | `false` |
 
 Commands:
 
@@ -106,24 +110,14 @@ Commands:
     npx cypress run --spec cypress/integration/search_test.js    # one spec
     npm run cypress:open    # interactive runner, useful for debugging failing tests
 
-Before each spec, a hook asks `<MINE_URL>/service/version`; if the mine does not answer, the spec stops at once with a message saying which URL failed, instead of every test timing out. Results go to `cypress/results/` (JUnit XML, one file per spec), and screenshots of failures to `cypress/screenshots/`.
-
-#### Against Biotestmine (the data the suite was written for)
-
-The specs, their search terms, gene identifiers and the expected export files in `cypress/fixtures/` come from [Biotestmine](https://github.com/intermine/biotestmine) (for example, with [intermine_boot](https://github.com/intermine/intermine_boot)). With Biotestmine at http://localhost:9999/biotestmine, the defaults need no settings:
-
-    clojure -T:build release
-    BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
-    BLUEGENES_DEFAULT_MINE_NAME=BioTestMine BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
-    BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
-    clojure -M:prod -m bluegenes.core &
-    npm run test:e2e
+Before each spec, a hook asks `<MINE_URL>/service/version`; if the mine does not answer, the spec stops at once with a message saying which URL failed, instead of every test timing out. Results go to `cypress/results/` (JUnit XML, one file per spec), and screenshots of failures to `cypress/screenshots/`. Add `--config video=false` (or `retries=0`) to `cypress run` to skip the videos, which are large, or the retries (`runMode` retries are 2; one flaky test then shows as a pass).
 
 #### Against the rdfc2im local stack
 
-The rdfc2im stack serves an InterMine webapp at http://localhost:8090/<mine> and its own BlueGenes at http://localhost:5000. With the mine path `humanmine` (`CYPRESS_MINE_NAME` is that mine's `project.title`; check it with `curl -s http://localhost:8090/humanmine/service/web-properties`):
+The rdfc2im stack serves an InterMine webapp at http://localhost:8090/<mine> and its own BlueGenes at http://localhost:5000. With the mine path `humanmine` (`CYPRESS_MINE_NAME` is that mine's `project.title`, "rdfc2im: 113 gene food/drug-metabolism panel"; check it with `curl -s http://localhost:8090/humanmine/service/web-properties`):
 
-    CYPRESS_MINE_URL=http://localhost:8090/humanmine CYPRESS_MINE_NAME="HumanMine" npm run test:e2e
+    CYPRESS_MINE_URL=http://localhost:8090/humanmine \
+    CYPRESS_MINE_NAME="rdfc2im: 113 gene food/drug-metabolism panel" npm run test:e2e
 
 To test this checkout rather than the stack's BlueGenes, start it on another port against the stack's mine and point `CYPRESS_BASE_URL` at it:
 
@@ -132,13 +126,34 @@ To test this checkout rather than the stack's BlueGenes, start it on another por
     BLUEGENES_DEFAULT_MINE_NAME=HumanMine BLUEGENES_DEFAULT_NAMESPACE=humanmine \
     clojure -M:prod -m bluegenes.core &
     CYPRESS_BASE_URL=http://localhost:5001 CYPRESS_MINE_URL=http://localhost:8090/humanmine \
-    CYPRESS_MINE_NAME="HumanMine" npm run test:e2e
+    CYPRESS_MINE_NAME="rdfc2im: 113 gene food/drug-metabolism panel" \
+    CYPRESS_ADMIN_USER=superuser@intermine.org CYPRESS_ADMIN_PASSWORD=... npm run test:e2e
 
-The stack's demo mine does not have Biotestmine's data, so tests that search for or upload Biotestmine identifiers, use its model labels or its seeded `test_user@mail_account` account, or compare exports with `cypress/fixtures/`, fail there until the specs and fixtures are recorded again for that mine. The account specs also register fixed user names, so they pass only once per fresh mine.
+(`clojure -T:build release` only builds the front end; `clojure -T:build uber` makes `target/bluegenes.jar`, which you can run with `java -jar` and the same environment variables.)
+
+**Accounts.** The demo mine has no seeded user. The specs that need a logged-in user ask for a fresh one (`useTestAccount()` in `cypress/support/mine.js`, which calls the task `createTestAccount` of `cypress.config.js`): it registers `cypress-<run id>-<label>-<n>@example.org` through `POST /service/users`, and every account of the run is deregistered when the run ends (`after:run`: its lists are deleted first, because InterMine answers `500` when it deregisters a user who owns a list without a description). Accounts that a spec registers through the BlueGenes forms are deleted by that spec. A run that is killed leaves its accounts behind; they are easy to recognise by the `cypress-` prefix. The specs that need a superuser (the home page notice and the report page layout in `admin_account_test/`, tagging a list `im:public` in `lists_test/admin_account_list_test.js`) log in with `CYPRESS_ADMIN_USER` and `CYPRESS_ADMIN_PASSWORD`; the report layout spec saves the mine's `layout.report` property and puts it back.
+
+**What the demo mine does not have**, and the tests that therefore skip (they say why in the Cypress log or their title):
+
+* `Location` objects: no feature has chromosome coordinates, so a region search finds nothing. The 10 export tests of `regions_test/` and 5 more tests of `regions_test.js`, the region example of `pr_test.js` and the report page's region link need them; they call `requireMineData(this, "Location", reason)`, which asks the mine for a count and skips the test, or the file, at 0. The chromosome distribution chart has no data either (BlueGenes shows no "Widgets" heading then).
+* `Sequence` objects: no FASTA on gene report pages (2 report page tests).
+* Organism names: `Organism` has only a taxon id, so the search page has no organism filter (1 search test) and the default organism of the upload and template pages, "Homo sapiens", matches nothing (upload tests choose "Any" with `createProteinList`).
+* A Gene Ontology enrichment widget: the enrichment spec uses the pathway widget instead; the widget's data set filter finds nothing because the pathways' data set names differ from the widget's.
+
+**Typing.** BlueGenes' inputs lose keystrokes when text is typed at Cypress' speed ("PPARG" arrived as "PARG", even at 200 ms per key); use `cy.typeSlowly(selector, text, { enter })` (types with a delay, checks the value, retypes) for identifiers, names and passwords. The generated class names of react-select (`.css-1hwfws3`) change with its version; use `cy.reactSelect(index, text)`.
+
+**Recording the fixtures again.** The expected exports in `cypress/fixtures/` are compared with `cy.expectFixture(name, actualText)`. The two enrichment files (`all_enrichment_result.tsv`, `checked_enrichment_result.tsv`) were recorded from the demo mine; the input lists (`gene.csv`, `enrichment_gene.csv`, `background_genes.csv`) are small hand-written gene lists. To record them again after the mine's data or the widgets changed, run the spec with `CYPRESS_RECORD_FIXTURES=true`, check the written files against the web service (for the enrichment files, `POST /service/list/enrichment` with the same list gives the same p-values), and commit them:
+
+    CYPRESS_RECORD_FIXTURES=true CYPRESS_BASE_URL=... CYPRESS_MINE_URL=... CYPRESS_MINE_NAME=... \
+    npx cypress run --spec cypress/integration/lists_test/enrichment_test.js
+
+The region exports (`region_result.*`, `all_regions_result.*`: TSV, CSV, GFF3, BED, FASTA) were recorded for Biotestmine, cannot match any other mine and have been removed. Run the two spec files in `regions_test/` with `CYPRESS_RECORD_FIXTURES=true` against a mine whose features have locations to create them.
+
+**Other mines.** The identifiers in `cypress/support/data.js` and the numbers in the specs (9 templates, 5 enriched pathways, 135 template rows) are the demo mine's. Against another mine, change them there and in the specs; Biotestmine's data (Plasmodium genes, `MAL1`...) is no longer used.
 
 #### Tests that need a second mine (`@external`)
 
-Two tests switch between mines, so they need internet access and a BlueGenes started with FlyMine in `BLUEGENES_ADDITIONAL_MINES` next to its default mine (as in the Biotestmine example above). The default mine should be the public HumanMine (`https://www.humanmine.org/humanmine`, name `HumanMine`) or the local demo mine; FlyMine is only the mine being switched to. Their titles end in `@external`, and they are skipped unless `CYPRESS_EXTERNAL=true`:
+Two tests switch between mines, so they need internet access and a BlueGenes started with FlyMine in `BLUEGENES_ADDITIONAL_MINES` next to its default mine (as in the example below). The default mine should be the public HumanMine (`https://www.humanmine.org/humanmine`, name `HumanMine`) or the local demo mine; FlyMine is only the mine being switched to. Their titles end in `@external`, and they are skipped unless `CYPRESS_EXTERNAL=true`:
 
 * `main_page_test.js`: "can access other intermine instances" (mine switcher to FlyMine)
 * `report_page_test.js`: "can access homologue of the gene in other mines" (search for PPARG, open the human gene, follow the homologue link into FlyMine; the FlyMine query itself is stubbed)
