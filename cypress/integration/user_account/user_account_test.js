@@ -1,27 +1,40 @@
 import { mineName, minePage, mineService } from "../../support/mine";
+import { GENES_A, PROTEINS } from "../../support/data";
+
+// The account the tests create through the UI, use, and delete in the last test. It is
+// unique per run, because the mine keeps accounts between runs.
+const username = "cypress-useraccount-" + Date.now().toString(36) + "@example.org";
+let password = "password";
 
 describe("User Account Test", function() {
     beforeEach(function() {
       cy.visit(minePage());
     });
 
-    it.only("can create a new user account", function(){
+    // when a test failed before "can delete an account", do not leave the account behind
+    after(function() {
+      cy.task("deleteAccount", { username, password });
+    });
+
+    it("can create a new user account", function(){
         cy.openRegisterDialogue();
         cy.get(".login-form").should("exist");
-        cy.get("input#email").type("test_user_account@mail.com");
-		cy.get("input[type='password']").type("password");
+        cy.typeSlowly("input#email", username);
+		cy.typeSlowly("input[type='password']", password);
         cy.intercept('POST', '/api/auth/register').as('register');
         cy.get("button").contains("Register").click();
         cy.wait("@register");
         cy.get(".logon.dropdown.success").should("exist").click();
-        cy.get(".logon.dropdown.success").should("contain", "test_user_account@mail.com");
+        cy.get(".logon.dropdown.success").should("contain", username);
     })
 
     it("can set user preferences", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
+        cy.loginToUserAccount(username,password);
+        cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
-        cy.intercept('GET', '/user/preferences').as('getPreferences');
         cy.wait('@getPreferences');
+        // the page replaces its inputs with the preferences when they arrive
+        cy.wait(500);
         cy.get('.profile-page > ').eq(0).as("userPreferences").within(() => {
             cy.get('[type="checkbox"]').first().uncheck({force:true}); //still flaky
             cy.contains("Save changes").should("not.be.disabled").click(); 
@@ -31,7 +44,7 @@ describe("User Account Test", function() {
     })
 
     it("can generate API access key", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
+        cy.loginToUserAccount(username,password);
         cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(1).as("generateAPI").within(() => {
             cy.contains("Generate a new API key").click();
@@ -40,8 +53,8 @@ describe("User Account Test", function() {
     })
 
     it("can add tags to list", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
-        cy.createGeneList("SODB, GBP, GST, CDPK1");
+        cy.loginToUserAccount(username,password);
+        cy.createGeneList(GENES_A);
         cy.contains("Lists").click();
         cy.url().should("include","/lists");
         cy.get('.lists-item').its("length").should('be.gt',0);
@@ -69,7 +82,7 @@ describe("User Account Test", function() {
     })
 
     it("can add lists to folders", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
+        cy.loginToUserAccount(username,password);
         cy.contains("Lists").click();
         cy.url().should("include","/lists");
         cy.get('.lists-item').its("length").should('be.gt',0);
@@ -80,7 +93,7 @@ describe("User Account Test", function() {
         cy.get('.bottom-controls').within(() => {
             cy.contains("Move all").click();
         })
-        cy.get(".css-1wy0on6").click().type("List of common genes{enter}",{delay:100},{force:true});
+        cy.reactSelect(0, "List of common genes");
         cy.get(".modal-footer").within(() => {
             cy.contains("Move list(s)").click();
         })
@@ -88,8 +101,8 @@ describe("User Account Test", function() {
     })
 
     it("can filter lists by tags", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
-        cy.createProteinList("Q8ID23_PLAF7, Q6LFN1");
+        cy.loginToUserAccount(username,password);
+        cy.createProteinList(PROTEINS);
         cy.get('.lists-item').its("length").should('be.gt',0);
 
         cy.contains("Tags").parent().find(".icon-selection").click();
@@ -98,8 +111,8 @@ describe("User Account Test", function() {
         cy.get('.lists-item').find(".list-title").should("include.text","List of common genes");
     })
 
-    it.only("can build and save a query", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password");
+    it("can build and save a query", function(){
+        cy.loginToUserAccount(username,password);
         cy.visit(minePage("/querybuilder"));
         cy.get(".model-browser-root").within(() => {
             cy.selectFromDropdown("Protein");        
@@ -120,36 +133,44 @@ describe("User Account Test", function() {
 
     
 
-    it.only("can change user password", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","password")
+    it("can change user password", function(){
+        cy.loginToUserAccount(username,password)
         cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(2).as("changePassword").within(() => {
-            cy.contains("Old password").siblings(".form-control").type("password");
-            cy.contains("New password").siblings(".form-control").type("newpassword");
+            cy.contains("Old password").siblings(".form-control").type("password", {delay:50}).should("have.value", "password");
+            cy.contains("New password").siblings(".form-control").type("newpassword", {delay:50}).should("have.value", "newpassword");
             cy.intercept("POST",mineService("user")).as("waitPasswordChange");
             cy.get("button").contains("Save password").click();
             cy.wait("@waitPasswordChange");
             // cy.wait(500); //change?
             cy.get(".success").should("include.text","Password changed successfully.")
         })
+        cy.then(() => { password = "newpassword"; });
         
     })
 
-    it.only("can delete an account", function(){
-        cy.loginToUserAccount("test_user_account@mail.com","newpassword")
+    it("can delete an account", function(){
+        // InterMine cannot delete an account that owns lists without a description (500),
+        // and the lists made by the earlier tests have none: delete them first.
+        cy.task("deleteAccountLists", { username, password });
+        cy.loginToUserAccount(username,password)
         cy.visit(minePage("/profile"));
         cy.get(".settings-group").eq(3).as("deleteAccountSection").within(() => {
             cy.contains("Start account deletion").click();
             cy.get("code").then(($code) => {
                 const deletionCode = $code.text();
-                cy.get("input").type(deletionCode);
+                cy.typeSlowly("input", deletionCode);
             })
+            cy.intercept({ method: "DELETE", url: /\/service\/user(\?|$)/ }).as("deleteAccount");
             cy.get("button").contains("Delete account").click();
+            cy.wait("@deleteAccount").its("response.statusCode").should("eq", 200);
         })
+        // BlueGenes logs the user out once the mine has deleted the account
+        cy.get(".logon.dropdown.warning").should("exist");
         cy.openLoginDialogue();
         cy.get(".login-form").should("contain", "Login to " + mineName());
-        cy.get("input#email").type("test_user_account@mail.com");
-        cy.get("input[type='password']").type("newpassword");
+        cy.typeSlowly("input#email", username);
+        cy.typeSlowly("input[type='password']", password);
         cy.intercept('POST', '/api/auth/login').as('login');
         cy.get(".login-form")
           .find("button")
@@ -157,6 +178,6 @@ describe("User Account Test", function() {
           .click();
         cy.wait('@login');
         cy.get(".error-box")
-          .should('to.contain', 'Unknown username: test_user_account@mail.com');
+          .should('to.contain', 'Unknown username: ' + username);
     })
 });

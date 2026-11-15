@@ -1,25 +1,28 @@
-import { mineName } from "../../support/mine";
+import { mineName, testAccount, useTestAccount } from "../../support/mine";
 
 describe(__filename, function() {
+
+	// a fresh account on the mine, deleted at the end of the run
+	useTestAccount("login");
 
 	it("it should login user successfully", function() {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input#email").type("test_user@mail_account");
-		cy.get("input[type='password']").type("secret");
+		cy.typeSlowly("input#email", testAccount().username);
+		cy.typeSlowly("input[type='password']", testAccount().password);
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
 		 	.click();
     cy.get(".logon.dropdown").click();
-    cy.get(".logon.dropdown").should('to.contain', 'test_user@mail_account');
+    cy.get(".logon.dropdown").should('to.contain', testAccount().username);
 	});
 
 	it("it should logout user successfully", function() {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input#email").type("test_user@mail_account");
-		cy.get("input[type='password']").type("secret");
+		cy.typeSlowly("input#email", testAccount().username);
+		cy.typeSlowly("input[type='password']", testAccount().password);
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
@@ -32,7 +35,7 @@ describe(__filename, function() {
 	it("it ensures password is not empty", function() {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input#email").type("test_user@mail_account");
+		cy.typeSlowly("input#email", testAccount().username);
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
@@ -43,7 +46,7 @@ describe(__filename, function() {
 	it("it ensures username is not empty", function() {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input[type='password']").type("test_password");
+		cy.typeSlowly("input[type='password']", "test_password");
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
@@ -55,22 +58,22 @@ describe(__filename, function() {
 	it("it errors out on invalid user credentials", () => {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input#email").type("test_user@gmail.com");
-		cy.get("input[type='password']").type("secret");
+		cy.typeSlowly("input#email", "no_such_user@example.org");
+		cy.typeSlowly("input[type='password']", "secret");
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')
 		 	.click();
 
 		cy.get(".error-box")
-			.should('to.contain', 'Unknown username: test_user@gmail.com');
+			.should('to.contain', 'Unknown username: no_such_user@example.org');
 	});
 
 	it("it errors out on invalid password", () => {
 		cy.openLoginDialogue()
 		cy.get('.login-form').should('to.contain', "Login to " + mineName())
-		cy.get("input#email").type("test_user@mail_account");
-		cy.get("input[type='password']").type("test");
+		cy.typeSlowly("input#email", testAccount().username);
+		cy.typeSlowly("input[type='password']", "wrong-password");
 		cy.get(".login-form")
 			.find("button")
 			.contains('Login')

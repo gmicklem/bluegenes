@@ -1,14 +1,17 @@
-import { mineName, minePage } from "../../support/mine";
+import { describeAdmin, mineName, minePage, mineService } from "../../support/mine";
 
-describe("Admin Account Test", function(){
+// needs a superuser: CYPRESS_ADMIN_USER and CYPRESS_ADMIN_PASSWORD
+describeAdmin("Admin Account Test", function(){
     beforeEach(function(){
         cy.loginToAdminAccount();
     });
 
     it("can set user preferences in profile page",function(){
+        cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
-        cy.intercept('GET', '/user/preferences').as('getPreferences');
         cy.wait('@getPreferences');
+        // the page replaces its inputs with the preferences when they arrive
+        cy.wait(500);
         cy.get('.profile-page > ').first().should("exist").within(() => {
             cy.get('[type="checkbox"]').first().uncheck({force:true}); //flaky
             // cy.get('[type="checkbox"]').first().should("not.be.checked"); //flaky
@@ -19,6 +22,11 @@ describe("Admin Account Test", function(){
     })
 
     after(function(){
+        // restore the preferences changed by the first test
+        cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
+        cy.visit(minePage("/profile"));
+        cy.wait('@getPreferences');
+        cy.wait(500);
         cy.get('.profile-page > ').first().should("exist").within(() => {
             cy.get('[type="checkbox"]').first().check({force:true}); //flaky
             cy.get('[type="checkbox"]').first().should("be.checked"); 
