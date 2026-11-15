@@ -82,7 +82,7 @@ describe("Query view test", function() {
 
       cy.get(".panel-body").eq(1).as("previewTab").within(() => {
         cy.contains("Preview").click();
-        cy.get("table").find("th").should("include.text","Protein > DB identifier");
+        cy.get("table").find("th").should("include.text","Protein > Primary Identifier");
         cy.get("table").find("th").should("include.text","Protein > Primary Accession");
       })
     })
@@ -150,13 +150,12 @@ describe("Query view test", function() {
     it('can load query from imported XML', function(){
       cy.get('.query-view-column').within(() => {
         cy.contains('Import from XML').click();
-        cy.get('textarea.form-control').click()
-          .type('<query model="genomic" view="Protein.primaryIdentifier Protein.organism.name Protein.length" sortOrder=""></query>');
+        cy.typeSlowly('textarea.form-control', '<query model="genomic" view="Protein.primaryIdentifier Protein.organism.name Protein.length" sortOrder=""></query>');
         cy.contains('Load query').click();
         cy.get('.success').should('have.text','XML loaded successfully');
         cy.get('.qb-label').should('include.text','Protein');
         cy.get('.qb-label').should('include.text','Length');
-        cy.get('.qb-label').should('include.text','DB identifier');
+        cy.get('.qb-label').should('include.text','Primary Identifier');
         cy.get('.qb-label').should('include.text','Organism');
         cy.get('.qb-label').should('include.text','Name');
       });
