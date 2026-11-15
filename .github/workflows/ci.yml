@@ -1,0 +1,198 @@
+# Continuous integration for BlueGenes (replaces the CircleCI config removed in
+# the deps.edn/shadow-cljs migration). The jobs run the same steps as the local
+# gate script in the intermine-planning repo (scripts/gate-bluegenes.sh), see
+# "Continuous integration" in docs/building.md. Cypress is not run here; see
+# nightly-cypress.yml (not yet enabled).
+name: CI
+
+on:
+  push:
+    branches: [maint-2026, dev, master]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch or pull request supersedes a running build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash   # bash -eo pipefail, so `cmd | tee log` fails when cmd fails
+
+env:
+  # Cypress 6 is a devDependency; its binary is not needed (and not run) here.
+  CYPRESS_INSTALL_BINARY: "0"
+  # Where the steps tee their output; uploaded as an artifact when the job fails.
+  CI_LOG_DIR: ci-logs
+
+jobs:
+  # Format, unit tests, dev and release builds, bundle load checks, the uberjar
+  # and a smoke start of it on JDK 21.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the release build takes its version from `git describe`
+
+      - uses: ./.github/actions/setup-build
+        with:
+          java-versions: "21"
+
+      - name: Log directory
+        run: mkdir -p "$CI_LOG_DIR"
+
+      - name: Check formatting (cljfmt)
+        run: clojure -M:fmt check 2>&1 | tee "$CI_LOG_DIR/fmt.log"
+
+      - name: Install npm packages
+        run: npm ci 2>&1 | tee "$CI_LOG_DIR/npm-ci.log"
+
+      # Same pass criteria as the gate: a cljs.test summary and no failures or
+      # errors (a build that compiles to an empty test run must not pass).
+      - name: Unit tests (shadow-cljs :test, node)
+        run: |
+          npm run test:unit 2>&1 | tee "$CI_LOG_DIR/test.log"
+          sed 's/\x1b\[[0-9;]*m//g' "$CI_LOG_DIR/test.log" > "$CI_LOG_DIR/test.plain.log"
+          grep -E '^Ran [0-9]+ tests containing [0-9]+ assertions' "$CI_LOG_DIR/test.plain.log"
+          grep -E '^0 failures, 0 errors' "$CI_LOG_DIR/test.plain.log"
+
+      - name: Dev build (shadow-cljs compile app)
+        run: npx shadow-cljs compile app 2>&1 | tee "$CI_LOG_DIR/app-dev.log"
+
+      # Loads the dev build, as a single file, in a node vm with stub DOM
+      # globals; catches load-order bugs (a top-level def reading a global that
+      # a later namespace sets). Only the re-frame-10x preload, which needs a
+      # real DOM, may fail.
+      #
+      # script/ci/bluegenes-runbundle.js is a byte-for-byte copy of
+      # scripts/bluegenes-runbundle.js in the intermine-planning repo (the local
+      # gate runs that one). Keep the two identical; change both together.
+      - name: Dev build load check (node vm)
+        run: |
+          rm -rf target/bundle-dev
+          npx shadow-cljs compile app --config-merge '{:output-dir "target/bundle-dev" :devtools {:loader-mode :eval}}' 2>&1 | tee "$CI_LOG_DIR/app-load-build.log"
+          node script/ci/bluegenes-runbundle.js --allow-fail=day8.re_frame_10x.preload.js target/bundle-dev/app.js 2>&1 | tee "$CI_LOG_DIR/app-load.log"
+
+      # `uber` runs the release build first (clean, im-tables CSS, lessc, shadow
+      # release with hashed file names, fingerprinted CSS), then AOT-compiles
+      # bluegenes.core and packs target/bluegenes.jar.
+      - name: Release build and uberjar (clojure -T:build uber)
+        run: clojure -T:build uber 2>&1 | tee "$CI_LOG_DIR/uber.log"
+
+      - name: Release bundle load check (node vm)
+        run: |
+          hash=$(grep -oE ':output-name "app\.[^"]*\.js"' resources/public/js/compiled/manifest.edn | sed -E 's/.*app\.(.*)\.js"/\1/')
+          node script/ci/bluegenes-runbundle.js "resources/public/js/compiled/app.$hash.js" 2>&1 | tee "$CI_LOG_DIR/bundle-load.log"
+
+      - name: Uberjar contents
+        run: script/ci/jar-check.sh uber target/bluegenes.jar
+
+      - name: Smoke start on JDK 21
+        run: script/ci/smoke.sh uber-21 target/bluegenes.jar "$JAVA_HOME/bin/java" -jar "$PWD/target/bluegenes.jar"
+
+      - name: Upload the uberjar
+        uses: actions/upload-artifact@v4
+        with:
+          name: bluegenes-uberjar
+          path: target/bluegenes.jar
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload logs (failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-logs
+          path: ${{ env.CI_LOG_DIR }}/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The uberjar built above, started on the oldest supported JDK.
+  smoke-jdk17:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4   # only for script/ci/smoke.sh
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bluegenes-uberjar
+          path: artifact
+
+      - name: Smoke start on JDK 17
+        run: script/ci/smoke.sh uber-17 artifact/bluegenes.jar "$JAVA_HOME/bin/java" -jar "$PWD/artifact/bluegenes.jar"
+
+      - name: Upload logs (failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-jdk17-logs
+          path: ci-logs/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The Clojars-style library jar (`clojure -T:build install`), started as
+  # rdfc2im starts it: `java -cp <jar and its dependencies> bluegenes.core` on
+  # JDK 17. Runs in parallel with `check` and builds the front end itself.
+  library-jar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-build
+        with:
+          java-versions: |
+            17
+            21
+
+      - name: Log directory
+        run: mkdir -p "$CI_LOG_DIR"
+
+      - name: Install npm packages
+        run: npm ci 2>&1 | tee "$CI_LOG_DIR/npm-ci.log"
+
+      - name: Build and install the library jar (clojure -T:build install)
+        run: clojure -T:build install 2>&1 | tee "$CI_LOG_DIR/libjar.log"
+
+      - name: Library jar contents
+        run: |
+          version=$(sed -n 's/^(def version "\([^"]*\)").*/\1/p' build.clj)
+          echo "BLUEGENES_VERSION=$version" >> "$GITHUB_ENV"
+          script/ci/jar-check.sh lib "target/bluegenes-$version.jar" "$version"
+          test -f "$HOME/.m2/repository/org/intermine/bluegenes/$version/bluegenes-$version.pom"
+
+      # Resolve the installed jar the way a consumer does, from a bare deps.edn.
+      - name: Start `java -cp ... bluegenes.core` on JDK 17
+        run: |
+          cons=$(mktemp -d)
+          echo "{:deps {org.intermine/bluegenes {:mvn/version \"$BLUEGENES_VERSION\"}}}" > "$cons/deps.edn"
+          cp=$(cd "$cons" && clojure -Spath | tr ':' '\n' | grep '\.jar$' | paste -sd: -)
+          echo "classpath: $(echo "$cp" | tr ':' '\n' | grep -c .) jars"
+          test -n "$cp"
+          java17="${JAVA_HOME_17_X64:?setup-java did not export JAVA_HOME_17_X64}/bin/java"
+          "$java17" -version
+          script/ci/smoke.sh lib-17 "target/bluegenes-$BLUEGENES_VERSION.jar" "$java17" -cp "$cp" bluegenes.core
+
+      - name: Upload logs (failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-jar-logs
+          path: ${{ env.CI_LOG_DIR }}/
+          retention-days: 7
+          if-no-files-found: ignore
