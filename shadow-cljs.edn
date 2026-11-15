@@ -23,6 +23,10 @@
  {:app {:target :browser
         :output-dir "resources/public/js/compiled"
         :asset-path "/js/compiled"
+        ;; JS language level of the output (docs/building.md): ES2018 runs in
+        ;; every browser released since 2018-2020 (Chrome 64, Firefox 58,
+        ;; Safari 12, Edge 79); shadow-cljs 2.28's default is ES2020.
+        :compiler-options {:output-feature-set :es2018}
         ;; The cljsjs stand-ins (src/shim) set the js/ globals that bluegenes
         ;; and im-tables 0.15.0 read in top-level defs, so they are loaded
         ;; first (requiring them in bluegenes.core alone is not enough: im-tables

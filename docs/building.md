@@ -114,6 +114,8 @@ Sometimes the Closure compiler is overzealous and removes something we actually 
     clojure -T:build release
     clojure -M:prod -m bluegenes.core
 
+The release build runs shadow-cljs in a JVM with only the `:cljs` alias's classpath, so the dev tooling (`:cljs-dev`) and test libraries (`:test`) that `shadow-cljs.edn` adds for dev builds stay out of it. The JavaScript is compiled for ES2018 (`:output-feature-set :es2018`), which every browser from 2018-2020 on supports (Chrome 64, Firefox 58, Safari 12, Edge 79); the shadow-cljs default would be ES2020.
+
 `release` cleans, copies the im-tables CSS, compiles the Less with `lessc`, runs `shadow-cljs release app` (advanced compilation; the output file is named `app.<hash>.js` and listed in `resources/public/js/compiled/manifest.edn`) and copies the CSS to `site-<hash>.css`/`im-tables-<hash>.css`. The hash changes whenever the JavaScript changes, which also resets the state BlueGenes keeps in the browser's local storage.
 
 

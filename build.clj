@@ -76,9 +76,16 @@
   (sh! ["npx" "lessc" "--math=always" "--quiet-deprecations" "-x"
         "less/site.less" "resources/public/css/site.css"]))
 
-(defn cljs [_]
-  (sh! ["npx" "shadow-cljs" "release" "app" "--config-merge"
-        (pr-str {:closure-defines {'bluegenes.version/release (git-describe)}})]))
+(defn cljs
+  "shadow-cljs release app, run in a JVM with only the :cljs classpath
+  (`npx shadow-cljs` would use shadow-cljs.edn's :deps aliases, which add the
+  dev tooling and the test libraries)."
+  [_]
+  (let [cmd (b/java-command {:basis (basis [:cljs])
+                             :main 'clojure.main
+                             :main-args ["-m" "shadow.cljs.devtools.cli" "release" "app" "--config-merge"
+                                         (pr-str {:closure-defines {'bluegenes.version/release (git-describe)}})]})]
+    (sh! (:command-args cmd))))
 
 (defn fingerprint-css [_]
   (run-clj! [:cljs] "(require 'bluegenes.prep) (bluegenes.prep/fingerprint-css) (shutdown-agents)"))
