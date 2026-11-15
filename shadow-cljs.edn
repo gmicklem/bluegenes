@@ -32,8 +32,7 @@
         ;; and im-tables use, so they are loaded first, before any namespace
         ;; that could read a global at load time (im-tables 0.15.0 read
         ;; js/ReactTransitionGroup in a top-level def).
-        :modules {:app {:entries [cljsjs.react-day-picker
-                                  cljsjs.react-select
+        :modules {:app {:entries [cljsjs.react-select
                                   cljsjs.highlight
                                   cljsjs.highlight.langs.javascript
                                   cljsjs.highlight.langs.perl

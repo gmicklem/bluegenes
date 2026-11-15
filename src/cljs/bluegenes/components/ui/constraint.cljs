@@ -6,9 +6,7 @@
             [bluegenes.components.loader :refer [mini-loader]]
             [reagent.core :as reagent :refer [create-class]]
             [dommy.core :as dommy :refer-macros [sel sel1]]
-            [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]
-            [cljs-time.coerce :as time-coerce]
-            [cljs-time.format :as time-format]))
+            [bluegenes.components.ui.list-dropdown :refer [list-dropdown]]))
 
 ; These are what appear in a constraint drop down in order. Each map contains:
 ;  :op         - The syntax found in InterMine Query Language
@@ -97,43 +95,20 @@
   ISeqable
   (-seq [array] (array-seq array 0)))
 
-(def fmt "yyyy-MM-dd")
-(def date-fmt (time-format/formatter fmt))
-
-(defn read-day-change
-  "Convert DayPicker input to the string we use as constraint."
-  [date _mods picker]
-  (let [input (-> (ocall picker :getInput)
-                  (oget :value))]
-    ;; `date` can be nil if it's not a valid date. We use the raw input text in
-    ;; that case, to accomodate alien calendars.
-    (or (some->> date
-                 (time-coerce/from-date)
-                 (time-format/unparse date-fmt))
-        input)))
+(def iso-date #"\d{4}-\d{2}-\d{2}")
 
 (defn date-constraint-input
-  "Wraps `cljsjs/react-day-picker` for use as constraint input for selecting dates."
+  "The browser's date input, for a constraint on a date (its value is the
+  YYYY-MM-DD string we use as constraint value). A value that is not such a
+  date, e.g. one entered for another calendar, is shown in a text input so it
+  stays visible and editable."
   [{:keys [value on-change on-blur]}]
-  [:> js/DayPicker.Input
-   {:inputProps {:class "form-control"}
-    :value (or value "")
+  [:input.form-control.date-constraint-input
+   {:type (if (or (blank? value) (re-matches iso-date value)) "date" "text")
     :placeholder "YYYY-MM-DD"
-    :formatDate (fn [date _ _]
-                  (if (instance? js/Date date)
-                    (->> date (time-coerce/from-date) (time-format/unparse date-fmt))
-                    ""))
-    :parseDate (fn [s _ _]
-                 (when (and (string? s)
-                            (= (count s) (count fmt)))
-                   ;; Invalid dates like "2020-03-33" causes cljs-time
-                   ;; to throw an error. We don't care and return nil.
-                   (try
-                     (some->> s (time-format/parse date-fmt) (time-coerce/to-date))
-                     (catch js/Error _
-                       nil))))
-    :onDayChange (comp on-change read-day-change)
-    :onDayPickerHide #(on-blur value)}])
+    :value (or value "")
+    :on-change (fn [e] (on-change (oget e :target :value)))
+    :on-blur (fn [e] (on-blur (oget e :target :value)))}])
 
 (defn select-constraint-input
   "Wraps `cljsjs/react-select` for use as constraint input for selecting

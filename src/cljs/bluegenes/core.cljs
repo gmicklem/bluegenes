@@ -1,8 +1,7 @@
 (ns bluegenes.core
   ;; The cljsjs namespaces set JS globals that later namespaces read when they
   ;; load, so they come first (shadow-cljs.edn also lists them as entries).
-  (:require [cljsjs.react-day-picker]
-            [cljsjs.react-select]
+  (:require [cljsjs.react-select]
             [reagent.dom :as dom]
             [re-frame.core :as re-frame]
             [bluegenes.utils]
