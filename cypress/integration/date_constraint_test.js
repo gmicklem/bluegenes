@@ -246,17 +246,10 @@ describe("Date constraints", function () {
     cy.contains("button", showAll(target.dates.length)).click();
     cy.url().should("include", "/results");
     cy.contains(new RegExp(`Showing 1 to \\d+ of ${target.dates.length} rows`)).should("exist");
-    // im-tables draws the table as plain HTML until the mouse touches it, then draws the
-    // interactive one: a click made on the plain one is lost.
-    cy.get(".im-table").trigger("mouseover");
-    cy.get("table th i.sort-icon[title]").should("have.length", 1);
+    // The first click on the static toolbar (drawn before the mouse touches the table) reaches
+    // the live table, so there is no need to wait for the interactive one.
+    cy.get("table th .filter-icon").should("have.length", 1);
   };
-
-  // im-tables' hide handler of a column dropdown reads a click that was not recorded (a known
-  // error of im-tables, it throws "Cannot read properties of null (reading 'lastIndexOf'|'trim')"
-  // when a filter dropdown closes, and Cypress fails the test on any error of the page).
-  const ignoreFilterDropdownError = () =>
-    cy.on("uncaught:exception", (err) => !/Cannot read properties of null \(reading '(trim|lastIndexOf)'\)/.test(err.message));
 
   // The Apply button of the open filter dropdown. In the small window of Cypress the dropdown is
   // clipped by the page after a filter was removed from it, so the click is forced.
@@ -268,7 +261,6 @@ describe("Date constraints", function () {
   };
 
   itExternal("results table: the column filter on the date filters the rows, shows the constraint, and clears", function () {
-    ignoreFilterDropdownError();
     openResults();
     openFilter().within(() => {
       cy.get("select").select(">=");
@@ -300,7 +292,6 @@ describe("Date constraints", function () {
   });
 
   itExternal("results table: every operator of the column filter, and null and not null", function () {
-    ignoreFilterDropdownError();
     openResults();
     const apply = (op, day) => {
       openFilter().within(() => {
