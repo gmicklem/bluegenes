@@ -81,7 +81,7 @@ describe("Multiple Lists Test", function() {
         cy.createProteinList(PROTEINS);
         cy.get('.lists-item').should('have.length',3);
 
-        cy.get("#lists-keyword-filter").type("Protein{enter}",{delay:100});
+        cy.get("#lists-keyword-filter").type("Protein{enter}");
         cy.get('.lists-item').should('have.length',1);
         cy.get('.lists-item').find(".list-title").should("include.text","Protein");
     })

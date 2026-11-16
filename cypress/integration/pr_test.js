@@ -52,14 +52,14 @@ describe("UI Test", function() {
 
   it("Gives suggestion results when typing in search", function() {
     cy.get(".home .search").within(() => {
-      cy.get("input[class=typeahead-search]").type("mal*",{delay:100});
+      cy.get("input[class=typeahead-search]").type("mal*");
       cy.get(".quicksearch-result").its('length').should("be.gt", 0);
     });
   });
 
   it("Opens the search page to show search results", function() {
     cy.get(".home .search").within(() => {
-      cy.get("input[class=typeahead-search]").type("mal*{enter}",{delay:100});
+      cy.get("input[class=typeahead-search]").type("mal*{enter}");
     });
     cy.url().should("include", "/search");
 
@@ -76,13 +76,13 @@ describe("UI Test", function() {
 
   //   cy.contains("Upload").click();
   //   cy.contains("Show example").click();
-  //   cy.get("textarea").type(",ABRA,GBP,RIF,SERA,OAT,PCNA", { delay: 100 });
+  //   cy.get("textarea").type(",ABRA,GBP,RIF,SERA,OAT,PCNA");
   //   cy.get("button")
   //     .contains("Continue")
   //     .click();
   //   cy.get(".save-list input")
   //     .clear()
-  //     .type(listName, { delay: 100 });
+  //     .type(listName);
 
   //   cy.server();
   //   cy.route("POST", "*/service/query/tolist").as("tolist");
@@ -97,13 +97,13 @@ describe("UI Test", function() {
   //   // Add description to list
 
   //   cy.contains("Add description").click();
-  //   cy.get("textarea").type("My description", { delay: 100 });
+  //   cy.get("textarea").type("My description");
   //   cy.get(".controls button")
   //     .contains("Save")
   //     .click();
   //   // Update description to list
   //   cy.contains("Edit description").click();
-  //   cy.get("textarea").type(" new", { delay: 100 });
+  //   cy.get("textarea").type(" new");
   //   cy.get(".controls button")
   //     .contains("Save")
   //     .click();
@@ -156,7 +156,7 @@ describe("UI Test", function() {
     cy.intercept("GET", /\/service\/search\?/).as("getSearch");
 
     cy.get(".home .search").within(() => {
-      cy.get("input[class=typeahead-search]").type("gene{enter}", { delay: 100 });
+      cy.get("input[class=typeahead-search]").type("gene{enter}");
     });
 
     cy.wait("@getSearch").its("response.statusCode").should("eq", 401);
@@ -172,7 +172,7 @@ describe("UI Test", function() {
 
     cy.contains("Home").click();
     cy.get(".home .search").within(() => {
-      cy.get("input[class=typeahead-search]").clear().type("gene{enter}", { delay: 100 });
+      cy.get("input[class=typeahead-search]").clear().type("gene{enter}");
     });
 
     cy.wait("@getSecondSearch").its("response.statusCode").should("eq", 200);

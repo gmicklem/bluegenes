@@ -68,7 +68,7 @@ describeAdmin("Report Page Layout Test", function(){
             cy.get("li").contains("Proteins").should("exist").click();                
             cy.get(".classes").within(() => {
                 cy.get(".icon-info").as("classInfoButton").click();
-                cy.get("textarea").clear().type("Proteins encoded by this gene{enter}",{delay:100});
+                cy.get("textarea").clear().type("Proteins encoded by this gene{enter}");
                 cy.contains("Save").click();
             })
             cy.contains("Save changes").click();
@@ -203,7 +203,7 @@ describeAdmin("Report Page Layout Test", function(){
             cy.get("a").eq(0).should("include.text","Interactions").within(() => {
                 cy.contains("Delete").click();
             })
-            // cy.contains("Delete").click({delay:100},{multiple:true}); //Flaky
+            // cy.contains("Delete").click({multiple:true}); //Flaky
             cy.get("li").contains("Interactions").should("not.exist");
             cy.get("li").contains("Regions").should("not.exist");
             cy.contains("Save changes").click();

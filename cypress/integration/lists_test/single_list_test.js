@@ -23,7 +23,7 @@ describe("Single List Test", function() {
         })
 
         cy.get('.modal-footer').within(() => {
-            cy.contains("Copy list(s)").click({delay:100});
+            cy.contains("Copy list(s)").click();
         })
         cy.get('.lists-item').should('have.length',2);
 
@@ -41,7 +41,7 @@ describe("Single List Test", function() {
             .click();
         })
 
-        cy.get('.modal-body').find("textarea").type("List of drug-metabolism genes",{delay:100});
+        cy.get('.modal-body').find("textarea").type("List of drug-metabolism genes");
         cy.contains('Save').click();
 
         cy.get(".lists-item").within(() => {
@@ -61,7 +61,7 @@ describe("Single List Test", function() {
         })
 
         cy.get('.modal-footer').within(() => {
-            cy.contains("Delete list(s)").click({delay:100});
+            cy.contains("Delete list(s)").click();
         })
         cy.get('.no-lists').should('exist');
     });

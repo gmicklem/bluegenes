@@ -27,7 +27,7 @@ describe("Account list test", function() {
         });
 
         cy.get(".modal-body").within(()=>{
-            cy.contains("Tags").parent().find("input").type("Major genes{enter}",{delay:100});
+            cy.contains("Tags").parent().find("input").type("Major genes{enter}");
         })
         cy.get('.modal-footer').within(()=>{
             cy.contains("Save").click();
@@ -148,7 +148,7 @@ describeAdmin("Admin account list test", function() {
         });
 
         cy.get(".modal-body").within(()=>{
-            cy.contains("Tags").parent().find("input").type("im:public{enter}",{delay:100});
+            cy.contains("Tags").parent().find("input").type("im:public{enter}");
         })
         cy.get('.modal-footer').within(()=>{
             cy.contains("Save").click();

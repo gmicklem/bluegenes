@@ -7,6 +7,12 @@ import { minePage, mineService, requireMineData } from "../../support/mine";
 const needsFeatures = (ctx) =>
     requireMineData(ctx, "Location", "the test needs features overlapping a region");
 
+// The extension inputs dispatch their value 250 ms after the last keystroke
+// (bluegenes.pages.regions.views, debounce). The typing used to be slowed down ({delay: 100}),
+// which hid that a Search clicked within 250 ms of the last key does not see the extension,
+// and that the debounce is shared by the start and end inputs (a value typed into the second
+// within 250 ms replaces the one typed into the first).
+const EXTEND_DEBOUNCE = 300;
 
 describe("Regions Test", function(){
     beforeEach(function(){
@@ -31,7 +37,7 @@ describe("Regions Test", function(){
         needsFeatures(this);
 
         cy.get(".input-section").within(() => {
-            cy.get("textarea").type("1:0..100000",{delay:100});
+            cy.get("textarea").type("1:0..100000");
             cy.get('button[class="btn dropdown-toggle"]').click();
             cy.get(".dropdown-menu li").first().click(); // the first organism of the mine
             cy.contains("Features to include").children().click();
@@ -49,7 +55,7 @@ describe("Regions Test", function(){
 
     it("can search regions with interbase coordinates", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:0..30000",{delay:100});
+            cy.get("textarea").clear().type("1:0..30000");
             cy.get(".radio-group").within(() => {
                 cy.contains("interbase").within(() => {
                     cy.get(".check").should("not.be.visible");
@@ -67,7 +73,7 @@ describe("Regions Test", function(){
 
     it("can perform region search in the leading strand", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:0..30000",{delay:100});
+            cy.get("textarea").clear().type("1:0..30000");
             cy.get(".togglebutton").within(() => {
                 cy.get('.toggle').click();
                 cy.wait(500);
@@ -80,7 +86,7 @@ describe("Regions Test", function(){
     })
     it("can perform region search in the lagging strand", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:30000..0",{delay:100});
+            cy.get("textarea").clear().type("1:30000..0");
             cy.get(".togglebutton").within(() => {
                 cy.get('.toggle').click();
                 cy.wait(500);
@@ -94,7 +100,7 @@ describe("Regions Test", function(){
 
     it("can extend gene search region by clicking tick marks", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000");
             cy.get(".extend-region").within(() => {
                 cy.get(".slider-ticks").eq(0).within(() => {
                     cy.contains("1k").click();
@@ -111,7 +117,7 @@ describe("Regions Test", function(){
 
     it("can extend gene search region by sliders", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000");
             cy.get(".extend-region").within(() => {
                 cy.get('input[type="range"]').eq(0)
                 .then($el => $el[0].stepUp(40))
@@ -128,11 +134,12 @@ describe("Regions Test", function(){
 
     it("can extend gene search region by inputing in the text box", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:40000..60000",{delay:100});
+            cy.get("textarea").clear().type("1:40000..60000");
             cy.get(".extend-region").within(() => {
-                cy.get("input.form-control").eq(1).clear().type("38k{enter}",{delay:100});
+                cy.get("input.form-control").eq(1).clear().type("38k{enter}");
                 cy.get("input.form-control").eq(1).should("have.value","38k");
             })
+            cy.wait(EXTEND_DEBOUNCE); // the extension reaches the app state after a debounce
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
@@ -142,14 +149,16 @@ describe("Regions Test", function(){
 
     it("can lock gene search region extension", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:10000..20000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..20000");
             cy.get(".extend-region").within(() => {
                 cy.get(".icon-lock").click();
-                cy.get("input.form-control").eq(1).clear().type("3.8k{enter}",{delay:100});
-                cy.get("input.form-control").eq(2).clear().type("2500{enter}",{delay:100});
+                cy.get("input.form-control").eq(1).clear().type("3.8k{enter}");
+                cy.wait(EXTEND_DEBOUNCE); // one debounce serves both inputs: the second would replace the first
+                cy.get("input.form-control").eq(2).clear().type("2500{enter}");
                 cy.get("input.form-control").eq(1).should("have.value","3.8k");
                 cy.get("input.form-control").eq(2).should("have.value","2500");
             })
+            cy.wait(EXTEND_DEBOUNCE); // the extension reaches the app state after a debounce
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
@@ -160,7 +169,7 @@ describe("Regions Test", function(){
 
     it("can select the organism in which to perform region search", function(){
         cy.get(".input-section").within(() => {
-            cy.get("textarea").clear().type("1:10000..40000",{delay:100});
+            cy.get("textarea").clear().type("1:10000..40000");
             cy.get(".organism-selection").within(() => {
                 cy.get(".dropdown-toggle").click();
                 cy.get(".dropdown-menu").within(() => {

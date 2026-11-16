@@ -16,7 +16,7 @@ describeAdmin("Admin Account Test", function(){
             // until then.
             cy.get('[type="checkbox"]').first().should("be.enabled").uncheck({force:true});
             // cy.get('[type="checkbox"]').first().should("not.be.checked"); //flaky
-            cy.contains("Public name").type("{selectall}Admin{enter}",{delay:100});
+            cy.contains("Public name").type("{selectall}Admin{enter}");
             cy.contains("Save changes").should("not.be.disabled").click(); //flaky {force:true} needed?
             cy.get(".success").should("have.text","Updated preferences have been saved.");
         })
@@ -33,7 +33,7 @@ describeAdmin("Admin Account Test", function(){
             cy.get('[id="input:alias"]').should("have.value", "Admin");
             cy.get('[type="checkbox"]').first().check({force:true}); //flaky
             cy.get('[type="checkbox"]').first().should("be.checked"); 
-            cy.contains("Public name").type("{selectall}{backspace}",{delay:100});
+            cy.contains("Public name").type("{selectall}{backspace}");
             cy.contains("Save changes").should("not.be.disabled").click(); //flaky {force:true}?
             cy.get(".success").should("have.text","Updated preferences have been saved.");
         })
@@ -45,7 +45,7 @@ describeAdmin("Admin Account Test", function(){
         cy.contains("Set homepage notice").parent().as("setHomepageNotice");
 
         cy.get("@setHomepageNotice").within(() => {
-            cy.get("textarea").type("A new list has been added!{enter}",{delay:100});
+            cy.get("textarea").type("A new list has been added!{enter}");
             cy.contains("Save changes").click();
             cy.get(".success").should("include.text","Successfully saved changes to notice text.");
         })

@@ -28,7 +28,7 @@ describe("Query view test", function() {
 
       cy.get("div.panel-body").first().as("queryEditorTab").within(()=>{
         cy.contains("Save Query").click();
-        cy.get("div.input-group").type("Protein summary", {delay:100});
+        cy.get("div.input-group").type("Protein summary");
         cy.contains("Save Query").click();
         cy.contains("Clear Query").click();
       });
@@ -112,7 +112,7 @@ describe("Query view test", function() {
  
       cy.get('.query-view-column').within(()=>{
         cy.contains("Save Query").click();
-        cy.get("div.input-group").click().type("Protein summary",{delay:100});
+        cy.get("div.input-group").click().type("Protein summary");
         cy.contains("Save Query").click();
         cy.contains("Clear Query").click();
         
@@ -121,7 +121,7 @@ describe("Query view test", function() {
 
         cy.contains('Rename').click();
         cy.get('input.form-control').clear();
-        cy.get('input.form-control').click().type('Gene summary{enter}',{delay:100});
+        cy.get('input.form-control').click().type('Gene summary{enter}');
         cy.get('.query-table').contains('td', 'Gene summary');      
       });
     });
@@ -134,7 +134,7 @@ describe("Query view test", function() {
 
       cy.get(".panel-body").first().as("queryEditorTab").within(() => {
         cy.contains("Save Query").click();
-        cy.get("div.input-group").click().type("Protein summary",{delay:100});
+        cy.get("div.input-group").click().type("Protein summary");
         cy.contains("Save Query").click();
       })
 
