@@ -34,7 +34,7 @@
         ;; build.clj writes them into the pom as the Maven version found in each
         ;; library (VERSION file or build.clj).
         org.intermine/imcljs {:git/url "https://github.com/gmicklem/imcljs.git"
-                              :git/sha "98c0f103bbb87812c8f948c7d7478ad349298957"} ; 1.7.0-SNAPSHOT
+                              :git/sha "d96a3ebbe242ac9087113946bb7b3366399f2cae"} ; 1.7.0-SNAPSHOT, d96a3eb: blank query attributes omitted from the XML (list saves from results)
         org.intermine/bluegenes-tool-store {:git/url "https://github.com/gmicklem/bluegenes-tool-store.git"
                                             :git/sha "be4678f9252c62bb566c9a0187ad4fab0a085947"}} ; 0.3.0-SNAPSHOT, tarball URL/integrity/size hardening
 
@@ -74,7 +74,7 @@
                       ;; cljsjs.* namespaces, which src/shim provides. Its compiled CSS
                       ;; is not in git: bluegenes.prep compiles it from its less/.
                       org.intermine/im-tables {:git/url "https://github.com/gmicklem/im-tables-3.git"
-                                               :git/sha "0fc6eba3f626ff387e032610fa26e5cc1fa6e9d1"}}} ; 0.16.0-SNAPSHOT, React 18 + highlight.js 11 line, nil-safe filter dropdown handlers, HumanMine demo-page configs
+                                               :git/sha "0d6cbedcd426859902c4542161f7b16c093a4305"}}} ; 0.16.0-SNAPSHOT, 0d6cbed: React 18 + highlight.js 11 line, nil-safe filter dropdown handlers, HumanMine demo-page configs, millisecond default list names
 
   ;; Development-only front-end tooling (dev build preloads).
   :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}
