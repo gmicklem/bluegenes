@@ -172,6 +172,13 @@ With `CYPRESS_EXTERNAL_ONLY=true` as well, only these tests run. That is how to 
     CYPRESS_MINE_URL=https://www.humanmine.org/humanmine CYPRESS_MINE_NAME=HumanMine \
     npx cypress run --spec cypress/integration/main_page_test.js,cypress/integration/report_page_test.js
 
+`date_constraint_test.js` (constraints on a date in the query builder, in templates and in the results table filters) is `@external` too, for another reason: it needs a mine with data in an attribute of type `java.util.Date`, which none of the public mines (HumanMine, FlyMine) and not the demo mine has. It uses the first such attribute of the mine's model and skips itself, with the reason in the log, when there is none. `script/date-mock-mine.js` puts one (`Gene.lastReviewed`, with some null values) and the evaluation of date constraints in front of the demo mine, its header says how:
+
+    node script/date-mock-mine.js 8095        # the mock mine, http://localhost:8095/humanmine, in front of the demo mine
+    # BlueGenes (port 5081) with BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:8095/humanmine, then
+    CYPRESS_EXTERNAL=true CYPRESS_BASE_URL=http://localhost:5081 CYPRESS_MINE_URL=http://localhost:8095/humanmine \
+    npx cypress run --spec cypress/integration/date_constraint_test.js
+
 Do not run the whole suite with a public mine (HumanMine, FlyMine) as the default mine (`CYPRESS_MINE_URL`): the account, list and admin specs register users, save lists and change the home page notice on the default mine.
 
 *Tip:* With BlueGenes under a deploy path (`BLUEGENES_DEPLOY_PATH=/foo/bar`), include the path in `CYPRESS_BASE_URL` (`http://localhost:5000/foo/bar`).
