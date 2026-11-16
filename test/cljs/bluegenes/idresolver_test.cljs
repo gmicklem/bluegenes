@@ -4,6 +4,7 @@
             [re-frame.core :as rf]
             [day8.re-frame.test :refer-macros [run-test-sync]]
             [cljs-time.core :as time]
+            [bluegenes.events]
             [bluegenes.events.boot :as boot]
             [bluegenes.components.idresolver.events :as evts]))
 
@@ -89,3 +90,81 @@
     (is (= [:span [:strong "Failed to save list: "]
             [:code "Please check your connection and try again later."]]
            (boot/save-list-failure-markup nil)))))
+
+;; The organisms are fetched at boot, so a reset (the upload page being opened, a list saved,
+;; "load example") can run before the list has arrived. The default organism must then be
+;; applied when the list arrives instead of the select staying on Any.
+(defn init-db-for-reset! [cache]
+  (reset! re-frame.db/app-db
+          (cond-> {:current-mine :demo
+                   :mines {:demo {:default-organism "Homo sapiens"
+                                  :default-object-types [:Gene]}}}
+            cache (assoc :cache cache))))
+
+(defn stage-options [] (get-in @re-frame.db/app-db [:idresolver :stage :options]))
+
+(deftest reset-before-the-organisms-arrive
+  (run-test-sync
+   (testing "organisms already loaded: the default is set at once"
+     (init-db-for-reset! {:organisms organisms})
+     (rf/dispatch-sync [::evts/reset])
+     (is (= "H. sapiens" (:organism (stage-options))))
+     (is (nil? (:default-organism-pending? (stage-options)))))
+   (testing "organisms not loaded yet: Any until the list arrives, then the default"
+     (init-db-for-reset! nil)
+     (rf/dispatch-sync [::evts/reset])
+     (is (= "" (:organism (stage-options))))
+     (is (true? (:default-organism-pending? (stage-options))))
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (= "H. sapiens" (:organism (stage-options))))
+     (is (nil? (:default-organism-pending? (stage-options))))
+     (is (= "Gene" (:type (stage-options))) "the other options are kept"))
+   (testing "a default that is not in the arriving list stays Any"
+     (init-db-for-reset! nil)
+     (rf/dispatch-sync [::evts/reset])
+     (rf/dispatch-sync [:cache/store-organisms {:results [{:taxonId "7227" :name "Drosophila melanogaster" :shortName "D. melanogaster"}]}])
+     (is (= "" (:organism (stage-options))))
+     (is (nil? (:default-organism-pending? (stage-options)))))
+   (testing "an organism chosen before the list arrives is kept"
+     (init-db-for-reset! nil)
+     (rf/dispatch-sync [::evts/reset])
+     (rf/dispatch-sync [::evts/update-option :organism "D. melanogaster"])
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (= "D. melanogaster" (:organism (stage-options)))))
+   (testing "choosing Any before the list arrives is kept too"
+     (init-db-for-reset! nil)
+     (rf/dispatch-sync [::evts/reset])
+     (rf/dispatch-sync [::evts/update-option :organism ""])
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (= "" (:organism (stage-options)))))
+   (testing "a list arriving when the upload page was never reset leaves the options alone"
+     (init-db-for-reset! nil)
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (nil? (stage-options))))
+   (testing "no default organism configured: nothing is waited for"
+     (reset! re-frame.db/app-db {:current-mine :demo
+                                 :mines {:demo {:default-object-types [:Gene]}}})
+     (rf/dispatch-sync [::evts/reset])
+     (is (= "" (:organism (stage-options))))
+     (is (nil? (:default-organism-pending? (stage-options)))))))
+
+(deftest update-type-before-the-organisms-arrive
+  (run-test-sync
+   (testing "switching to a type with an organism before the list arrives: the default is applied when it does"
+     (reset! re-frame.db/app-db
+             {:current-mine :demo
+              :mines {:demo {:default-organism "Homo sapiens"}}
+              :idresolver {:stage {:options {:type "Chromosome" :organism nil :disable-organism? true}}}})
+     (rf/dispatch-sync [::evts/update-type model "Gene"])
+     (is (= "" (:organism (stage-options))))
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (= "H. sapiens" (:organism (stage-options)))))
+   (testing "switching to a type without an organism cancels the wait"
+     (reset! re-frame.db/app-db
+             {:current-mine :demo
+              :mines {:demo {:default-organism "Homo sapiens"}}
+              :idresolver {:stage {:options {:type "Chromosome" :organism nil :disable-organism? true}}}})
+     (rf/dispatch-sync [::evts/update-type model "Gene"])
+     (rf/dispatch-sync [::evts/update-type model "Chromosome"])
+     (rf/dispatch-sync [:cache/store-organisms {:results organisms}])
+     (is (nil? (:organism (stage-options)))))))

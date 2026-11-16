@@ -131,6 +131,37 @@
     ;;sending a blank string for the organism value
    ""))
 
+(defn default-organism-options
+  "The organism part of the upload options for the mine's configured
+  `default-organism`: {:organism <dropdown value>}, plus
+  :default-organism-pending? true when there is a default but the list of
+  organisms has not arrived yet (the options then hold Any, \"\"), so that
+  :cache/store-organisms can apply it once the list is there (see
+  `apply-pending-default-organism`)."
+  [db default-organism]
+  (let [organism (validate-default-organism db default-organism)]
+    (cond-> {:organism organism}
+      (and (string/blank? organism)
+           (not (string/blank? default-organism))
+           (nil? (get-in db [:cache :organisms])))
+      (assoc :default-organism-pending? true))))
+
+(defn apply-pending-default-organism
+  "Called when the list of organisms has been stored. If the upload options
+  are waiting for the default organism (they were reset before the list
+  arrived), sets it now. The user choosing an organism, or a type without an
+  organism, clears the wait."
+  [db]
+  (let [options-path [:idresolver :stage :options]]
+    (if (get-in db (conj options-path :default-organism-pending?))
+      (let [mine-details (get-in db [:mines (get db :current-mine)])]
+        (update-in db options-path
+                   (fn [options]
+                     (-> options
+                         (dissoc :default-organism-pending?)
+                         (assoc :organism (validate-default-organism db (:default-organism mine-details)))))))
+      db)))
+
 (reg-event-db
  ::update-type
  (fn [db [_ model value]]
@@ -141,7 +172,9 @@
          mine-details      (get-in db [:mines (get db :current-mine)])]
      (if disable-organism?
        (update-in db [:idresolver :stage :options]
-                  assoc :type value :disable-organism? true :organism nil)
+                  #(-> %
+                       (assoc :type value :disable-organism? true :organism nil)
+                       (dissoc :default-organism-pending?)))
        (update-in db [:idresolver :stage :options]
                   #(cond-> %
                       ; Assoc the new Type value to the options
@@ -150,13 +183,14 @@
                      true (assoc :disable-organism? false)
                       ; Give the organism dropdown a value if nil
                      (nil? (:organism %))
-                     (assoc :organism
-                            (validate-default-organism db (:default-organism mine-details)))))))))
+                     (merge (default-organism-options db (:default-organism mine-details)))))))))
 
 (reg-event-db
  ::update-option
  (fn [db [_ option-kw value]]
-   (assoc-in db [:idresolver :stage :options option-kw] value)))
+   (cond-> (assoc-in db [:idresolver :stage :options option-kw] value)
+     ;; A chosen organism is not to be overwritten by the default.
+     (= option-kw :organism) (update-in [:idresolver :stage :options] dissoc :default-organism-pending?))))
 
 (reg-event-db
  ::toggle-keep-duplicate
@@ -269,14 +303,14 @@
  ::reset
  (fn [{db :db} [_ {example-type :type example-text :text} navigate?]]
    (let [mine-details (get-in db [:mines (get db :current-mine)])
-         organism (validate-default-organism db (:default-organism mine-details))]
+         organism-options (default-organism-options db (:default-organism mine-details))]
      (cond-> {:db (assoc db :idresolver
                          {:stage {:files nil
                                   :textbox example-text
-                                  :options {:case-sensitive false
-                                            :type (or example-type
-                                                      (some-> mine-details :default-object-types first name))
-                                            :organism organism}
+                                  :options (merge {:case-sensitive false
+                                                   :type (or example-type
+                                                             (some-> mine-details :default-object-types first name))}
+                                                  organism-options)
                                   :status nil
                                   :flags nil}
                           :response nil

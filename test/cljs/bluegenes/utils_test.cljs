@@ -354,3 +354,30 @@
         "A tool that requests no widgets is never missing any")
     (is (nil? (utils/missing-widgets nil config))
         "Nothing is missing while the mine's widgets are not known")))
+
+(def possible-values-model
+  {:classes {:Gene {:name "Gene"
+                    :attributes {:symbol {:name "symbol" :type "java.lang.String"}
+                                 :length {:name "length" :type "java.lang.Integer"}
+                                 :created {:name "created" :type "java.util.Date"}}
+                    :references {:organism {:name "organism" :referencedType "Organism"}
+                                 :sequence {:name "sequence" :referencedType "Sequence"}}}
+             :Organism {:name "Organism"
+                        :attributes {:name {:name "name" :type "java.lang.String"}}}
+             :Sequence {:name "Sequence"
+                        :attributes {:residues {:name "residues" :type "org.intermine.objectstore.query.ClobAccess"}}}}})
+
+(deftest fetch-possible-values?
+  (testing "attributes with enumerable values are requested"
+    (are [path] (true? (utils/fetch-possible-values? possible-values-model path))
+      "Gene.symbol"
+      "Gene.length"
+      "Gene.organism.name"))
+  (testing "Date and ClobAccess attributes are not requested"
+    (are [path] (false? (utils/fetch-possible-values? possible-values-model path))
+      "Gene.created"
+      "Gene.sequence.residues"))
+  (testing "class paths are not requested"
+    (are [path] (false? (utils/fetch-possible-values? possible-values-model path))
+      "Gene"
+      "Gene.organism")))

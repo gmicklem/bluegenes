@@ -9,7 +9,7 @@
             [bluegenes.events.blog]
             [bluegenes.events.webproperties]
             [bluegenes.events.bgproperties]
-            [bluegenes.components.idresolver.events]
+            [bluegenes.components.idresolver.events :as idresolver-events]
             [day8.re-frame.forward-events-fx]
             [day8.re-frame.async-flow-fx]
             [bluegenes.pages.reportpage.events]
@@ -34,7 +34,7 @@
             [imcljs.path :as im-path]
             [clojure.string :as str :refer [join split]]
             [cljs.core.async :refer [put! chan <! >! timeout close!]]
-            [bluegenes.utils :refer [read-registry-mine]]
+            [bluegenes.utils :as utils :refer [read-registry-mine]]
             [bluegenes.pages.templates.helpers :refer [prepare-template-query]]))
 
 ;; If a requirement exists for the target panel, it will be called with the db
@@ -207,7 +207,9 @@
 (reg-event-db
  :cache/store-organisms
  (fn [db [_ res]]
-   (assoc-in db [:cache :organisms] (:results res))))
+   (-> (assoc-in db [:cache :organisms] (:results res))
+       ;; The upload page may have been reset before the list arrived.
+       idresolver-events/apply-pending-default-organism)))
 
 (reg-event-fx
  :cache/fetch-organisms-failure
@@ -259,7 +261,7 @@
          mine (get-in db [:mines (get db :current-mine)])
          split-path (split path ".")
          existing-value (get-in db [:mines (get db :current-mine) :possible-values split-path])]
-     (if (and (nil? existing-value) (not (im-path/class? model path)))
+     (if (and (nil? existing-value) (utils/fetch-possible-values? model path))
        {:cache/fetch-possible-values-fx {:service (get mine :service)
                                          :query (merge
                                                  {:from (first split-path)
