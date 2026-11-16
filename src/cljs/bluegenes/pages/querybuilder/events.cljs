@@ -11,7 +11,7 @@
             [bluegenes.pages.querybuilder.logic :as logic
              :refer [read-logic-string remove-code vec->list append-code]]
             [clojure.string :as str :refer [join split blank? starts-with?]]
-            [bluegenes.utils :refer [read-xml-query dissoc-in template->xml]]
+            [bluegenes.utils :as utils :refer [read-xml-query dissoc-in template->xml]]
             [oops.core :refer [oget]]
             [clojure.walk :refer [postwalk]]
             [bluegenes.components.ui.constraint :as constraint]))
@@ -71,7 +71,7 @@
          model (assoc (:model service) :type-constraints (get-in db [:qb :im-query :where]))
          summary-path (im-path/adjust-path-to-last-class model (join "." view-vec))
          split-summary-path (split summary-path ".")]
-     (if (not (im-path/class? model summary-path))
+     (if (utils/fetch-possible-values? model summary-path)
        {:qb/pv {:service service
                 :query {:from (first split-summary-path)
                         :select [(last split-summary-path)]}

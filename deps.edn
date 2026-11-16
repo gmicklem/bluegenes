@@ -36,7 +36,7 @@
         org.intermine/imcljs {:git/url "https://github.com/gmicklem/imcljs.git"
                               :git/sha "d96a3ebbe242ac9087113946bb7b3366399f2cae"} ; 1.7.0-SNAPSHOT, d96a3eb: blank query attributes omitted from the XML (list saves from results)
         org.intermine/bluegenes-tool-store {:git/url "https://github.com/gmicklem/bluegenes-tool-store.git"
-                                            :git/sha "be4678f9252c62bb566c9a0187ad4fab0a085947"}} ; 0.3.0-SNAPSHOT, tarball URL/integrity/size hardening
+                                            :git/sha "da4f23bbfeef664310ef0eeb44a28c41ffa84930"}} ; 0.3.0-SNAPSHOT, da4f23b: registry cookie policy, config.json reference for tool authors
 
  :aliases
  {;; ClojureScript build classpath (shadow-cljs.edn :deps {:aliases [:cljs ...]}).
@@ -78,7 +78,7 @@
                       ;; cljsjs.* namespaces, which src/shim provides. Its compiled CSS
                       ;; is not in git: bluegenes.prep compiles it from its less/.
                       org.intermine/im-tables {:git/url "https://github.com/gmicklem/im-tables-3.git"
-                                               :git/sha "0d6cbedcd426859902c4542161f7b16c093a4305"}}} ; 0.16.0-SNAPSHOT, 0d6cbed: React 18 + highlight.js 11 line, nil-safe filter dropdown handlers, HumanMine demo-page configs, millisecond default list names
+                                               :git/sha "1be6530161d581319e9cda2f95165f6e546c64bc"}}} ; 0.16.0-SNAPSHOT, 1be6530: filter Add More fix, no possible-values request for Date/clob attributes, explicit highlight.js languages for codegen, cljs-time removed, oops 0.7.2
 
   ;; Development-only front-end tooling (dev build preloads).
   :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}

@@ -34,7 +34,7 @@
             [imcljs.path :as im-path]
             [clojure.string :as str :refer [join split]]
             [cljs.core.async :refer [put! chan <! >! timeout close!]]
-            [bluegenes.utils :refer [read-registry-mine]]
+            [bluegenes.utils :as utils :refer [read-registry-mine]]
             [bluegenes.pages.templates.helpers :refer [prepare-template-query]]))
 
 ;; If a requirement exists for the target panel, it will be called with the db
@@ -259,7 +259,7 @@
          mine (get-in db [:mines (get db :current-mine)])
          split-path (split path ".")
          existing-value (get-in db [:mines (get db :current-mine) :possible-values split-path])]
-     (if (and (nil? existing-value) (not (im-path/class? model path)))
+     (if (and (nil? existing-value) (utils/fetch-possible-values? model path))
        {:cache/fetch-possible-values-fx {:service (get mine :service)
                                          :query (merge
                                                  {:from (first split-path)

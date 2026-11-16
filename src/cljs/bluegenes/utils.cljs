@@ -3,6 +3,7 @@
             [clojure.data.xml :as xml]
             [clojure.walk :as walk]
             [imcljs.query :as im-query]
+            [imcljs.path :as im-path]
             [bluegenes.version :as version]
             [bluegenes.components.icons :refer [icon]]
             [markdown-to-hiccup.core :as md]
@@ -55,6 +56,22 @@
       (string/join " " $)
       (string/capitalize $))
     s))
+
+;; Attribute types (see the model's `attributes`) whose possible values are never offered in
+;; the query builder: the date constraint input is a date picker, and a ClobAccess attribute is
+;; long text (e.g. Sequence.residues). Asking the server to summarise them is wasted work, for
+;; a Date path two requests (a size 1 count, then up to 7000 values). Same as im-tables 63b9b9a.
+(def non-enumerable-types
+  #{"java.util.Date" "org.intermine.objectstore.query.ClobAccess"})
+
+(defn fetch-possible-values?
+  "True if the unique values of the attribute path `path` should be requested from
+  the server: false for a class path (nothing to list) and for attributes of a
+  `non-enumerable-types` type. `model` should carry the :type-constraints that
+  the path needs."
+  [model path]
+  (and (not (im-path/class? model path))
+       (not (contains? non-enumerable-types (im-path/data-type model path)))))
 
 ;; You may think update-in serves you just fine
 ;;     (update-in {} [:foo :bar] dissoc :baz)
