@@ -74,7 +74,7 @@
                       ;; cljsjs.* namespaces, which src/shim provides. Its compiled CSS
                       ;; is not in git: bluegenes.prep compiles it from its less/.
                       org.intermine/im-tables {:git/url "https://github.com/gmicklem/im-tables-3.git"
-                                               :git/sha "146b1c5361da1a9047574e5887e531085a19fd25"}}} ; 0.16.0-SNAPSHOT, React 18 + highlight.js 11 line
+                                               :git/sha "a36091a24b901534194f6f5871f8ba3cacee06be"}}} ; 0.16.0-SNAPSHOT, React 18 + highlight.js 11 line
 
   ;; Development-only front-end tooling (dev build preloads).
   :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}
