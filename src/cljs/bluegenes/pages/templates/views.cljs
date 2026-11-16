@@ -8,7 +8,7 @@
             [bluegenes.components.ui.results-preview :refer [preview-table]]
             [oops.core :refer [oget ocall]]
             [bluegenes.components.loader :refer [mini-loader]]
-            [bluegenes.utils :refer [ascii-arrows ascii->svg-arrows compatible-version?]]
+            [bluegenes.utils :refer [ascii-arrows ascii->svg-arrows compatible-version? unsafe-html]]
             [bluegenes.pages.templates.helpers :refer [categories-from-tags]]
             [bluegenes.components.top-scroll :as top-scroll]
             [bluegenes.route :as route]
@@ -226,7 +226,7 @@
               (ascii->svg-arrows title)
               [[:span title]]))
       [:div.description
-       {:dangerouslySetInnerHTML {:__html (:description query)}}]
+       {:dangerouslySetInnerHTML (unsafe-html (:description query))}]
       (when selected?
         [:div.body
          [select-template-settings]
