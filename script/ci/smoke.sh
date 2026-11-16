@@ -19,7 +19,7 @@
 # the jar's manifest.edn.
 # Environment: SMOKE_PORT (default 5055), CI_LOG_DIR (default ci-logs; the
 # server log goes there as smoke-<label>-server.log),
-# BLUEGENES_DEFAULT_SERVICE_ROOT (default https://www.flymine.org/flymine; "/"
+# BLUEGENES_DEFAULT_SERVICE_ROOT (default https://www.humanmine.org/humanmine; "/"
 # fetches the default mine's markup, 3 s timeout, so it need not be reachable).
 set -u   # no pipefail: failures are collected in $prob, and `grep | head -1` may SIGPIPE
 [ $# -ge 4 ] || { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
@@ -34,7 +34,7 @@ want=$(unzip -p "$jar" public/js/compiled/manifest.edn | grep -oE ':output-name 
 
 dir=$(mktemp -d)
 ( cd "$dir" && SERVER_PORT=$port \
-    BLUEGENES_DEFAULT_SERVICE_ROOT=${BLUEGENES_DEFAULT_SERVICE_ROOT:-https://www.flymine.org/flymine} \
+    BLUEGENES_DEFAULT_SERVICE_ROOT=${BLUEGENES_DEFAULT_SERVICE_ROOT:-https://www.humanmine.org/humanmine} \
     exec "$javabin" "$@" ) > "$log" 2>&1 &
 pid=$!
 cleanup() { kill "$pid" 2>/dev/null; sleep 1; kill -9 "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; rm -rf "$dir"; }
