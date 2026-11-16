@@ -46,8 +46,8 @@ env:
   # The raw-data cache tools/full-build.sh --use-cached-data restores
   # (cached_raw_data/<source>/{data,MD5SUMS,META.json}), 23 MB. A new cache gets a
   # new release tag; never replace an asset in place.
-  RDFC2IM_DATA_URL: https://github.com/gmicklem/rdfc2im/releases/download/demo-data-2026-11-15/cached_raw_data.tar.gz
-  RDFC2IM_DATA_SHA256: 425636c3319ba34f0bedc2937ad689a4b53ed8abaf6f57a774bb2d824f96f31d
+  RDFC2IM_DATA_URL: https://github.com/gmicklem/rdfc2im/releases/download/demo-data-2026-11-16/cached_raw_data.tar.gz
+  RDFC2IM_DATA_SHA256: 64cab8cc0f53f69b1d32c75100be95efac313a2885fe2bdf859d963100d8b266
   # The standalone Gradle 4.9 launcher full-build.sh needs (BUILD.md, Prerequisites)
   GRADLE49_URL: https://services.gradle.org/distributions/gradle-4.9-bin.zip
   GRADLE49_SHA256: e66e69dce8173dd2004b39ba93586a184628bc6c28461bc771d6835f7f9b0d28
