@@ -97,18 +97,49 @@
 
 (def iso-date #"\d{4}-\d{2}-\d{2}")
 
+(def date-commit-delay
+  "Milliseconds after the last change of a complete date before the constraint is
+  committed (on-blur) without the input losing focus."
+  500)
+
 (defn date-constraint-input
   "The browser's date input, for a constraint on a date (its value is the
   YYYY-MM-DD string we use as constraint value). A value that is not such a
   date, e.g. one entered for another calendar, is shown in a text input so it
-  stays visible and editable."
-  [{:keys [value on-change on-blur]}]
-  [:input.form-control.date-constraint-input
-   {:type (if (or (blank? value) (re-matches iso-date value)) "date" "text")
-    :placeholder "YYYY-MM-DD"
-    :value (or value "")
-    :on-change (fn [e] (on-change (oget e :target :value)))
-    :on-blur (fn [e] (on-blur (oget e :target :value)))}])
+  stays visible and editable.
+
+  The constraint is committed (`on-blur`, which makes the query builder and
+  the templates run the query) when the input loses focus, as for the other
+  inputs, and also shortly after a date has been picked or typed completely or
+  cleared: choosing a date in the browser's calendar popup does not blur the
+  input, and nothing would happen until the user clicked elsewhere. The short
+  delay is for typing a year, which changes the date with every digit."
+  [_props]
+  (let [timer (atom nil)
+        cancel! (fn []
+                  (when-let [t @timer]
+                    (js/clearTimeout t)
+                    (reset! timer nil)))]
+    (create-class
+     {:component-will-unmount cancel!
+      :reagent-render
+      (fn [{:keys [value on-change on-blur]}]
+        [:input.form-control.date-constraint-input
+         {:type (if (or (blank? value) (re-matches iso-date value)) "date" "text")
+          :placeholder "YYYY-MM-DD"
+          :value (or value "")
+          :on-change (fn [e]
+                       (let [v (oget e :target :value)]
+                         (on-change v)
+                         (cancel!)
+                         (when (or (blank? v) (re-matches iso-date v))
+                           (reset! timer (js/setTimeout (fn []
+                                                          (reset! timer nil)
+                                                          (on-blur v))
+                                                        date-commit-delay)))))
+          :on-blur (fn [e]
+                     (cancel!)
+                     (on-blur (oget e :target :value)))}])})))
 
 (defn select-constraint-input
   "Wraps `cljsjs/react-select` for use as constraint input for selecting
