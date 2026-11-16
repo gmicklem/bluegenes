@@ -206,6 +206,15 @@
                       $)))
         (not-empty $)))))
 
+(defn missing-widgets
+  "Returns the names of the widgets a tool's config lists under `:widgets`
+  (the ones it requests from the mine's web service) that the mine does not
+  have. `widget-names` is the set of names from the mine's /service/widgets;
+  nil means that list is not known (yet), in which case nothing is missing."
+  [widget-names config]
+  (when (some? widget-names)
+    (not-empty (remove widget-names (:widgets config)))))
+
 (defn version-string->vec
   "Converts a version string consisting of one or more whole numbers separated
   by non-numeric characters into a vector of integers. Returns nil if the

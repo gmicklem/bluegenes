@@ -342,3 +342,15 @@
       "Returns an empty sequential if string is empty")
   (is (= (utils/highlight-substring "" "") [])
       "Returns an empty sequential if string and substring are empty"))
+
+(deftest missing-widgets
+  (let [config {:widgets ["go_enrichment_for_gene" "pathway_enrichment"]}]
+    (is (= ["go_enrichment_for_gene"]
+           (utils/missing-widgets #{"pathway_enrichment" "publication_enrichment"} config))
+        "Lists the widgets the mine lacks")
+    (is (nil? (utils/missing-widgets #{"go_enrichment_for_gene" "pathway_enrichment"} config))
+        "Nothing is missing when the mine has them all")
+    (is (nil? (utils/missing-widgets #{} {:accepts ["ids"]}))
+        "A tool that requests no widgets is never missing any")
+    (is (nil? (utils/missing-widgets nil config))
+        "Nothing is missing while the mine's widgets are not known")))
