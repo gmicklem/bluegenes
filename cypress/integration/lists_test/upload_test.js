@@ -29,6 +29,33 @@ describe("Upload Test", function(){
         cy.contains("2 of your 2 identifiers matched a Protein");
     })
 
+    // A list type without an organism (Publication) disables the organism dropdown; back on Gene
+    // the dropdown must show the organism that the upload then sends: the mine's default organism
+    // when the organism list has it, else Any (a blank value). The state used to hold the default
+    // organism by name ("Homo sapiens") while the dropdown, whose options are short names or has no
+    // option for it at all, showed Any.
+    it("sends the organism that the dropdown shows after the list type changed", function(){
+        cy.intercept("POST", "**/service/ids").as("resolve");
+        cy.get('.select-organism-and-list-type').within(() => {
+            cy.contains("List type").siblings(".form-group").find("select").select("Publication");
+            cy.get(".organism-selector select").should("be.disabled");
+            cy.contains("List type").siblings(".form-group").find("select").select("Gene");
+            cy.get(".organism-selector select").should("not.be.disabled");
+        });
+        cy.get(".organism-selector select").then($select => {
+            const shown = $select.val();
+            // every organism of the mine with a short name is an option, next to Any
+            cy.wrap($select).find("option").then($options => {
+                expect([...$options].map(o => o.value)).to.include(shown);
+            });
+            cy.get(".wizard textarea").type(GENES_A);
+            cy.contains("Continue").click();
+            cy.wait("@resolve").its("request.body").then(body => {
+                expect(body.extra || "").to.equal(shown);
+            });
+        });
+    })
+
     it("finds identifiers typed in the wrong case when they are not case sensitive", function(){
         cy.get('.select-organism-and-list-type').within(() => {
             cy.contains("List type").siblings(".form-group").find("select").select("Protein");
