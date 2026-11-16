@@ -1,6 +1,6 @@
 (ns bluegenes.components.tools.subs
   (:require [re-frame.core :refer [reg-sub]]
-            [bluegenes.utils :refer [suitable-entities]]
+            [bluegenes.utils :refer [suitable-entities missing-widgets]]
             [bluegenes.crud.tools :as crud]))
 
 (reg-sub
@@ -41,17 +41,26 @@
              available))))
 
 (reg-sub
+ ::mine-widget-names
+ (fn [db]
+   ;; nil until the mine's widgets have been fetched.
+   (when-let [widgets (get-in db [:assets :widgets (:current-mine db)])]
+     (set (map :name widgets)))))
+
+(reg-sub
  ::suitable-tools
  :<- [::installed-tools]
  :<- [::entities]
  :<- [:model]
  :<- [:current-model-hier]
  :<- [:results/entities-ready?]
- (fn [[tools entities model hier ready?]]
+ :<- [::mine-widget-names]
+ (fn [[tools entities model hier ready? widget-names]]
    (when ready?
      (keep (fn [tool]
-             (when-let [entity (suitable-entities model hier entities (:config tool))]
-               (assoc tool :entity entity)))
+             (when-not (missing-widgets widget-names (:config tool))
+               (when-let [entity (suitable-entities model hier entities (:config tool))]
+                 (assoc tool :entity entity))))
            tools))))
 
 (reg-sub

@@ -4,7 +4,7 @@
             [bluegenes.pages.tools.events :as events]
             [bluegenes.version :as version]
             [bluegenes.components.viz.views :refer [all-viz]]
-            [bluegenes.utils :refer [md-paragraph]]
+            [bluegenes.utils :refer [md-paragraph missing-widgets]]
             [bluegenes.config :refer [server-vars]]))
 
 ;; You may notice that this page is only linked from the admin's profile
@@ -64,6 +64,18 @@
               (interpose " " (map #(vector :code %) unsupported)))
         ". However, it may be shown for other mines."]])))
 
+(defn output-tool-widgets
+  "Shows an alert if the current mine does not have the widgets this tool requests."
+  [config]
+  (let [widget-names @(subscribe [::tools-subs/mine-widget-names])
+        mine-name    (:name @(subscribe [:current-mine]))]
+    (when-let [missing (missing-widgets widget-names config)]
+      [:div.tool-alert
+       [:p (str "This tool will not show on " mine-name " as it doesn't have the widgets: ")
+        (into [:<>]
+              (interpose " " (map #(vector :code %) missing)))
+        ". However, it may be shown for other mines."]])))
+
 (defn output-tool-version
   "Shows an alert if the version does not match this Bluegenes' tool API."
   [version]
@@ -103,6 +115,7 @@
         [tool-description (get-in tool [:package :description])]
         [output-tool-version (get-in tool [:config :version] 1)]
         [output-tool-depends (get-in tool [:config :depends])]
+        [output-tool-widgets (:config tool)]
         [output-tool-classes (get-in tool [:config :classes])]
         [output-tool-accepts (get-in tool [:config :accepts])]]
        [:div.tool-footer

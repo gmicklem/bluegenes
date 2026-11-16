@@ -111,6 +111,26 @@
  (fn [db [_ response]]
    (update-in db [:idresolver :stage :options :case-sensitive?] not)))
 
+(defn validate-default-organism
+  "This handles the fact that a mine could be misconfigured and might return
+  an organism that isn't present in the list (or one without a short name, which
+  the dropdown cannot offer). Learned from the school of hard knocks, aka beta
+  humanmine. Returns the shortName of the matching organism, the value of the
+  matching dropdown option, or \"\" (the \"Any\" option) when there is none."
+  [db default-organism]
+  (or
+    ;;return the default if it exists in the dropdown, making sure to use shortName as default-organism may be the long name.
+   (when-not (string/blank? default-organism)
+     (some (fn [org]
+             (when (and (not (string/blank? (:shortName org)))
+                        (or (= default-organism (:shortName org))
+                            (= default-organism (:name org))))
+               (:shortName org)))
+           (get-in db [:cache :organisms])))
+    ;;if the default isn't preset, we default to "all", which is equivalent to
+    ;;sending a blank string for the organism value
+   ""))
+
 (reg-event-db
  ::update-type
  (fn [db [_ model value]]
@@ -131,7 +151,7 @@
                       ; Give the organism dropdown a value if nil
                      (nil? (:organism %))
                      (assoc :organism
-                            (-> mine-details :default-organism))))))))
+                            (validate-default-organism db (:default-organism mine-details)))))))))
 
 (reg-event-db
  ::update-option
@@ -244,22 +264,6 @@
                                   "Please check your connection and try again later.")]]
                 :timeout 10000
                 :style "danger"}]}))
-
-(defn validate-default-organism
-  "This handles the fact that a mine could be misconfigured and might return
-  an organism that isn't present in the list. Learned from the school of hard
-  knocks, aka beta humanmine"
-  [db default-organism]
-  (or
-    ;;return the default if it exists in the dropdown, making sure to use shortName as default-organism may be the long name.
-   (some (fn [org]
-           (when (or (= default-organism (:shortName org))
-                     (= default-organism (:name org)))
-             (:shortName org)))
-         (get-in db [:cache :organisms]))
-    ;;if the default isn't preset, we default to "all", which is equivalent to
-    ;;sending a blank string for the organism value
-   ""))
 
 (reg-event-fx
  ::reset

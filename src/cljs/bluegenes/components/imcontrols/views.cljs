@@ -1,6 +1,7 @@
 (ns bluegenes.components.imcontrols.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
+            [clojure.string :as str]
             [oops.core :refer [oget]]))
 
 (defn organism-dropdown
@@ -38,12 +39,11 @@
                                  organisms-pred (filter organisms-pred))))))])))
 
 (defn select-organism []
-  (let [organisms        (subscribe [:cache/organisms])
-        default-organism (subscribe [:mine-default-organism])]
+  (let [organisms (subscribe [:cache/organisms])]
     (fn [{:keys [value on-change disabled class]}]
       [:div.form-group.organism-selector
        (into [:select.form-control
-              {:value (if disabled "" (or value @default-organism ""))
+              {:value (if disabled "" (or value ""))
                :disabled disabled
                :class class
                :on-change (fn [e]
@@ -54,7 +54,9 @@
                (when (empty? @organisms)
                  [:option {:value "_" :disabled true} "Failed to query organisms from mine"])]
               (map (fn [{short-name :shortName}]
-                     [:option {:value short-name} short-name]) @organisms)))])))
+                     [:option {:value short-name} short-name])
+                   ;; An organism without a short name has no value to select.
+                   (remove (comp str/blank? :shortName) @organisms))))])))
 
 (defn sort-classes [classes]
   (sort-by (comp :displayName second) < classes))
