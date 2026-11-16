@@ -1,20 +1,26 @@
-# NOT YET ENABLED. This is a placeholder for the nightly end-to-end run, and it
-# does not work yet: the job below runs only when the repository variable
-# CYPRESS_ENABLED is 'true' (it is not set), and the pieces it will need do not
-# exist yet. Setting the variable now only makes the job fail with "not
-# implemented".
+# Nightly end-to-end run: the Cypress suite against the rdfc2im demo mine, built
+# from scratch in the job, with the BlueGenes of this commit. See "Continuous
+# integration" in docs/building.md.
 #
-#   - a local mine to test against: built from the rdfc2im stack (planned,
-#     issue G1; bluegenes cannot run its Cypress suite against nothing; the
-#     tests are written for Biotestmine)
-#   - a Cypress run that works: package.json still has Cypress 6.9, which is
-#     years old and has not been run in this migration (the local gate never runs
-#     Cypress); the plan is Cypress 13 or later (planned, issue F2)
+#   uberjar   `clojure -T:build uber` of this checkout -> target/bluegenes.jar
+#   e2e       builds the demo mine (rdfc2im tools/full-build.sh --use-cached-data:
+#             Postgres, Solr and the InterMine webapp on :8090/humanmine, in
+#             docker compose), stops the stack's own BlueGenes, starts the uberjar
+#             on :5001 against the mine and runs `npx cypress run` with no retries
+#   external  the @external tests (switching to FlyMine) against the public
+#             HumanMine; they depend on two live public mines, so this job may
+#             fail without failing the run
 #
-# When both exist: replace the placeholder step with the steps in the comments
-# and set the variable (Settings > Secrets and variables > Actions > Variables).
-# Until then the job is reported as skipped in the Actions tab every night.
-name: Nightly Cypress (not yet enabled)
+# The mine is built from pinned inputs: the rdfc2im commit (RDFC2IM_REF) and its
+# fetched RDF Portal data, a release asset of gmicklem/rdfc2im checked against
+# RDFC2IM_DATA_SHA256, so the build never queries RDF Portal. It still clones
+# the upstream InterMine repositories and reads the live HumanMine model
+# (rdfc2im tools/make-inputs.sh), and pulls the Docker images and Gradle/Maven
+# dependencies.
+#
+# To switch the nightly off, disable the workflow (Actions > Nightly Cypress >
+# "..." > Disable workflow, or `gh workflow disable nightly-cypress.yml`).
+name: Nightly Cypress
 
 on:
   schedule:
@@ -25,58 +31,318 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-jobs:
-  cypress:
-    if: ${{ vars.CYPRESS_ENABLED == 'true' }}   # NOT YET ENABLED, see the header
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - name: Placeholder
-        run: echo "nightly Cypress is not implemented yet" && exit 1
+defaults:
+  run:
+    shell: bash   # bash -eo pipefail
 
-      # Intended steps (none of this has been run):
-      #
-      # - uses: actions/checkout@v7
-      #   with:
-      #     fetch-depth: 0
-      #
-      # - uses: ./.github/actions/setup-build        # Java 21, Clojure, Node 22, caches
-      #
-      # # 1. A local mine (future G1): start the rdfc2im stack (InterMine core
-      # #    and its database, loaded with Biotestmine data) with docker
-      # #    compose, wait for http://localhost:9999/biotestmine/service/version
-      # #    to answer, and keep its logs for the failure artifact.
-      #
-      # - run: npm ci                                # with Cypress 13+ (future F2)
-      #   env:
-      #     CYPRESS_INSTALL_BINARY: ""              # the real binary this time
-      #
-      # - run: clojure -T:build uber
-      #
-      # # 2. Start BlueGenes against that mine, as in docs/building.md:
-      # - run: |
-      #     BLUEGENES_DEFAULT_SERVICE_ROOT=http://localhost:9999/biotestmine \
-      #     BLUEGENES_DEFAULT_MINE_NAME=Biotestmine \
-      #     BLUEGENES_DEFAULT_NAMESPACE=biotestmine \
-      #     # FlyMine is the second mine the @external tests switch to; the nightly
-      #     # needs it only when CYPRESS_EXTERNAL=true. Tests that need a public mine
-      #     # as the default use HumanMine (https://www.humanmine.org/humanmine).
-      #     BLUEGENES_ADDITIONAL_MINES='[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]' \
-      #     nohup java -jar target/bluegenes.jar > bluegenes.log 2>&1 &
-      #   # then wait for http://localhost:5000/version
-      #
-      # # 3. Run Cypress 13+ (future F2):
-      # - run: npx cypress run
-      #
-      # - if: failure()
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: cypress-failure
-      #     path: |
-      #       cypress/screenshots
-      #       cypress/videos
-      #       bluegenes.log
-      #     retention-days: 7
+env:
+  # rdfc2im, the demo mine's build: repository and commit (branch
+  # maint/im-ore.1-intermine-src). To move to a newer commit, change the sha.
+  RDFC2IM_REPO: gmicklem/rdfc2im
+  RDFC2IM_REF: 542fe57bfd3378d7492133a36be97e308bae1e70
+  # The raw-data cache tools/full-build.sh --use-cached-data restores
+  # (cached_raw_data/<source>/{data,MD5SUMS,META.json}), 23 MB. A new cache gets a
+  # new release tag; never replace an asset in place.
+  RDFC2IM_DATA_URL: https://github.com/gmicklem/rdfc2im/releases/download/demo-data-2026-11-16/cached_raw_data.tar.gz
+  RDFC2IM_DATA_SHA256: 64cab8cc0f53f69b1d32c75100be95efac313a2885fe2bdf859d963100d8b266
+  # The standalone Gradle 4.9 launcher full-build.sh needs (BUILD.md, Prerequisites)
+  GRADLE49_URL: https://services.gradle.org/distributions/gradle-4.9-bin.zip
+  GRADLE49_SHA256: e66e69dce8173dd2004b39ba93586a184628bc6c28461bc771d6835f7f9b0d28
+  # The demo mine and the BlueGenes under test
+  MINE_URL: http://localhost:8090/humanmine
+  MINE_TITLE: "rdfc2im: 113 gene food/drug-metabolism panel"
+  BLUEGENES_PORT: "5001"
+  LOGS: ${{ github.workspace }}/nightly-logs
+  # cypress.config.js's JUnit options, plus the skipped tests (includePending),
+  # which the job summary counts; the XML is not echoed to the log
+  REPORTER_OPTIONS: mochaFile=cypress/results/output-[hash].xml,toConsole=false,includePending=true
+
+jobs:
+  uberjar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # the release build takes its version from `git describe`
+
+      - uses: ./.github/actions/setup-build
+        with:
+          java-versions: "21"
+
+      - name: Install npm packages
+        run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: "0"   # not run in this job
+
+      - name: Release build and uberjar (clojure -T:build uber)
+        run: clojure -T:build uber
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightly-bluegenes-uberjar
+          path: target/bluegenes.jar
+          retention-days: 3
+          if-no-files-found: error
+
+  e2e:
+    needs: uberjar
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check out rdfc2im ${{ env.RDFC2IM_REF }}
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.RDFC2IM_REPO }}
+          ref: ${{ env.RDFC2IM_REF }}
+          path: _rdfc2im
+
+      # JDK 8 for the mine's Gradle 4.9 build (JAVA_HOME_8_X64), 21 for BlueGenes
+      # (the last one listed is the default java).
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            21
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-binary-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install npm packages and the Cypress binary
+        run: |
+          npm ci
+          npx cypress verify
+
+      - name: Prerequisites of the mine build (raw-data cache, Gradle 4.9, Python venv)
+        run: |
+          mkdir -p "$LOGS"
+          curl -fsSL --retry 5 --retry-connrefused -o "$RUNNER_TEMP/cached_raw_data.tar.gz" "$RDFC2IM_DATA_URL"
+          echo "$RDFC2IM_DATA_SHA256  $RUNNER_TEMP/cached_raw_data.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/cached_raw_data.tar.gz" -C _rdfc2im
+          ls _rdfc2im/cached_raw_data
+          curl -fsSL --retry 5 --retry-connrefused -o "$RUNNER_TEMP/gradle-4.9-bin.zip" "$GRADLE49_URL"
+          echo "$GRADLE49_SHA256  $RUNNER_TEMP/gradle-4.9-bin.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/gradle-4.9-bin.zip" -d "$RUNNER_TEMP"
+          python3 -m venv _rdfc2im/.venv
+          _rdfc2im/.venv/bin/pip install --quiet -r _rdfc2im/requirements.txt
+          (cd _rdfc2im && .venv/bin/python -m rdfc2im --help > /dev/null)
+          echo "free memory before the build:"; free -m; nproc; df -h / | tail -1
+
+      # 18 phases, from the rdfc2im pipeline to a running mine; ends with
+      # phase_verify (/service/version, /service/model and BlueGenes on :5000
+      # answer). The per-phase timings go to the job summary.
+      - name: Build the demo mine (tools/full-build.sh --use-cached-data)
+        id: mine
+        timeout-minutes: 60
+        working-directory: _rdfc2im
+        env:
+          GRADLE49: ${{ runner.temp }}/gradle-4.9/bin/gradle
+          TRIAL_HOME: ${{ runner.temp }}/trial_home
+          LOG_DIR: ${{ env.LOGS }}/full-build
+          RUN_ID: nightly
+        run: |
+          export JAVA8_HOME="${JAVA_HOME_8_X64:?setup-java did not export JAVA_HOME_8_X64}"
+          t0=$(date +%s)
+          tools/full-build.sh --use-cached-data
+          echo "seconds=$(( $(date +%s) - t0 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Mine build timings
+        if: always() && steps.mine.outcome != 'skipped'
+        run: |
+          tsv="$LOGS/full-build/build-nightly.timing.tsv"
+          {
+            echo "### Demo mine build (rdfc2im ${RDFC2IM_REF:0:7}): ${{ steps.mine.outcome }}${{ steps.mine.outputs.seconds && format(', {0} s', steps.mine.outputs.seconds) || '' }}"
+            echo
+            if [ -s "$tsv" ]; then
+              echo "| phase | seconds |"; echo "|---|---:|"
+              awk -F'\t' '{ printf "| %s | %s |\n", $1, $3 }' "$tsv"
+            fi
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The Gradle daemon of the build keeps its 4 GB heap; the stack's own
+      # BlueGenes (the released 1.4.5 jars, on :5000) is not the one under test.
+      - name: Free the build's memory and stop the stack's BlueGenes
+        run: |
+          pkill -f 'org.gradle.launcher.daemon' || true
+          docker stop rdfc2im-bluegenes
+          docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+          free -m
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: nightly-bluegenes-uberjar
+          path: ${{ runner.temp }}/uberjar
+
+      - name: Start this commit's BlueGenes on :${{ env.BLUEGENES_PORT }}
+        env:
+          SERVER_PORT: ${{ env.BLUEGENES_PORT }}
+          BLUEGENES_DEFAULT_SERVICE_ROOT: ${{ env.MINE_URL }}
+          BLUEGENES_DEFAULT_MINE_NAME: ${{ env.MINE_TITLE }}
+          BLUEGENES_DEFAULT_NAMESPACE: humanmine
+          # only the demo mine: the report page would otherwise ask every mine of
+          # the public registry for homologues
+          HIDE_REGISTRY_MINES: "true"
+        run: |
+          java -version
+          nohup java -jar "$RUNNER_TEMP/uberjar/bluegenes.jar" > "$LOGS/bluegenes.log" 2>&1 &
+          for i in $(seq 1 90); do
+            curl -fsS "http://localhost:$BLUEGENES_PORT/version" && echo && break
+            sleep 2
+          done
+          curl -fsS "http://localhost:$BLUEGENES_PORT/version" > /dev/null
+          curl -fsS "$MINE_URL/service/version"; echo
+          curl -fsS "$MINE_URL/service/web-properties" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["web-properties"]["project"]["title"])'
+
+      - name: Cypress (npx cypress run, no retries)
+        id: cypress
+        timeout-minutes: 45
+        env:
+          CYPRESS_BASE_URL: http://localhost:${{ env.BLUEGENES_PORT }}
+          CYPRESS_MINE_URL: ${{ env.MINE_URL }}
+          CYPRESS_MINE_NAME: ${{ env.MINE_TITLE }}
+          # the demo mine's superuser (rdfc2im full-build.sh writes it into the
+          # mine's properties); not a secret
+          CYPRESS_ADMIN_USER: superuser@intermine.org
+          CYPRESS_ADMIN_PASSWORD: intermine
+        run: npx cypress run --config retries=0,video=true --reporter-options "$REPORTER_OPTIONS"
+
+      - name: Cypress totals
+        if: always() && steps.cypress.outcome != 'skipped'
+        run: |
+          python3 -I script/ci/cypress-summary.py cypress/results "Cypress against the demo mine: ${{ steps.cypress.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Collect the stack's logs
+        if: failure() || cancelled()
+        run: |
+          mkdir -p "$LOGS/stack"
+          docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' > "$LOGS/stack/docker-ps.txt" || true
+          for c in $(docker ps -a --format '{{.Names}}' | grep '^rdfc2im-' || true); do
+            docker logs "$c" > "$LOGS/stack/$c.log" 2>&1 || true
+          done
+          # Tomcat writes its own logs to a tmpfs in the container
+          docker exec rdfc2im-mine tar -C /usr/local/tomcat/logs -czf - . > "$LOGS/stack/tomcat-logs.tgz" 2>/dev/null || true
+          free -m > "$LOGS/stack/free.txt"; df -h > "$LOGS/stack/df.txt"
+
+      - name: Upload the JUnit results
+        if: always() && steps.cypress.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cypress-results
+          path: cypress/results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload screenshots, videos and logs (failure)
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-failure
+          path: |
+            cypress/screenshots/
+            cypress/videos/
+            ${{ env.LOGS }}/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The @external tests switch from the default mine to FlyMine, so they need two
+  # live public mines: HumanMine as the default (read-only here: only these two
+  # tests run, with EXTERNAL_ONLY) and FlyMine. A failure here is reported but
+  # does not fail the run.
+  external:
+    needs: uberjar
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    env:
+      PUBLIC_MINE_URL: https://www.humanmine.org/humanmine
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-binary-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install npm packages and the Cypress binary
+        run: |
+          npm ci
+          npx cypress verify
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: nightly-bluegenes-uberjar
+          path: ${{ runner.temp }}/uberjar
+
+      - name: Start this commit's BlueGenes against HumanMine, with FlyMine
+        env:
+          SERVER_PORT: ${{ env.BLUEGENES_PORT }}
+          BLUEGENES_DEFAULT_SERVICE_ROOT: ${{ env.PUBLIC_MINE_URL }}
+          BLUEGENES_DEFAULT_MINE_NAME: HumanMine
+          BLUEGENES_DEFAULT_NAMESPACE: humanmine
+          BLUEGENES_ADDITIONAL_MINES: '[{:root "https://www.flymine.org/flymine" :name "FlyMine" :namespace "flymine"}]'
+          # FlyMine is the only other mine: the homologue test expects exactly one
+          HIDE_REGISTRY_MINES: "true"
+        run: |
+          mkdir -p "$LOGS"
+          nohup java -jar "$RUNNER_TEMP/uberjar/bluegenes.jar" > "$LOGS/bluegenes.log" 2>&1 &
+          for i in $(seq 1 90); do
+            curl -fsS "http://localhost:$BLUEGENES_PORT/version" && echo && break
+            sleep 2
+          done
+          curl -fsS "http://localhost:$BLUEGENES_PORT/version" > /dev/null
+          curl -fsS "$PUBLIC_MINE_URL/service/version"; echo
+
+      - name: Cypress @external tests (no retries)
+        id: cypress
+        timeout-minutes: 15
+        env:
+          CYPRESS_BASE_URL: http://localhost:${{ env.BLUEGENES_PORT }}
+          CYPRESS_MINE_URL: ${{ env.PUBLIC_MINE_URL }}
+          CYPRESS_MINE_NAME: HumanMine
+          CYPRESS_EXTERNAL: "true"
+          CYPRESS_EXTERNAL_ONLY: "true"
+        run: npx cypress run --config retries=0,video=true --reporter-options "$REPORTER_OPTIONS" --spec cypress/integration/main_page_test.js,cypress/integration/report_page_test.js
+
+      - name: Cypress totals
+        if: always() && steps.cypress.outcome != 'skipped'
+        run: |
+          python3 -I script/ci/cypress-summary.py cypress/results "Cypress @external tests against HumanMine and FlyMine: ${{ steps.cypress.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots, videos and logs (failure)
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: external-failure
+          path: |
+            cypress/results/
+            cypress/screenshots/
+            cypress/videos/
+            ${{ env.LOGS }}/
+          retention-days: 7
+          if-no-files-found: ignore

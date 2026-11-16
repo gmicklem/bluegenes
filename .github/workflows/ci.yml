@@ -2,7 +2,7 @@
 # the deps.edn/shadow-cljs migration). The jobs run the same steps as the local
 # gate script in the intermine-planning repo (scripts/gate-bluegenes.sh), see
 # "Continuous integration" in docs/building.md. Cypress is not run here; see
-# nightly-cypress.yml (not yet enabled).
+# nightly-cypress.yml, which runs it every night against a demo mine it builds.
 name: CI
 
 on:

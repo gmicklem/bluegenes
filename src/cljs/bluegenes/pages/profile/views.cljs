@@ -62,20 +62,22 @@
         (when-let [{:keys [type message]} @response]
           [:p {:class type} message])]])))
 
-(defn input [{:keys [group id label type] :or {type "text"}}]
+(defn input [{:keys [group id label type disabled?] :or {type "text"}}]
   [:div.form-group
    [:label {:for (str "input" id)} label]
    [:div.input-container
     [:input.form-control
      {:type type
       :id (str "input" id)
+      :disabled disabled?
       :value @(subscribe [::subs/inputs [group id]])
       :on-change #(dispatch [::events/set-input [group id] (oget % :target :value)])}]]])
 
-(defn checkbox [{:keys [group id label reversed?]}]
+(defn checkbox [{:keys [group id label reversed? disabled?]}]
   [:div.form-group
    [:label label
     [:input {:type "checkbox"
+             :disabled disabled?
              :checked (cond-> @(subscribe [::subs/inputs [group id]]) reversed? not)
              :on-change #(dispatch [::events/update-input [group id] not])}]]])
 
@@ -99,23 +101,30 @@
        [:div.settings-loader {:ref #(reset! loader-ref %)}
         [mini-loader]]
        [:h3 "User preferences"]
+       ;; The inputs are disabled until the saved preferences have arrived: they
+       ;; replace the inputs, so an edit made before that would be lost.
        [checkbox {:id :do_not_spam
                   :group :user-preferences
+                  :disabled? @requesting?
                   :reversed? true
                   :label "Inform me by email of newly shared lists"}]
        [checkbox {:id :hidden
                   :group :user-preferences
+                  :disabled? @requesting?
                   :reversed? true
                   :label "Allow other users to share lists with me without confirmation"}]
        [input {:id :alias
                :group :user-preferences
+               :disabled? @requesting?
                :label "Public name (use this name to share lists with me)"}]
        [input {:id :email
                :group :user-preferences
+               :disabled? @requesting?
                :type "email"
                :label "My preferred email address"}]
        [input {:id :galaxy-url
                :group :user-preferences
+               :disabled? @requesting?
                :label "The URL of your preferred Galaxy instance"}]
        (let [input-prefs @(subscribe [::subs/inputs [:user-preferences]])
              saved-prefs @(subscribe [::subs/preferences])]

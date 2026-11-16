@@ -10,12 +10,11 @@ describeAdmin("Admin Account Test", function(){
         cy.intercept('GET', mineService("user/preferences*")).as('getPreferences');
         cy.visit(minePage("/profile"));
         cy.wait('@getPreferences');
-        // The page replaces its inputs with the saved preferences when the response is
-        // handled, which is after the request has finished; there is nothing on the page
-        // to wait for while the preferences are the default ones.
-        cy.wait(500);
         cy.get('.profile-page > ').first().should("exist").within(() => {
-            cy.get('[type="checkbox"]').first().uncheck({force:true}); //flaky
+            // The page replaces its inputs with the saved preferences when the response is
+            // handled, which is after the request has finished; the inputs are disabled
+            // until then.
+            cy.get('[type="checkbox"]').first().should("be.enabled").uncheck({force:true});
             // cy.get('[type="checkbox"]').first().should("not.be.checked"); //flaky
             cy.contains("Public name").type("{selectall}Admin{enter}",{delay:100});
             cy.contains("Save changes").should("not.be.disabled").click(); //flaky {force:true} needed?
