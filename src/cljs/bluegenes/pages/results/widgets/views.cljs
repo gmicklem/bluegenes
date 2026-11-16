@@ -5,6 +5,7 @@
             [clojure.string :as str]
             [inflections.core :refer [plural]]
             [oops.core :refer [oget ocall]]
+            [bluegenes.utils :refer [unsafe-html]]
             [bluegenes.pages.results.enrichment.events :refer [build-matches-query]]))
 
 (defn filter-display [& {:keys [widget-kw filterSelectedValue filters filterLabel]}]
@@ -26,7 +27,7 @@
                      (into (when-not full-width? [:col-lg-6 :col-xl-4-workaround]))
                      (into (when loading? [:is-loading])))}
          [:h4 title]
-         [:p {:dangerouslySetInnerHTML {:__html description}}]
+         [:p {:dangerouslySetInnerHTML (unsafe-html description)}]
          (if (pos? notAnalysed)
            [:p (str "Number of " (plural type) " in the table not analysed in this widget: ")
             [:strong notAnalysed]]

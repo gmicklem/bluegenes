@@ -1,5 +1,6 @@
 (ns bluegenes.utils
   (:require [clojure.string :as string]
+            [reagent.core :as reagent]
             [clojure.data.xml :as xml]
             [clojure.walk :as walk]
             [imcljs.query :as im-query]
@@ -11,6 +12,17 @@
             [oops.core :refer [ocall]]
             [clojure.data.xml :as xml]
             [bluegenes.config :refer [server-vars]]))
+
+(defn unsafe-html
+  "Value for :dangerouslySetInnerHTML. Reagent 1.3+ (and 2.x) silently drops a plain
+  {:__html s} map and only accepts reagent.core/unsafe-html; reagent 1.2 has no such
+  function and takes the plain map. This works on both."
+  [s]
+  ;; `resolve` is expanded at compile time and checks at run time that the function
+  ;; exists, so there is no undeclared-var warning on reagent 1.2.
+  (if-let [f (resolve 'reagent.core/unsafe-html)]
+    (@f s)
+    #js {:__html s}))
 
 (defn hiccup-anchors-newtab
   "Add target=_blank to all anchor elements, so all links open in new tabs."
