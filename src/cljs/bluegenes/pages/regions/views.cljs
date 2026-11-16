@@ -1,7 +1,6 @@
 (ns bluegenes.pages.regions.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [bluegenes.pages.regions.graphs :as graphs]
             [bluegenes.components.loader :refer [loader]]
             [bluegenes.pages.regions.events]
@@ -222,16 +221,19 @@
   []
   (reagent/create-class
    (let [to-search (subscribe [:regions/to-search])
-         results (subscribe [:regions/results])]
+         results (subscribe [:regions/results])
+         ;; Set by the :ref callback of the textarea, before did-mount.
+         textarea-node (atom nil)]
      {:reagent-render
       (fn []
         [:textarea.form-control
-         {:rows (if @results 3 6)
+         {:ref (fn [el] (reset! textarea-node el))
+          :rows (if @results 3 6)
           :placeholder "Type genome regions here, or click [SHOW EXAMPLE] below."
           :value @to-search
           :on-change (fn [e]
                        (dispatch [:regions/set-to-search (oget e "target" "value")]))}])
-      :component-did-mount (fn [this] (.focus (dom/dom-node this)))})))
+      :component-did-mount (fn [this] (some-> @textarea-node .focus))})))
 
 (defn clear-textbox
   "Interactive UI component to clear any entered text present in the region input textarea."

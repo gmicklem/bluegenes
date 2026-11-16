@@ -1,6 +1,5 @@
 (ns bluegenes.components.search.typeahead
   (:require [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [dommy.core :as dommy :refer-macros [sel1]]
             [bluegenes.route :as route]
@@ -90,10 +89,12 @@
   (reagent/create-class
    (let [results     (subscribe [:suggestion-results])
          error       (subscribe [:suggestion-error])
-         search-term (subscribe [:search-term])]
+         search-term (subscribe [:search-term])
+         ;; Set by the :ref callback of the root element, before did-mount.
+         dom-node    (atom nil)]
      {:component-did-mount
       (fn [e]
-        (let [node (dom/dom-node e)]
+        (let [node @dom-node]
           (-> node
               (sel1 :input)
               (dommy/listen! :focus (fn [] (dommy/add-class! node :open)))
@@ -101,6 +102,7 @@
       :reagent-render
       (fn []
         [:div.dropdown
+         {:ref (fn [el] (reset! dom-node el))}
          [:input.typeahead-search
           {:type         "text"
            :value        @search-term
