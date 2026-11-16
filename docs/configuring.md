@@ -10,9 +10,9 @@
 | BLUEGENES_TOOL_PATH | Directory on server where BlueGenes tools are installed | ./tools |
 | BLUEGENES_DEPLOY_PATH | Custom URL path to host BlueGenes. Must start with `/` and **not** end with `/`, e.g. `/bluegenes`. If you wish to host at root, set to `nil`. | nil |
 | BLUEGENES_BACKEND_SERVICE_ROOT | Override BLUEGENES_DEFAULT_SERVICE_ROOT for backend API requests (usually an internal address) | nil |
-| BLUEGENES_DEFAULT_SERVICE_ROOT | Default InterMine service to run API requests against | https://www.flymine.org/flymine |
-| BLUEGENES_DEFAULT_MINE_NAME | Mine name to display for default mine | FlyMine |
-| BLUEGENES_DEFAULT_NAMESPACE | Namespace of the default mine | flymine |
+| BLUEGENES_DEFAULT_SERVICE_ROOT | Default InterMine service to run API requests against | https://www.humanmine.org/humanmine |
+| BLUEGENES_DEFAULT_MINE_NAME | Mine name to display for default mine | HumanMine |
+| BLUEGENES_DEFAULT_NAMESPACE | Namespace of the default mine | humanmine |
 | BLUEGENES_ADDITIONAL_MINES | Additional mines managed by this BlueGenes instance | [] |
 | HIDE_REGISTRY_MINES | Disable acquiring and displaying mines from the public InterMine registry | false |
 

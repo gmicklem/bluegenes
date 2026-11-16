@@ -6,15 +6,15 @@
  :bluegenes-tool-path "./tools"
  :bluegenes-deploy-path nil
  :bluegenes-backend-service-root nil
- :bluegenes-default-service-root "https://www.flymine.org/flymine"
- :bluegenes-default-mine-name "FlyMine"
- :bluegenes-default-namespace "flymine"
+ :bluegenes-default-service-root "https://www.humanmine.org/humanmine"
+ :bluegenes-default-mine-name "HumanMine"
+ :bluegenes-default-namespace "humanmine"
  :bluegenes-additional-mines [
                               ;; Example of an additional mine.
                               ; {
-                              ;  :root "https://www.humanmine.org/humanmine"
-                              ;  :name "HumanMine"
-                              ;  :namespace "humanmine"
+                              ;  :root "https://www.flymine.org/flymine"
+                              ;  :name "FlyMine"
+                              ;  :namespace "flymine"
                               ;  ; :external true ; Optional to open as a new tab.
                               ;  }
                               ]
