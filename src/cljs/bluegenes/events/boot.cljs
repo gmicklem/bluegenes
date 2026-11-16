@@ -100,6 +100,17 @@
    :events #{:imt.io/save-list-success :imt.io/save-list-failure}
    :dispatch-to [:intercept-save-list]})
 
+(defn save-list-failure-markup
+  "The alert for a failed list save from im-tables. `evt` is the failed response
+  (cljs-http map, the mine's JSON in :body). The mine refuses a list whose name is
+  taken with a 400 and says why in :error, so show that, not just the name."
+  [evt]
+  (let [body (let [b (:body evt)] (when (map? b) b))
+        list-name (some #(when (seq %) %) [(:listName evt) (:listName body)])
+        error (some #(when (seq %) %) [(:error body) (:error evt)])]
+    [:span [:strong (str "Failed to save list" (when list-name (str " " list-name)) ": ")]
+     [:code (or error "Please check your connection and try again later.")]]))
+
 ; When a list is saved from im-tables, intercept the message
 ; and show an alert while also refreshing the user's lists
 (reg-event-fx
@@ -116,8 +127,9 @@
 
      :imt.io/save-list-failure
      {:dispatch [:messages/add
-                 {:markup [:span (str "Failed to save list: " listName)]
-                  :style "danger"}]}
+                 {:markup (save-list-failure-markup evt)
+                  :style "danger"
+                  :timeout 10000}]}
 
      (.error js/console (str "Unhandled forwarded im-tables event " evt-id)))))
 

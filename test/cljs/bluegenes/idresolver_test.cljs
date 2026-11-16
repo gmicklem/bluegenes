@@ -3,6 +3,8 @@
             [bluegenes.test-utils :as utils]
             [re-frame.core :as rf]
             [day8.re-frame.test :refer-macros [run-test-sync]]
+            [cljs-time.core :as time]
+            [bluegenes.events.boot :as boot]
             [bluegenes.components.idresolver.events :as evts]))
 
 (use-fixtures :each utils/fixtures)
@@ -57,3 +59,33 @@
    (testing "default organism missing from the list: the state is Any"
      (let [[_ enabled] (organism-after-type-switch organisms-without-names)]
        (is (= "" (:organism enabled)))))))
+
+(deftest default-list-name-is-unique-within-a-second
+  (let [t1 (time/date-time 2026 11 16 10 20 31 120)
+        t2 (time/date-time 2026 11 16 10 20 31 480)]
+    (testing "the name has the type, the organism and the time to the millisecond"
+      (is (= "Gene list for H. sapiens 16 Nov 2026 10:20:31.120"
+             (evts/default-list-name "Gene" "H. sapiens" t1)))
+      (is (= "Protein list for all organisms 16 Nov 2026 10:20:31.480"
+             (evts/default-list-name "Protein" "" t2))))
+    (testing "two lists saved in the same second get different names"
+      (is (not= (evts/default-list-name "Gene" "H. sapiens" t1)
+                (evts/default-list-name "Gene" "H. sapiens" t2))))))
+
+(deftest save-list-failure-shows-the-mines-error
+  (testing "the 400 for a name that is taken: the list name and the mine's reason"
+    (is (= [:span [:strong "Failed to save list dup test: "]
+            [:code "Attempting to rename a bag to a new name that already exists: dup test"]]
+           (boot/save-list-failure-markup
+            {:status 400
+             :body {:listName "dup test"
+                    :wasSuccessful false
+                    :error "Attempting to rename a bag to a new name that already exists: dup test"
+                    :statusCode 400}}))))
+  (testing "no body from the mine: a generic reason instead of an empty message"
+    (is (= [:span [:strong "Failed to save list: "]
+            [:code "Please check your connection and try again later."]]
+           (boot/save-list-failure-markup {:status 0 :body ""})))
+    (is (= [:span [:strong "Failed to save list: "]
+            [:code "Please check your connection and try again later."]]
+           (boot/save-list-failure-markup nil)))))
