@@ -34,7 +34,8 @@ describe("User Account Test", function() {
         cy.visit(minePage("/profile"));
         cy.wait('@getPreferences');
         cy.get('.profile-page > ').eq(0).as("userPreferences").within(() => {
-            cy.get('[type="checkbox"]').first().uncheck({force:true}); //still flaky
+            // the inputs are enabled once the saved preferences have replaced them
+            cy.get('[type="checkbox"]').first().should("be.enabled").uncheck({force:true});
             cy.contains("Save changes").should("not.be.disabled").click(); 
             cy.get(".success").should("have.text","Updated preferences have been saved.");
             cy.get('[type="checkbox"]').first().should("not.be.checked");
