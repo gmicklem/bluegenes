@@ -12,9 +12,18 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 // ".enrichment" sidebar. The list is 18 drug-metabolism genes (fixtures/enrichment_gene.csv);
 // with the default settings (p < 0.05, Holm-Bonferroni) 5 pathways are enriched, and the
 // publication widget has none. The numbers below were checked with POST /service/list/enrichment.
-// Every row of a result table is there twice: each pathway of the demo mine is in two data
-// sets (Reactome pathways data set, Reactome pathways (RDF Portal)). So the 10 genes of
-// Xenobiotics make 20 rows, the 5 pathways 72 and the first two 34.
+// Each pathway is in exactly one data set (Reactome pathways data set), so the table of a
+// result has one row per gene of the list that is in the pathway, once: the number of rows is
+// the number of gene ids in the third column of the downloaded result (the tsv fixtures, one
+// line per pathway: name, p-value, matched gene ids, pathway identifier).
+
+// Rows of the results table for the pathways in a tsv fixture: the matched genes, summed.
+const matchedGenes = (line) => line.split("\t")[2].split(",").length;
+const expectedRows = (fixture) =>
+    cy.readFile("cypress/fixtures/" + fixture).then(tsv =>
+        tsv.trim().split("\n").reduce((sum, line) => sum + matchedGenes(line), 0));
+const expectRows = (n) => cy.get(".pagination-label").invoke("text").should("match", new RegExp("of " + n + " rows$"));
+
 const pathwayCategory = () => cy.contains(".enrichment-category", "Pathway Enrichment");
 
 describe("Enrichment Test", function(){
@@ -31,7 +40,10 @@ describe("Enrichment Test", function(){
             })
             cy.contains("Xenobiotics").click();
         })
-        cy.get(".pagination-label").should("include.text","of 20 rows");
+        // Xenobiotics is the first line of the fixtures: one row per matched gene
+        cy.readFile("cypress/fixtures/all_enrichment_result.tsv").then(tsv => {
+            expectRows(matchedGenes(tsv.split("\n")[0]));
+        });
     })
 
     it("can view and download all enrichment results", function(){
@@ -46,7 +58,7 @@ describe("Enrichment Test", function(){
             })
             cy.contains("View").click();
         })
-        cy.get('.pagination-label').should("include.text","of 72 rows");
+        expectedRows("all_enrichment_result.tsv").then(expectRows);
         cy.readFile("cypress/downloads/Enrichment analysis genes Pathway Enrichment.tsv").then(newResult => {
             cy.expectFixture("all_enrichment_result.tsv", newResult);
         })
@@ -63,7 +75,7 @@ describe("Enrichment Test", function(){
             })
             cy.contains("View").click();
         })
-        cy.get('.pagination-label').should("include.text","of 34 rows");
+        expectedRows("checked_enrichment_result.tsv").then(expectRows);
         cy.readFile("cypress/downloads/Enrichment analysis genes Pathway Enrichment.tsv").then(newResult => {
             cy.expectFixture("checked_enrichment_result.tsv", newResult);
         })
@@ -89,14 +101,27 @@ describe("Enrichment Test", function(){
         })
     })
 
-    // The demo mine's pathways are not linked to a data set, so the data set filter finds none.
+    // Every pathway is in the one data set "Reactome pathways data set", so filtering by it
+    // keeps all the enriched pathways; the options are the widget's filter list of the mine.
     it("can filter enrichment results by data set", function(){
-        cy.get(".enrichment").should("exist").within(() => {
-            cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
-            cy.get(".enrichment-filter > div > select").select("Reactome data set");
-            cy.wait("@enrichmentLoad");
-            cy.contains("Pathway Enrichment").should("include.text","(0)");
-        })
+        cy.request(mineService("widgets")).then(({ body }) => {
+            const widget = body.widgets.find(w => w.name === "pathway_enrichment");
+            const options = widget.filters.split(",");
+            expect(options).to.deep.equal(["All", "Reactome pathways data set"]);
+            cy.get(".enrichment").should("exist").within(() => {
+                cy.get(".enrichment-filter > div > select option").then($options => {
+                    expect([...$options].map(o => o.textContent)).to.deep.equal(options);
+                });
+                cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
+                cy.get(".enrichment-filter > div > select").select("Reactome pathways data set");
+                cy.wait("@enrichmentLoad");
+                // as many pathways as without the filter: the lines of the all-results fixture
+                cy.readFile("cypress/fixtures/all_enrichment_result.tsv").then(tsv => {
+                    const pathways = tsv.trim().split("\n").length;
+                    cy.contains("Pathway Enrichment").should("include.text","(" + pathways + ")");
+                });
+            })
+        });
     })
 
     it("can filter enrichment results by text", function(){
