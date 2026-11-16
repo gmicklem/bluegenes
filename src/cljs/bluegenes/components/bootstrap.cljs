@@ -1,6 +1,5 @@
 (ns bluegenes.components.bootstrap
   (:require [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [reagent.dom.server :refer [render-to-static-markup]]
             [oops.core :refer [ocall oapply oget oset!]]))
 
@@ -16,19 +15,23 @@
                  :data-placement right
                  :data-content [:div [:h1 Hello] [:h4 Goodbye]]} Hover-Over-Me]]"
   []
-  (reagent/create-class
-   {:component-did-mount
-    (fn [this]
-      (let [node (dom/dom-node this)] (ocall (-> node js/$) "popover")))
-    :component-will-unmount
-    (fn [this]
-      (let [node (dom/dom-node this)] (ocall (-> "popover" js/$) "remove")))
-    :reagent-render
-    (fn [[element attributes & rest]]
-      [element (-> attributes
-                   (assoc :data-html true)
-                   (assoc :data-container "body")
-                   (update :data-content render-to-static-markup)) rest])}))
+  ;; The node comes from a :ref callback on the element, which React calls
+  ;; before :component-did-mount (reagent.dom/dom-node is deprecated).
+  (let [dom-node (atom nil)]
+    (reagent/create-class
+     {:component-did-mount
+      (fn [this]
+        (ocall (-> @dom-node js/$) "popover"))
+      :component-will-unmount
+      (fn [this]
+        (ocall (-> "popover" js/$) "remove"))
+      :reagent-render
+      (fn [[element attributes & rest]]
+        [element (-> attributes
+                     (assoc :data-html true)
+                     (assoc :data-container "body")
+                     (assoc :ref (fn [e] (reset! dom-node e)))
+                     (update :data-content render-to-static-markup)) rest])})))
 
 (defn poppable
   "Reagent wrapper for bootstrap's popover component. It accepts

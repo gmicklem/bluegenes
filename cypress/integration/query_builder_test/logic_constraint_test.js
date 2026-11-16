@@ -16,7 +16,7 @@ describe("Query view test", function() {
        cy.contains('Length').parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
        cy.get("select").select(">=");
        cy.wait(500);
-       cy.get("input.form-control").click().type("450{enter}",{delay:100});
+       cy.get("input.form-control").click().type("450{enter}");
      });
    });
 
@@ -35,7 +35,7 @@ describe("Query view test", function() {
 
         cy.contains('Primary Identifier').parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
         cy.get('select').last().select('Contains').should("have.value","CONTAINS");
-        cy.get('input.form-control').click().type("CYP{enter}",{delay:100});
+        cy.get('input.form-control').click().type("CYP{enter}");
       })
     });
 
@@ -62,14 +62,14 @@ describe("Query view test", function() {
 
       cy.get(".query-view-column").within(() => {
           cy.contains("Gene").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
-          cy.get("input.form-control").eq(0).type("MA*{enter}",{delay:100});
+          cy.get("input.form-control").eq(0).type("MA*{enter}");
           
           cy.contains("Protein").parentsUntil('.lab qb-class').children('.icon.icon-filter').click();
-          cy.get("input.form-control").eq(1).type("MA*{enter}",{delay:100});
+          cy.get("input.form-control").eq(1).type("MA*{enter}");
 
           cy.get(".logic-container").should("exist");
           cy.get("#logic-input").click();
-          cy.get("input.form-control").eq(2).clear().type("{selectall}{backspace}A or B{enter}",{delay:100});
+          cy.get("input.form-control").eq(2).clear().type("{selectall}{backspace}A or B{enter}");
       })
   })
 
@@ -90,7 +90,7 @@ describe("Query view test", function() {
 
           cy.get(".logic-container").should("exist");
           cy.get("#logic-input").click();
-          cy.get("input.form-control").clear().type("{selectall}{backspace}A or B{enter}",{delay:100});
+          cy.get("input.form-control").clear().type("{selectall}{backspace}A or B{enter}");
       })
   })
 });

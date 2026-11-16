@@ -9,7 +9,7 @@ describe("Templates Test", function() {
     });
 
     it("can filter templates by search", function() {
-        cy.contains('Filter by text').next().type("organism proteins",{delay:100});
+        cy.contains('Filter by text').next().type("organism proteins");
         cy.get('.template').eq(0).should("have.id","All_Proteins_In_Organism_To_Publications");
         cy.get('.template').eq(1).should("have.id","Organism_Protein");
     });
@@ -68,7 +68,7 @@ describe("Templates Test", function() {
 
     it("can lookup a gene with a template search", function() {
         cy.get("#Gene_Protein").click().within(() => {
-            cy.get(".constraint-input input").clear().type("CYP*{enter}",{delay:100});
+            cy.get(".constraint-input input").clear().type("CYP*{enter}");
             cy.get(".view-results").click();
         })
         cy.url().should("include","/results");

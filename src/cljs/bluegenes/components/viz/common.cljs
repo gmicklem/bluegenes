@@ -1,6 +1,5 @@
 (ns bluegenes.components.viz.common
-  (:require [reagent.core :as r]
-            [reagent.dom :as rd]))
+  (:require [reagent.core :as r]))
 
 ;; Taken from the oz project and adjusted to our usecase.
 ;; https://github.com/metasoarous/oz/blob/master/src/cljs/oz/core.cljs
@@ -39,19 +38,22 @@
   ([doc] (vega doc {}))
   ([doc opts]
    ;; Is this the right way to do this? So vega component behaves abstractly like a vega-lite potentially?
-   (let [opts (merge {:mode "vega"} opts)]
+   (let [opts (merge {:mode "vega"} opts)
+         ;; Set by the :ref callback of the root div, before did-mount/did-update.
+         dom-node (atom nil)]
      (r/create-class
       {:display-name "vega"
        :component-did-mount (fn [this]
-                              (embed-vega (rd/dom-node this) doc (apply dissoc opts local-keys)))
+                              (embed-vega @dom-node doc (apply dissoc opts local-keys)))
        :component-did-update (fn [this [_ old-doc old-opts]]
                                (let [[_ new-doc new-opts] (r/argv this)]
                                  (when (or (not= old-doc new-doc)
                                            (not= old-opts new-opts))
-                                   (embed-vega (rd/dom-node this) new-doc (apply dissoc new-opts local-keys)))))
+                                   (embed-vega @dom-node new-doc (apply dissoc new-opts local-keys)))))
        :reagent-render (fn []
                          [:div
-                          {:class (:class opts)}])}))))
+                          {:class (:class opts)
+                           :ref (fn [el] (reset! dom-node el))}])}))))
 
 (defn vega-lite
   "Reagent component that renders vega-lite."

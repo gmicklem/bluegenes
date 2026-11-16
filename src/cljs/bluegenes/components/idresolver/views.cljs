@@ -1,6 +1,5 @@
 (ns bluegenes.components.idresolver.views
   (:require [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [json-html.core :as json-html]
             [clojure.string :refer [join split]]

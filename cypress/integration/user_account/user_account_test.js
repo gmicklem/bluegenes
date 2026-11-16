@@ -70,7 +70,7 @@ describe("User Account Test", function() {
         });
 
         cy.get(".modal-body").within(()=>{
-            cy.contains("Tags").parent().find("input").type("Algae genes{enter}",{delay:100});
+            cy.contains("Tags").parent().find("input").type("Algae genes{enter}");
         })
         cy.get('.modal-footer').within(()=>{
             cy.contains("Save").click();
@@ -120,7 +120,7 @@ describe("User Account Test", function() {
     
           cy.get("div.panel-body").first().as("queryEditorTab").within(()=>{
             cy.contains("Save Query").click();
-            cy.get("div.input-group").type("Protein summary", {delay:100});
+            cy.get("div.input-group").type("Protein summary");
             cy.contains("Save Query").click();
           });
           cy.visit(minePage("/querybuilder"));
@@ -136,8 +136,8 @@ describe("User Account Test", function() {
         cy.loginToUserAccount(username,password)
         cy.visit(minePage("/profile"));
         cy.get('.profile-page > ').eq(2).as("changePassword").within(() => {
-            cy.contains("Old password").siblings(".form-control").type("password", {delay:50}).should("have.value", "password");
-            cy.contains("New password").siblings(".form-control").type("newpassword", {delay:50}).should("have.value", "newpassword");
+            cy.contains("Old password").siblings(".form-control").type("password").should("have.value", "password");
+            cy.contains("New password").siblings(".form-control").type("newpassword").should("have.value", "newpassword");
             cy.intercept("POST",mineService("user")).as("waitPasswordChange");
             cy.get("button").contains("Save password").click();
             cy.wait("@waitPasswordChange");

@@ -36,7 +36,7 @@
         org.intermine/imcljs {:git/url "https://github.com/gmicklem/imcljs.git"
                               :git/sha "98c0f103bbb87812c8f948c7d7478ad349298957"} ; 1.7.0-SNAPSHOT
         org.intermine/bluegenes-tool-store {:git/url "https://github.com/gmicklem/bluegenes-tool-store.git"
-                                            :git/sha "4e3e8969cce37966e27af7a7118432d2201d2cac"}} ; 0.3.0-SNAPSHOT, real-path containment + npm package-name validation (400)
+                                            :git/sha "be4678f9252c62bb566c9a0187ad4fab0a085947"}} ; 0.3.0-SNAPSHOT, tarball URL/integrity/size hardening
 
  :aliases
  {;; ClojureScript build classpath (shadow-cljs.edn :deps {:aliases [:cljs ...]}).

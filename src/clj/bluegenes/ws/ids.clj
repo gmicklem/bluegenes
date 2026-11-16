@@ -24,9 +24,15 @@
            repeatedly
            ; That is until we no longer have a value
            (take-while some?)
-           ; There's a lot going on here:
-           ; Re-find returns nested lists of results, so we collect the last non-nil value from each
-           (map (partial (comp last (partial take-while some?))))))))
+           ; Re-find returns the whole match followed by the capture groups (nil for
+           ; the groups that did not take part in the match, e.g. the double-quote
+           ; group of a single-quoted token), or just the match when it has no
+           ; groups. The identifier is the last group that matched: the text inside
+           ; the quotes, without them, or the whole token when it was not quoted.
+           (map (fn [match]
+                  (if (string? match)
+                    match
+                    (last (filter some? match)))))))))
 
 (defn parse-file
   "Parse identifiers from a file on disk"

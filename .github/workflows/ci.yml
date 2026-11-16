@@ -77,7 +77,7 @@ jobs:
         run: |
           rm -rf target/bundle-dev
           npx shadow-cljs compile app --config-merge '{:output-dir "target/bundle-dev" :devtools {:loader-mode :eval}}' 2>&1 | tee "$CI_LOG_DIR/app-load-build.log"
-          node script/ci/bluegenes-runbundle.js --allow-fail=day8.re_frame_10x.preload.js target/bundle-dev/app.js 2>&1 | tee "$CI_LOG_DIR/app-load.log"
+          node script/ci/bluegenes-runbundle.js --allow-fail=day8.re_frame_10x.preload.react_18.js target/bundle-dev/app.js 2>&1 | tee "$CI_LOG_DIR/app-load.log"
 
       # `uber` runs the release build first (clean, im-tables CSS, lessc, shadow
       # release with hashed file names, fingerprinted CSS), then AOT-compiles

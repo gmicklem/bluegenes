@@ -5,7 +5,14 @@
 (deftest parse-identifiers-test
   (is (= ["P37231" "HFE" "a b" "c"]
          (ids/parse-identifiers "P37231, HFE\n\"a b\" c")))
-  (is (nil? (ids/parse-identifiers nil))))
+  (is (nil? (ids/parse-identifiers nil)))
+  (testing "the quotes of a quoted identifier are removed, single or double"
+    (is (= ["c"] (ids/parse-identifiers "'c'")))
+    (is (= ["a b"] (ids/parse-identifiers "\"a b\"")))
+    (is (= ["a b" "c d" "e" "f"]
+           (ids/parse-identifiers "'a b', \"c d\"\ne 'f'"))))
+  (testing "a single-quoted identifier may contain a double quote and the other way round"
+    (is (= ["a\"b" "c'd"] (ids/parse-identifiers "'a\"b' \"c'd\"")))))
 
 (deftest distinct-identifiers-test
   (testing "case sensitive identifiers keep their case"

@@ -1,7 +1,6 @@
 (ns bluegenes.pages.upload.views
   (:require [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as reagent]
-            [reagent.dom :as dom]
             [bluegenes.components.idresolver.subs :as subs]
             [bluegenes.components.idresolver.events :as evts]
             [bluegenes.components.idresolver.views :as idresolver]
@@ -66,10 +65,13 @@
 (defn input-box []
   (reagent/create-class
    (let [val (reagent/atom nil)
-         timer (reagent/atom nil)]
+         timer (reagent/atom nil)
+         ;; Set by the :ref callback of the input, before did-mount.
+         input-node (atom nil)]
      {:reagent-render (fn []
                         [:input#identifierinput.freeform
-                         {:type "text"
+                         {:ref (fn [el] (reset! input-node el))
+                          :type "text"
                           :placeholder "Type or paste identifiers here..."
                           :value @val
                           :on-key-press
@@ -94,7 +96,7 @@
                                   (submit-input input val))
                                 (reset! val input))))}])
        ;;autofocus on the entry field when the page loads
-      :component-did-mount (fn [this] (.focus (dom/dom-node this)))})))
+      :component-did-mount (fn [this] (some-> @input-node .focus))})))
 
 (defn parse-files [files]
   (dotimes [i (.-length files)]
