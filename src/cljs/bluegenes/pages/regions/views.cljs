@@ -12,8 +12,7 @@
             [bluegenes.pages.regions.utils :refer [linear->log log->linear parse-bp bp->int int->bp]]
             [clojure.string :as str]
             [oops.core :refer [oget ocall]]
-            [bluegenes.components.ui.inputs :refer [reject-input!]]
-            [goog.functions :refer [debounce]]))
+            [bluegenes.components.ui.inputs :refer [reject-input!]]))
 
 (defn dropdown-hover [{:keys [data children]}]
   [:span.dropdown.dropdown-hover
@@ -116,14 +115,53 @@
          {:data strand-specific-help
           :children [icon "question"]}]]])))
 
-(def !dispatch
-  (debounce dispatch 250))
+(def ^:private extend-debounce-ms 250)
+
+;; Pending extension values, one entry per extension input (key), each with its
+;; own timer. A value typed into one input must neither replace the pending
+;; value of another input nor be missed by a Search clicked before the timer
+;; fires, so the Search button (and Clear) flush (or cancel) all of them.
+(defonce ^:private pending-extends (atom {}))
+(defonce ^:private pending-seq (atom 0))
+
+(defn- fire-pending!
+  "Dispatches and forgets the pending event of the input `k`, if any."
+  [k]
+  (when-let [{:keys [timer event]} (get @pending-extends k)]
+    (js/clearTimeout timer)
+    (swap! pending-extends dissoc k)
+    (dispatch event)))
+
+(defn queue-extend!
+  "Dispatches `event` after a debounce unique to the input `k`."
+  [k event]
+  (when-let [{:keys [timer]} (get @pending-extends k)]
+    (js/clearTimeout timer))
+  (swap! pending-extends assoc k
+         {:seq (swap! pending-seq inc)
+          :event event
+          :timer (js/setTimeout #(fire-pending! k) extend-debounce-ms)}))
+
+(defn flush-extends!
+  "Dispatches every pending extension value now, oldest first, so that an
+  immediately following :regions/run-query sees them."
+  []
+  (doseq [k (map key (sort-by (comp :seq val) @pending-extends))]
+    (fire-pending! k)))
+
+(defn cancel-extends!
+  "Forgets every pending extension value without dispatching it."
+  []
+  (doseq [{:keys [timer]} (vals @pending-extends)]
+    (js/clearTimeout timer))
+  (reset! pending-extends {}))
 
 (defn input-slider [input* range* & {:keys [reverse? lock?]}]
-  (let [update-input #(!dispatch [(cond
-                                    lock? :regions/extend-region-both
-                                    reverse? :regions/extend-region-start
-                                    :else :regions/extend-region-end) %])
+  (let [update-input #(queue-extend! (if reverse? :start :end)
+                                     [(cond
+                                        lock? :regions/extend-region-both
+                                        reverse? :regions/extend-region-start
+                                        :else :regions/extend-region-end) %])
         set-region! (fn [a value]
                       (swap! a (cond
                                  lock? #(assoc % :start value :end value)
@@ -309,12 +347,16 @@
              :on-click #(dispatch [:regions/set-to-search (str/replace example-text "\\n" "\n")])}
             "Show Example"]
            [:button.btn.btn-default.btn-raised.btn-block
-            {:on-click #(dispatch [:regions/clear-inputs])}
+            {:on-click (fn [_]
+                         (cancel-extends!)
+                         (dispatch [:regions/clear-inputs]))}
             "Clear"]
            [:button.btn.btn-primary.btn-raised.btn-block
             {:disabled (or (str/blank? @to-search)
                            (empty? (filter (fn [[name enabled?]] enabled?) @feature-types)))
-             :on-click (fn [e] (dispatch [:regions/run-query])
+             :on-click (fn [e]
+                         (flush-extends!)
+                         (dispatch [:regions/run-query])
                          (ocall (oget e "target") "blur"))
              :title "Enter something into the 'Regions to search' box or click on [SHOW EXAMPLE]"}
             "Search"]])]

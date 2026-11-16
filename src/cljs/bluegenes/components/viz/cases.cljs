@@ -144,7 +144,8 @@
                                             {:scale {:type "log" :base 2}}))
                                 :color {:field "geoLocation.country"
                                         :type "nominal"}}
-                     :selection {:brush {:encodings ["x"] :type "interval"}}}
+                     :params [{:name "brush"
+                               :select {:type "interval" :encodings ["x"]}}]}
                     (when (= @!scale-type :log)
                       ;; Replace zero and negative values with 1. In log scale,
                       ;; 0 becomes negative infinity and negative values have
@@ -180,8 +181,9 @@
                     ;; The below line isn't used for anything; it's a workaround
                     ;; to fix tooltips for composed views.
                     ;; https://github.com/vega/vega-lite/issues/6003
-                    :selection {:fake {:type "single"}}
-                    :transform (cond-> [{:filter {:selection "brush"}}]
+                    :params [{:name "fake"
+                              :select {:type "point"}}]
+                    :transform (cond-> [{:filter {:param "brush"}}]
                                  (= @!bin-scale :log)
                                  (into (let [x-field (name @!y-field)
                                              x (str "datum." x-field)]

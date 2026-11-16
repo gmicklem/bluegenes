@@ -9,14 +9,14 @@
 {:paths ["src/clj" "config/defaults" "resources"]
 
  :deps {org.clojure/clojure {:mvn/version "1.12.6"}
-        org.clojure/core.async {:mvn/version "1.0.567"}
+        org.clojure/core.async {:mvn/version "1.8.741"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
 
         hiccup/hiccup {:mvn/version "1.0.5"}
 
         ;; HTTP
         clj-http/clj-http {:mvn/version "3.13.1"}
-        compojure/compojure {:mvn/version "1.6.2"}
+        compojure/compojure {:mvn/version "1.7.1"}
         ring/ring {:mvn/version "1.13.0"}
         cheshire/cheshire {:mvn/version "5.10.0"}
         metosin/ring-http-response {:mvn/version "0.9.5"}
