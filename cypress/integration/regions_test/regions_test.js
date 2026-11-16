@@ -7,13 +7,6 @@ import { minePage, mineService, requireMineData } from "../../support/mine";
 const needsFeatures = (ctx) =>
     requireMineData(ctx, "Location", "the test needs features overlapping a region");
 
-// The extension inputs dispatch their value 250 ms after the last keystroke
-// (bluegenes.pages.regions.views, debounce). The typing used to be slowed down ({delay: 100}),
-// which hid that a Search clicked within 250 ms of the last key does not see the extension,
-// and that the debounce is shared by the start and end inputs (a value typed into the second
-// within 250 ms replaces the one typed into the first).
-const EXTEND_DEBOUNCE = 300;
-
 describe("Regions Test", function(){
     beforeEach(function(){
         cy.visit(minePage("/regions"));
@@ -139,7 +132,6 @@ describe("Regions Test", function(){
                 cy.get("input.form-control").eq(1).clear().type("38k{enter}");
                 cy.get("input.form-control").eq(1).should("have.value","38k");
             })
-            cy.wait(EXTEND_DEBOUNCE); // the extension reaches the app state after a debounce
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
@@ -153,12 +145,10 @@ describe("Regions Test", function(){
             cy.get(".extend-region").within(() => {
                 cy.get(".icon-lock").click();
                 cy.get("input.form-control").eq(1).clear().type("3.8k{enter}");
-                cy.wait(EXTEND_DEBOUNCE); // one debounce serves both inputs: the second would replace the first
                 cy.get("input.form-control").eq(2).clear().type("2500{enter}");
                 cy.get("input.form-control").eq(1).should("have.value","3.8k");
                 cy.get("input.form-control").eq(2).should("have.value","2500");
             })
-            cy.wait(EXTEND_DEBOUNCE); // the extension reaches the app state after a debounce
             cy.get("button").filter(':contains("Search")').click();
         })
         cy.get(".results").within(() => {
