@@ -65,6 +65,10 @@
 
                       ;; Utility libraries
                       com.cognitect/transit-cljs {:mvn/version "0.8.256"}
+                      ;; explicit: transit-cljs 0.8.256 would bring 0.8.846/0.8.861, whose
+                      ;; types.print still calls goog.isArray/goog.isString (removed from the
+                      ;; Closure Library); 0.8.874 uses goog.typeOf.
+                      com.cognitect/transit-js {:mvn/version "0.8.874"}
                       com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
                       inflections/inflections {:mvn/version "0.13.2"}
                       binaryage/oops {:mvn/version "0.7.2"}
