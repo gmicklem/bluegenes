@@ -67,7 +67,7 @@
                       com.cognitect/transit-cljs {:mvn/version "0.8.256"}
                       com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
                       inflections/inflections {:mvn/version "0.13.2"}
-                      binaryage/oops {:mvn/version "0.7.0"}
+                      binaryage/oops {:mvn/version "0.7.2"}
 
                       ;; InterMine front-end library (git dependency, see :deps above).
                       ;; It declares no cljsjs jars any more but still requires the
