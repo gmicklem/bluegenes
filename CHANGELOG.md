@@ -1,3 +1,44 @@
+## 1.5.0 (unreleased)
+
+This release changes how BlueGenes is built and what it needs to run. If you deploy BlueGenes, read "Changes for deployers" first.
+
+### Changes for deployers
+
+- The default mine is now HumanMine (`https://www.humanmine.org/humanmine`; it was FlyMine). A deployment that sets `BLUEGENES_DEFAULT_SERVICE_ROOT`, `BLUEGENES_DEFAULT_MINE_NAME` and `BLUEGENES_DEFAULT_NAMESPACE` (or its own `config.edn`) is not affected; one that relied on the default and wants FlyMine must now set them. See [docs/configuring.md](docs/configuring.md)
+- Leiningen is gone: there is no `project.clj` and no `lein` command. BlueGenes is built with the Clojure CLI (`deps.edn`, tools.build in `build.clj`), shadow-cljs and npm: `npm ci`, then `clojure -T:build uber` makes `target/bluegenes.jar`; `npm run dev` replaces `lein dev` and figwheel. See [docs/building.md](docs/building.md)
+- Build requirements: Java 17 or later (the Docker image uses 21; a jar built on one JDK runs on another), the Clojure CLI 1.11 or later, and Node.js 22 or later (`engines` in `package.json` was `10.x`; the Docker image and CI use 22). The build needs GitHub access, because imcljs, im-tables and bluegenes-tool-store are now git dependencies of `deps.edn` pinned by commit (see [docs/building.md](docs/building.md))
+- The Dockerfile builds the uberjar itself in a multi-stage build and runs it on `eclipse-temurin:21-jre` (it was a prebuilt jar on `gcr.io/distroless/java:11`). The base images are pinned by digest. Pass `--build-arg BLUEGENES_VERSION="$(git describe --always)"` to show a version in the UI. The Procfile is removed (Dokku builds the Dockerfile)
+- Users' saved state in their browser is reset by the first visit after the upgrade: the key under which BlueGenes keeps it is a hash of the build inputs, and it changes with every release
+- Configuration (environment variables and `config.edn` keys) is otherwise unchanged
+- CircleCI configuration removed. GitHub Actions replace it (see Development below)
+
+### Front end
+
+- React 18.3.1 (createRoot) with reagent 1.2, re-frame 1.4 and reitit 0.7. A start-up patch of reagent's input wrapper stops text inputs from dropping keystrokes and the search from submitting a stale term, which stock reagent does under React 18 (checked on reagent 2.0.1 too; reported upstream as [reagent-project/reagent#676](https://github.com/reagent-project/reagent/issues/676)). A unit test fails the build if the patched internals change
+- Date constraints in the query builder, templates and results filters use the browser's date input (react-day-picker is gone) and are applied when the date is picked or typed
+- react-select 5, highlight.js 11 and unsafe-html compatibility for inner HTML, in preparation for reagent 2; React refs replace `reagent.dom/dom-node`
+- Vega 5.33, Vega-Lite 5.23 and Vega-Embed 6.29 with Vega-Lite parameters replacing deprecated selections in the visualisations
+- jQuery 3.7.1 (was 3.1.0 from code.jquery.com) and the other scripts and stylesheets from CDNs are loaded from cdnjs with Subresource Integrity hashes (`script/cdn-sri.sh` prints them when you change a URL)
+- No request is made to the dead `cdn.intermine.org` and `rawgit.com` (the navbar's InterMine logo, the tools' `window.imjs`, the results table's code export). The tools get `window.React`, `window.ReactDOM` and `window.imjs` from the npm packages
+- Tools no longer fail with "No data found!" or request widgets that the mine lacks; the tool store is pinned to a newer version with package-name validation (tool-store hardening)
+- Region search: each input is debounced and flushed on search
+- Lists: a list saved from the results table works again (imcljs fix); default list names are unique, save errors are shown and identifiers are no longer quoted
+- Upload: the default organism is re-applied when the organism list arrives after a reset; the organism dropdown and the state agree when the default organism is absent; the "Identifiers are case sensitive" option no longer lower-cases the identifiers
+- Query builder: no possible-values request for Date and clob attributes
+- The profile's preference inputs are disabled until the saved preferences have loaded
+- Updates of im-tables (code export without cdn.intermine.org, dropdown and toolbar fixes, HumanMine demo configs, highlight.js 11, reagent 1.2) and the bluegenes-tool-store
+
+### Back end
+
+- Clojure 1.12 (was 1.10) with updated server libraries: ring 1.13, timbre 6, clj-http 3.13, compojure 1.7.1, core.async 1.8, transit-js 0.8.874 (no `goog.is*` calls left) and oops 0.7.2. The unused libraries (core.cache, ring-defaults, http-fx, undo, lambdaisland/uri and others) are removed; semantic markup is cached in an atom
+
+### Development and testing
+
+- shadow-cljs builds the front end (replacing lein, figwheel and cljsjs, whose packages are now npm packages), with a hashed `app.<hash>.js`, ES2018 output and the release on the `:cljs` classpath only
+- Cypress 13.17 (was 6), `cy.intercept` instead of `cy.server`, built-in `selectFile`. The specs run against the [rdfc2im](https://github.com/gmicklem/rdfc2im) demo mine, with HumanMine for the `@external` specs. New specs: keystroke regression, results code export, dates (`@external`)
+- GitHub Actions: CI (format check, unit tests, dev and release builds, a bundle load check, the uberjar with a smoke start on JDK 21 and 17, and a check that the Clojars-style library jar starts as a consumer such as rdfc2im would run it) and a nightly Cypress run against a demo mine built in the job. Dependabot for npm and GitHub Actions
+- npm advisories fixed (`npm audit fix`, `qs` overridden to 6.17.1) and build-only packages moved to devDependencies; unused npm packages, the dead `lighttable` and `table` namespaces, unused SQL migrations and the lein plugins removed
+
 ## 1.4.5
 
 - Update results table with expanded export modal functionality to support wider range of formats, preview and modifying contents
