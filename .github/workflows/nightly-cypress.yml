@@ -42,7 +42,7 @@ env:
   # rdfc2im, the demo mine's build: repository and commit (branch
   # maint/im-ore.1-intermine-src). To move to a newer commit, change the sha.
   RDFC2IM_REPO: gmicklem/rdfc2im
-  RDFC2IM_REF: 49ebe66f3c2363073a0fa0f431777a483e40e07f
+  RDFC2IM_REF: ae106ec9f8ad9b0dc39927776ce032402c0b206f
   # The raw-data cache tools/full-build.sh --use-cached-data restores
   # (cached_raw_data/<source>/{data,MD5SUMS,META.json}), 23 MB. A new cache gets a
   # new release tag; never replace an asset in place.
