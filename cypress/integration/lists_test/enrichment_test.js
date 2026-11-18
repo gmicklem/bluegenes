@@ -12,6 +12,9 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 // ".enrichment" sidebar. The list is 18 drug-metabolism genes (fixtures/enrichment_gene.csv);
 // with the default settings (p < 0.05, Holm-Bonferroni) 5 pathways are enriched, and the
 // publication widget has none. The numbers below were checked with POST /service/list/enrichment.
+// The p-values depend on the population (the 111 of the panel's 114 genes that have a pathway) and on
+// the number of tests (the 220 pathways of those genes), so they move with the panel: the fixtures are
+// compared with a relative tolerance, since their last digits are floating-point noise of the mine.
 // Each pathway is in exactly one data set (Reactome pathways data set), so the table of a
 // result has one row per gene of the list that is in the pathway, once: the number of rows is
 // the number of gene ids in the third column of the downloaded result (the tsv fixtures, one
@@ -22,6 +25,23 @@ const matchedGenes = (line) => line.split("\t")[2].split(",").length;
 const expectedRows = (fixture) =>
     cy.readFile("cypress/fixtures/" + fixture).then(tsv =>
         tsv.trim().split("\n").reduce((sum, line) => sum + matchedGenes(line), 0));
+// The downloaded tsv against a fixture: every column equal, but the p-value (second column), which
+// must agree to 9 significant figures. CYPRESS_RECORD_FIXTURES=true records the fixture instead.
+const expectEnrichmentFixture = (fixture, actual) => {
+    if (String(Cypress.env("RECORD_FIXTURES")) === "true") {
+        return cy.expectFixture(fixture, actual);
+    }
+    return cy.readFile("cypress/fixtures/" + fixture).then(expected => {
+        const rows = (tsv) => tsv.trim().split("\n").map(line => line.split("\t"));
+        const want = rows(expected);
+        const got = rows(actual);
+        expect(got.length, "number of pathways").to.equal(want.length);
+        want.forEach((row, i) => {
+            [0, 2, 3].forEach(col => expect(got[i][col], "column " + col + " of line " + (i + 1)).to.equal(row[col]));
+            expect(Number(got[i][1]), "p-value of line " + (i + 1)).to.be.closeTo(Number(row[1]), Number(row[1]) * 1e-9);
+        });
+    });
+};
 const expectRows = (n) => cy.get(".pagination-label").invoke("text").should("match", new RegExp("of " + n + " rows$"));
 
 const pathwayCategory = () => cy.contains(".enrichment-category", "Pathway Enrichment");
@@ -60,7 +80,7 @@ describe("Enrichment Test", function(){
         })
         expectedRows("all_enrichment_result.tsv").then(expectRows);
         cy.readFile("cypress/downloads/Enrichment analysis genes Pathway Enrichment.tsv").then(newResult => {
-            cy.expectFixture("all_enrichment_result.tsv", newResult);
+            expectEnrichmentFixture("all_enrichment_result.tsv", newResult);
         })
     })
 
@@ -77,7 +97,7 @@ describe("Enrichment Test", function(){
         })
         expectedRows("checked_enrichment_result.tsv").then(expectRows);
         cy.readFile("cypress/downloads/Enrichment analysis genes Pathway Enrichment.tsv").then(newResult => {
-            cy.expectFixture("checked_enrichment_result.tsv", newResult);
+            expectEnrichmentFixture("checked_enrichment_result.tsv", newResult);
         })
     })
 
@@ -87,8 +107,9 @@ describe("Enrichment Test", function(){
             cy.intercept("POST",mineService("list/enrichment")).as("enrichmentLoad");
             cy.get(".correction").find("select").select("Benjamini Hochberg");
             cy.wait("@enrichmentLoad");
-            // Holm-Bonferroni gives 2.16e-4 for the second pathway
-            cy.get(".enrichment-p-value").eq(1).should("have.text","1.09e-4");
+            // Holm-Bonferroni gives 2.05e-4 for the second pathway, Benjamini Hochberg
+            // 220 * 9.37e-7 / 2 (the raw p-value of the tied second and third pathways)
+            cy.get(".enrichment-p-value").eq(1).should("have.text","1.03e-4");
         })
     })
 

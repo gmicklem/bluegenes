@@ -1,7 +1,20 @@
-import { minePage } from "../support/mine";
-import { GENES_A, GENES_A_PROTEIN_ROWS } from "../support/data";
+import { minePage, mineService } from "../support/mine";
+import { GENES_A } from "../support/data";
 
 // The demo mine has 9 public templates (/service/templates), one with the aspect Genomics.
+
+// Rows of the template Gene_Protein (gene, then its proteins) for the genes of GENES_A: counted by
+// the web service, so the expectation follows the mine's data (135 for the 114 gene panel).
+const geneProteinRows = () => {
+    const symbols = GENES_A.split(",").map(s => `<value>${s.trim()}</value>`).join("");
+    const query = '<query model="genomic" view="Gene.primaryIdentifier Gene.symbol Gene.proteins.primaryIdentifier ' +
+        'Gene.proteins.primaryAccession"><constraint path="Gene.symbol" op="ONE OF">' + symbols + "</constraint></query>";
+    return cy.request({ url: mineService("query/results"), qs: { query, format: "count" } })
+        .then(({ body }) => {
+            expect(Number(body), "Gene_Protein rows of GENES_A").to.be.greaterThan(0);
+            return String(Number(body));
+        });
+};
 
 describe("Templates Test", function() {
     beforeEach(function() {
@@ -42,7 +55,7 @@ describe("Templates Test", function() {
 
             cy.get(".dropdown-menu").should("exist");
             cy.get(".list-selection").first().click();
-            cy.get(".view-results").should("contain",String(GENES_A_PROTEIN_ROWS)).click();
+            geneProteinRows().then(rows => cy.get(".view-results").should("contain", rows).click());
         });
         cy.url().should("contain","/results");
     });
