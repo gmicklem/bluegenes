@@ -11,7 +11,7 @@
 //                          (default: the last path segment of MINE_URL)
 //   CYPRESS_MINE_NAME      mine name BlueGenes shows, e.g. "Login to <name>": the
 //                          mine's project.title web property (default
-//                          "rdfc2im: 113 gene food/drug-metabolism panel", the title of
+//                          "rdfc2im: 114 gene food/drug-metabolism panel", the title of
 //                          the demo mine)
 //   CYPRESS_EXTERNAL       set to true to also run the tests tagged @external
 //                          (itExternal in support/mine.js), which need live
@@ -97,10 +97,10 @@ module.exports = defineConfig({
     openMode: 2,
   },
   env: {
-    // The rdfc2im demo mine (HumanMine's model, 113 genes). MINE_NAMESPACE, the route
+    // The rdfc2im demo mine (HumanMine's model, 114 genes). MINE_NAMESPACE, the route
     // prefix BlueGenes uses for it, comes from the last path segment: "humanmine".
     MINE_URL: "http://localhost:8090/humanmine",
-    MINE_NAME: "rdfc2im: 113 gene food/drug-metabolism panel",
+    MINE_NAME: "rdfc2im: 114 gene food/drug-metabolism panel",
     EXTERNAL: false,
   },
   e2e: {

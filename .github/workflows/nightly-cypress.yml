@@ -42,18 +42,18 @@ env:
   # rdfc2im, the demo mine's build: repository and commit (branch
   # maint/im-ore.1-intermine-src). To move to a newer commit, change the sha.
   RDFC2IM_REPO: gmicklem/rdfc2im
-  RDFC2IM_REF: 31eeae90c1ab5cf2e33352ac38186af82192c589
+  RDFC2IM_REF: RDFC2IM_REF_TO_BE_SET_BY_ORCHESTRATOR
   # The raw-data cache tools/full-build.sh --use-cached-data restores
-  # (cached_raw_data/<source>/{data,MD5SUMS,META.json}), 23 MB. A new cache gets a
+  # (cached_raw_data/<source>/{data,MD5SUMS,META.json}), 29 MB, 16 groups, for the 114 gene panel. A new cache gets a
   # new release tag; never replace an asset in place.
-  RDFC2IM_DATA_URL: https://github.com/gmicklem/rdfc2im/releases/download/demo-data-2026-11-16/cached_raw_data.tar.gz
-  RDFC2IM_DATA_SHA256: 64cab8cc0f53f69b1d32c75100be95efac313a2885fe2bdf859d963100d8b266
+  RDFC2IM_DATA_URL: https://github.com/gmicklem/rdfc2im/releases/download/demo-data-2026-11-18/cached_raw_data.tar.gz
+  RDFC2IM_DATA_SHA256: 5d4a1a3d6050ebf2043b6d41d85ab87cdd2d70a372940aa5cbe8151f803fccd3
   # The standalone Gradle 4.9 launcher full-build.sh needs (BUILD.md, Prerequisites)
   GRADLE49_URL: https://services.gradle.org/distributions/gradle-4.9-bin.zip
   GRADLE49_SHA256: e66e69dce8173dd2004b39ba93586a184628bc6c28461bc771d6835f7f9b0d28
   # The demo mine and the BlueGenes under test
   MINE_URL: http://localhost:8090/humanmine
-  MINE_TITLE: "rdfc2im: 113 gene food/drug-metabolism panel"
+  MINE_TITLE: "rdfc2im: 114 gene food/drug-metabolism panel"
   BLUEGENES_PORT: "5001"
   LOGS: ${{ github.workspace }}/nightly-logs
   # cypress.config.js's JUnit options, plus the skipped tests (includePending),
@@ -142,7 +142,7 @@ jobs:
           (cd _rdfc2im && .venv/bin/python -m rdfc2im --help > /dev/null)
           echo "free memory before the build:"; free -m; nproc; df -h / | tail -1
 
-      # 18 phases, from the rdfc2im pipeline to a running mine; ends with
+      # 21 phases, from the rdfc2im pipeline to a running mine; ends with
       # phase_verify (/service/version, /service/model and BlueGenes on :5000
       # answer). The per-phase timings go to the job summary.
       - name: Build the demo mine (tools/full-build.sh --use-cached-data)

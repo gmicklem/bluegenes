@@ -1,4 +1,4 @@
-// Identifiers of the rdfc2im demo mine (HumanMine model, a panel of 113 human genes),
+// Identifiers of the rdfc2im demo mine (HumanMine model, a panel of 114 human genes),
 // shared by the specs. Every value here was checked against the mine's web service.
 // Gene.primaryIdentifier is the NCBI gene id, Gene.secondaryIdentifier the Ensembl id;
 // Protein.primaryAccession is the UniProt accession. See docs/building.md, "Cypress
@@ -9,8 +9,8 @@
 export const GENES_A = "PPARG, HFE, GSTP1, CYP2D6";
 export const GENES_B = "CYP2D6, CYP3A4, CYP2C9, VKORC1";
 export const GENES_A_SIZE = 4;
-// Rows of the template Gene_Protein (gene, then its proteins) for GENES_A.
-export const GENES_A_PROTEIN_ROWS = 135;
+// The rows of the template Gene_Protein (gene, then its proteins) for GENES_A are not listed here:
+// templates_test.js counts them with the web service (135 on the 114 gene panel).
 
 // Two proteins of the panel's genes: PPARG and CYP3A4.
 export const PROTEINS = "P37231, P08684";

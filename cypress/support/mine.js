@@ -12,7 +12,7 @@ export const mineService = (path) => `${mineUrl()}/service/${path}`;
 // BlueGenes route of the default mine, e.g. minePage("/search") -> /humanmine/search
 export const minePage = (path = "") => `/${Cypress.env("MINE_NAMESPACE")}${path}`;
 
-// Name BlueGenes shows for the mine ("Login to rdfc2im: 113 gene food/drug-metabolism panel")
+// Name BlueGenes shows for the mine ("Login to rdfc2im: 114 gene food/drug-metabolism panel")
 export const mineName = () => Cypress.env("MINE_NAME");
 
 // A test that needs a second, live mine next to the default one: FlyMine, because
