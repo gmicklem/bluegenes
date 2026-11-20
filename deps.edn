@@ -78,7 +78,7 @@
                       ;; cljsjs.* namespaces, which src/shim provides. Its compiled CSS
                       ;; is not in git: bluegenes.prep compiles it from its less/.
                       org.intermine/im-tables {:git/url "https://github.com/gmicklem/im-tables-3.git"
-                                               :git/sha "f780276f629b2abd2acdbee1a9fd929c9923b7f8"}}} ; 0.16.0-SNAPSHOT, f780276: reagent 2 readiness (refs replace dom-node, unsafe-html compatibility); includes 1be6530 (filter Add More fix, no possible-values request for Date/clob attributes, explicit highlight.js languages, cljs-time removed, oops 0.7.2)
+                                               :git/sha "b70e43c069aca35a64133478ffb4be65a7c405fa"}}} ; 0.16.0-SNAPSHOT, b70e43c: a Publication.pubMedId cell links to PubMed in a new tab (im-9n4.61); includes f780276 (reagent 2 readiness) and 1be6530 (filter Add More fix, no possible-values request for Date/clob attributes, explicit highlight.js languages, cljs-time removed, oops 0.7.2)
 
   ;; Development-only front-end tooling (dev build preloads).
   :cljs-dev {:extra-deps {binaryage/devtools {:mvn/version "1.0.7"}
